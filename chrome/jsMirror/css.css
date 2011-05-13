@@ -1,0 +1,42 @@
+shadiaglue{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")}
+
+
+.menulist-editable-box{
+	padding-top: 0px;
+	padding-bottom: 0px;
+	-moz-padding-start: 0px;
+	-moz-padding-end: 0px;
+}
+menulist{
+	margin:0px;
+	-moz-appearance: textfield;
+
+}
+tree{
+	-moz-appearance: listbox!important;
+}
+/******************* /
+treechildren::-moz-tree-row(hover) { background-color: #FFFFAA!important ;color:red}
+
+treechildren::-moz-tree-row(selected) { background-color: #97C6E7; }
+treechildren::-moz-tree-row(odd) { background-color: #FAFAFA; }
+treechildren::-moz-tree-row(odd, selected) { background-color: #97C6E7; }
+treechildren::-moz-tree-cell-text(selected) { color: #000000; }
+treechildren::-moz-tree-cell-text(odd, selected) { color: #000000; }
+*/
+
+treechildren::-moz-tree-cell-text(d0){
+	color: #000;
+}
+treechildren::-moz-tree-cell-text(d1){
+	color: darkblue;
+}
+treechildren::-moz-tree-cell-text(d2){
+	color: green;
+}
+treechildren::-moz-tree-cell-text(d3){
+	color: #339;
+}
+treechildren::-moz-tree-cell-text(d4){
+	color: #000;
+}

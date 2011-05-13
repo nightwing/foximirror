@@ -1,0 +1,324 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<!--   <script src="js/highlight.js" type="text/javascript"></script>
+		<script src="js/stringstream.js" type="text/javascript"></script>
+		<script src="js/tokenize.js" type="text/javascript"></script>
+		<script src="js/tokenizejavascript.js" type="text/javascript"></script>
+		<script src="js/parsejavascript.js" type="text/javascript"></script> 
+		<script src="js/parsecss.js" type="text/javascript"></script>-->
+			<script src="../property_database.js" type="text/javascript"></script>
+
+		<title>CodeMirror: String highlight demonstration</title>
+		<link rel="stylesheet" type="text/css" media="screen" href="editor-slate.css" />
+
+	</head>
+	<style>
+		.editing{
+			border:1px solid grey;
+			-moz-box-shadow:3px 2px 3px black;
+			outline:medium none;
+			-moz-padding-end:4px;
+		}
+		.editing{
+			-moz-box-shadow:3px 2px 3px grey;
+			margin:-1px;
+			-moz-margin-end:-3px;
+			-moz-padding-end:2px;
+			background:none repeat scroll 0 0 white;
+			border:1px solid grey;
+			outline:medium none;
+			overflow:hidden;
+			-moz-user-focus: normal!important;
+			-moz-user-select: text!important;
+		}
+		.name.editing{
+			margin-left:-25px!important;
+		}
+		*|*{
+		  -moz-user-focus: normal!important;
+		  -moz-user-modify: read-write!important;
+		}
+	</style>
+	<script>  
+  
+initAll=function(){
+	window.addEventListener('mouseup',function(e){
+		//  document.body.style.MozUserSelect=""
+		startEditing(e)		
+	},true)
+	window.addEventListener('mousedown',function(e){
+		downPos=[e.screenX,e.screenY]		
+		if(e.target==lt){
+			lt.setCapture&&lt.setCapture(true)
+		//	lt.style.MozUserSelect="text"
+		//	document.body.style.MozUserSelect="none"
+
+		}else{
+			window.focus()
+			finishEditing()
+		}			
+	},true)
+	
+	window.addEventListener('blur',function(e){
+		finishEditing()
+	},true)
+	
+	window.addEventListener('mousemove',function(e){
+	
+	},true) 
+	window.addEventListener('keypress', function(e){keyListener.keypress(e)},true)
+	//window.addEventListener('keydown', function(e){keyListener.keydown(e)},true)
+}
+keyListener={
+	keypress:function(event){
+		sel=window.getSelection()
+		var range=sel.getRangeAt(0)
+		c=range.startContainer
+		var a=range.startOffset,b=range.endOffset	
+		if(c!=lt.firstChild){
+			c=lt.firstChild
+			a=0
+			text=lt.textContent
+			b=text.length	
+		}else{
+			text=lt.textContent
+		}
+		
+		
+		switch(event.keyCode){
+			case KeyEvent.DOM_VK_UP:				
+				event.preventDefault();event.stopPropagation();
+				break
+			case KeyEvent.DOM_VK_DOWN:
+				event.preventDefault();event.stopPropagation();
+				break
+			case KeyEvent.DOM_VK_BACK_SPACE:
+				if(a!=b){
+					text=text.substring(0,a)+text.substr(b)
+					b=a
+				}else if(a>0){
+					a--;
+					text=text.substring(0,a)+text.substr(b)
+					b=a				
+				}
+				event.preventDefault();event.stopPropagation();
+				break
+			case KeyEvent.DOM_VK_DELETE:
+				if(a!=b){
+					text=text.substring(0,a)+text.substr(b)
+					b=a
+				}else{
+					text=text.substring(0,a)+text.substr(b+1)
+					b=a				
+				}
+				event.preventDefault();event.stopPropagation();
+				break
+			case KeyEvent.DOM_VK_RETURN:		
+				editNext()
+				event.preventDefault();event.stopPropagation();
+				return;
+				break
+			case 46:
+				//this.startMain(this.object[this.selected()],"")
+				break;
+			case KeyEvent.DOM_VK_RIGHT:		
+				break
+			case KeyEvent.DOM_VK_LEFT:
+				break
+			default:				
+				if(event.charCode==0){
+					return
+				}
+				var newChar=String.fromCharCode(event.charCode)
+				if(!event.ctrlKey&&!event.altKey&&!event.shiftKey){
+					text=text.substring(0,a)+newChar+text.substr(b)	
+					a++;b=a
+				}else if(event.ctrlKey){
+					if(newChar=='v'){
+						newChar=gClipboardHelper.getData()
+						text=text.substring(0,a)+newChar+text.substr(b)	
+						a+=newChar.length;b=a
+					}else if(newChar=='x'){
+						gClipboardHelper.copyString(text.substring(a,b))
+						text=text.substring(0,a)+text.substr(b)	
+						a;b=a
+					}else if(newChar=='c'){
+						gClipboardHelper.copyString(text.substring(a,b))					
+					}
+				}					
+		}
+		c.textContent=text
+		range.setStart(c,a)
+		range.setEnd(c,b)
+		sel.removeAllRanges()
+		sel.addRange(range)
+	},
+	
+	keydown:function(e){
+		if(e.ctrlKey)
+			switch(e.which){
+				case KeyboardEvent.DOM_VK_C:
+				text=text.substring(0,a)+String.fromCharCode(event.charCode)+text.substr(b)	
+
+				break
+				case KeyboardEvent.DOM_VK_V:
+				
+				break
+				case KeyboardEvent.DOM_VK_X:
+					text=text.substring(0,a)+String.fromCharCode(event.charCode)+text.substr(b)	
+
+				break
+			}
+			c.textContent=text
+			range.setStart(c,a)
+			range.setEnd(c,b)
+			sel.removeAllRanges()
+			sel.addRange(range)
+	}
+}
+function editNext(){	
+	startEditingElement(lt.nextSibling)
+}
+function startEditingElement(el){	
+	if(lt==el){
+		return
+	}else if(lt){
+		finishEditing()
+	}
+	lt=el
+	if(lt.nodeName!='SPAN'){
+		lt=''
+		return
+	}
+	
+	lt.className=lt.className.replace(' editing','','g')+' editing'
+	//lt.contentEditable=true
+	lt.focus()
+	select()
+}
+lt=''
+function startEditing(e){
+	if(lt==e.target){
+		return
+	}	
+	lt=e.target
+	if(lt.nodeName!='SPAN'){
+		lt=''
+		return
+	}		
+	sel=window.getSelection()
+	a=sel.focusNode,b=sel.anchorNode
+	if(a.parentNode!=lt||b.parentNode!=lt){
+		lt=''
+		return
+	}		
+	
+	lt.className=lt.className.replace(' editing','','g')+' editing'
+	sel=window.getSelection()
+	a=sel.focusOffset,b=sel.anchorOffset
+	//lt.contentEditable=true
+	lt.focus()
+	if(downPos[0]==e.screenX&&downPos[1]==e.screenY)
+		select()
+}
+function finishEditing(e){
+	if(lt&&lt.className){
+		lt.blur()
+		lt.className=lt.className.replace(' editing','','g')		
+		//lt.contentEditable=false
+		lt=''
+	}
+}
+function select(a,b){
+	if(!lt)
+		return
+	sel=window.getSelection()
+	sel.removeAllRanges()
+	
+	searchRange = document.createRange()
+	searchRange.selectNodeContents(lt.firstChild);
+	sel.addRange(searchRange);
+	//sel=window.getSelection()
+	a=sel.focusOffset,b=sel.anchorOffset
+}
+
+
+function autocomlete(){
+	sel=window.getSelection()
+	var range=sel.getRangeAt(0)
+	c=range.startContainer
+	var a=range.startOffset,b=range.endOffset	
+	if(c!=lt.firstChild){
+		c=lt.firstChild
+		a=0
+		text=lt.textContent
+		b=text.length	
+	}else{
+		text=lt.textContent
+	}
+	text=text.substring(0,a)
+	if(lt.className.indexOf('identifier')>-1)
+		var type=''
+	else{
+		var p=lt.previousSibling
+		while(lt&&lt.className.indexOf('identifier')==-1){
+			p=lt.previousSibling
+		}
+		type=p.textContent
+	}
+		
+}
+
+
+gCSSProperties
+
+
+	filter=function(){
+		var table = [];
+		var filterText=this.text.toLowerCase()	
+		if(!filterText){
+			var arr=[]
+			this.propsArray.forEach(function(val) {arr.push(val[1])})
+			arr.sort()
+			this.sortedArray=arr
+			return;
+		}
+		this.propsArray.forEach(function(val) {
+			var lowVal=val[0]
+			var priority=0,lastI=0,ind1=0;
+			//exact match
+			if(val[1].indexOf(filterTextCase)===0){
+				table.push([-2,val[0],val[1]]);
+				return;
+			}
+			//vague matches
+			for(var j=0;j<filterText.length;j++){
+				lastI = lowVal.indexOf(filterText[j],ind1);
+				priority += lastI-ind1
+				ind1 = lastI+1;
+				if(lastI===-1)
+					break;
+			}
+			if (lastI != -1) {
+				table.push([priority,val[0],val[1]]);
+			}
+		})
+		table.sort(function (a, b) {
+			for(i in a){
+			  if (a[i]<b[i]) return -1;
+			  if (a[i]>b[i]) return 1;
+			}
+			return 0;
+		})
+		var arr=[]
+		table.forEach(function(val) {arr.push(val[2])})
+		this.sortedArray=arr
+	}
+
+
+
+</script>
+
+
+	<body style="" onload='initAll()' spellcheck='false'><span/></body>
+</html>

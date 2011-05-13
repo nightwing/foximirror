@@ -1,0 +1,217 @@
+<?xml version="1.0"?>  
+ <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>  
+
+<window
+	title="shadia"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:h="http://www.w3.org/1999/xhtml"
+	id="shadia" width="600" height="300"
+	windowtype='shadia:inspector'
+	persist="screenX screenY width height sizemode"
+	onload="initAll()"
+	onunload='unload()'>
+
+	<h:head>
+		<h:link rel="icon"        href="../turnoff.gif"/>
+		<h:link rel="stylesheet"  href="domMirror.css" type="text/css" />
+		<h:link rel="stylesheet"  href="chrome://shadia/content/css/global.css" type="text/css" />
+	</h:head>
+	<!--<script type="application/javascript" src="sort.js"/>-->
+	<script type="application/javascript" src="../shadia.js"/>
+	
+	<script type="application/javascript" src="chrome://xulgear/content/xulgear_data.js"/>
+	
+	<script><![CDATA[{
+	function initAll(){
+		initialize();	
+	}
+	function unload(){
+		var e=document.getElementsByTagName('tree')
+		for(var i=0;i<e.length;i++)
+			e[i].view=null
+		windowViewer.deactivate()
+		domUtils = winService=null
+	}
+	}]]></script>
+
+
+
+<toolbar id='actionsp'>
+	<shadiaglue/>	
+	<toolbarbutton oncommand='actions.refreshSkins()' label='refreshSkins' tooltiptext='reloads all stylesheets not added by xbl'/>
+	
+	<toolbarbutton id="shadiaButton" onclick="mWindow.focus();if(event.button==0)window.focus()" label='&#8251;' tooltiptext='show window'/>
+	<spacer flex='1'/>
+                                                
+	<toolbarbutton id="shadiaByClickButton"  oncommand="shadowInspector.start(mWindow,true)"	style='list-style-image:url(chrome://shadia/content/turnon.gif)'/>
+	<toolbarbutton id="shadiaButton" 		 oncommand="shadowInspector.start(mWindow)"		label='xx' />
+	<toolbarbutton id='windowViewerButton' 	 oncommand='windowViewer.toggle()'				label='xx' popup='po' type='checkbox' >		
+	</toolbarbutton>
+	
+	<toolbarbutton id="shadiaButton" 		 oncommand="shadowInspector.allWindowsSelect(true,true,true)" label='all' />
+</toolbar>
+
+
+	
+	
+	
+	
+<!-- <splitter collapse="before" state="collapsed2"><grippy/></splitter>
+<splitter collapse="after" state="collapsed2"><grippy/></splitter> -->
+
+<panelset>	
+	<menupopup id="globalContext" onpopupshowing='contextMenuPopupShowing(event)' oncommand="this.hidePopup()">
+		<menuseparator/>
+		<hbox class="split-menuitem">
+			<toolbarbutton id="copy" label='copy' oncommand=" var controller=document.commandDispatcher.getControllerForCommand('cmd_copy');
+													if(controller)controller.doCommand('cmd_copy')//goDoCommand('cmd_copy')"/>
+		</hbox>
+		<menuseparator/>
+		<hbox id='nodeOperations' class="split-menuitem">
+			<toolbarbutton id="p" label='delete' oncommand="mNode.parentNode.removeChild(mNode)"/>
+			
+			<toolbarbutton id="p" label='cut'/>
+			<toolbarbutton id="o" label='paste'/>
+		</hbox>
+		<groupbox id='urlOperations' oncommand="urlOperations(event.target.id)" class="split-menuitem">
+			<caption label='url'>
+				<toolbarbutton label='edit file' id='edit'   class="split-menuitem-item"/>
+			</caption>
+			<hbox>
+				<toolbarbutton label='view source' id='view'   class="split-menuitem-item"/>
+				<toolbarbutton label='copy'        id='copy'   class="split-menuitem-menu"/>
+			</hbox>
+			<hbox>
+				<toolbarbutton label='reveal' id='reveal' class="split-menuitem-menu" flex='1'/>
+				<toolbarbutton label='launch' id='launch' class="split-menuitem-menu"/>
+			</hbox>
+		</groupbox>
+		<groupbox id='domViewerOperations' class="split-menuitem">
+			<caption label='root'/>
+			<toolbarbutton label='parent window' oncommand='inspect(mNode,"parent")'/>
+			<toolbarbutton label='current window' oncommand='inspect(mNode)'/>
+		</groupbox>
+	
+	</menupopup>
+
+
+</panelset>
+
+<hbox flex="1" >
+	<vbox id='left-deck' flex="1" >
+		<hbox id='leftPane-search' >			
+			<textbox type='search' flex="1" />
+<tabs onselect='if(leftPane)window[this.selectedItem.id].activate()'>
+		<tab label='dom' id='domViewer'/>
+		<tab label='css' id='stylesheetViewer'/>
+		<tab label='overlays' id='chromeRegistryViewer'/>
+</tabs>
+			
+		</hbox>		
+		<stack1 flex="1" id='domViewer'>
+			<hbox width='0' style='width:0px;max-width:0;min-width:0;position:fixed;'>
+			<tree id="domViewer-hidden-tree" class="plain" hidecolumnpicker='true' 
+					treelines="true" flex="0" style='width:0px;max-width:0;min-width:0;-moz-appearance:none;position:fixed;'>
+				<treecols>
+					<treecol id="colNodeName" hideheader="true" flex="1" primary="true" />          
+				</treecols>
+				<treechildren id="inspector-tree-h-body"/>
+			</tree>
+			</hbox>
+			<tree id="leftPane" class="plain" onselect="selectObjectInTree('leftPane')"  hidecolumnpicker='true'
+					 treelines="true"  flex="1">
+				<treecols>
+					<treecol id="text" hideheader="true" flex="1" primary="true" ordinal='0'/>
+					<splitter class="tree-splitter"/>
+					<treecol id="count" hideheader="true" width="53" hidden='true'  ordinal='1'/>  
+				</treecols>
+				<treechildren contextmenu='globalContext' onmousedown="selectObjectInTree('leftPane')"/>
+<!-- tools widget -->
+<treetools1  style='position:absolute;height:100%' flex='0' >
+<treetools  style='position:absolute;right:0px;top:0px;'>
+	<box style='-moz-border-radius:0 2px 0 18px;border-left:rgb(213,80,255) solid 1px;border-bottom:rgb(213,80,255) solid 1px'>
+		<menubar >
+			<menu label='t' type='menu'>
+				<menupopup class='plain' style='-moz-appearance:listbox'>								
+					<toolbarbutton label='highlight' type='checkbox' oncommand='domLighter.toggle()'/>					
+					<toolbarbutton label='autoposition '  type='checkbox' oncommand='' hidden='true'/>
+					
+					<toolbarbutton label='reload' oncommand="mWindow.document.location.reload();setTimeout('domViewer.setWindow(mWindow)',300)"/>
+				</menupopup>
+			</menu>
+		</menubar>
+	</box>
+</treetools >
+</treetools1 >	
+								
+								
+			</tree>
+		</stack1>
+		<hbox id='cssSearch' >			
+			<textbox type='search' flex="1" /><!-- emptytext='cearch all css' -->
+		</hbox>
+	</vbox>
+	<splitter collapse="after" state="collapsed2"><grippy/></splitter>
+	<vbox id='right-deck' flex="1">		
+		<vbox collapsed='true' flex='1'>		
+			<tree id="window-tree" class="plain" flex='1' seltype="single" treelines="true" hidecolumnpicker='true'>
+				<treecols>
+				  <treecol id="text" hideheader="true" primary="true" flex="1" />          
+				</treecols>				
+				<treechildren contextmenu='globalContext'/>
+			</tree>				
+		</vbox>
+		<hbox >
+			<tabs id='subpantabs'/>
+			<textbox type='search' flex="1" id='slate-finder'/>
+			<checkbox label='' style='margin:0;padding:0' oncommand='browserFind.updateAutoHighlight()' tooltiptext='autohighlight'/>
+		</hbox>
+		<vbox collapsed='false' flex='1'>			
+			<browser id='slate-browser' type='content-primary' flex='1' showcaret='true' src="chrome://shadia/content/domMirror/editor-slate.html" context='globalContext'/>
+		</vbox>
+		<vbox collapsed='true' flex='1'>
+			<textbox id='editbox' multiline='true' flex='1'  wrap='off'/>
+			<toolbar>
+				<checkbox label='wrap' oncommand="attributeViewer.toggleWrap()"/>
+				<spacer flex='1'/>
+				<toolbarbutton id='editboxsave' label='save' oncommand="attributeViewer.saveEdit()" />
+
+			</toolbar>
+		</vbox>
+	</vbox>
+</hbox>
+
+<script type="application/javascript" src="3.js"/>
+
+</window>
+
+
+<!-- 
+  <vbox id='i2'  style='position:absolute;background-color:blue' >
+       <vbox id='i1'  style='position:absolute;right:0px'>
+       <textbox value='5554' style='border:solid;width:20px;height:20px;max-width30px;' type='search'/>
+  </vbox></vbox>
+
+
+
+function asyncLoadDom(uri, callback){
+  let doc = Cc['@mozilla.org/appshell/window-mediator;1']
+              .getService(Ci.nsIWindowMediator)
+              .getMostRecentWindow("mail:3pane").document;
+  let frame = doc.createElement("iframe");
+  frame.setAttribute("type", "content");
+  frame.setAttribute("collapsed", "true");
+  doc.documentElement.appendChild(frame);
+  let ds = frame.webNavigation;
+  ds.allowPlugins = ds.allowJavascript = ds.allowImages = false;
+  ds.allowSubframes = false;
+  ds.allowMetaRedirects = true;
+  frame.addEventListener("load", function (event){
+    if(event.originalTarget.location.href == "about:blank") return;
+    callback(frame.contentDocument);
+    doc.documentElement.removeChild(frame);
+  }, true);
+  frame.contentDocument.location.href = uri;
+} 
+
+-->

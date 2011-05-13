@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<?xul-overlay href="chrome://shadia/content/browserOverlay.xul"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="sm.css" type="text/css"?>
+
+<window id="css:mirror"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		xmlns:h="http://www.w3.org/1999/xhtml"
+        contenttitlesetting="true"
+        title="css:mirror" 
+        titlemodifier="titlemodifier;" 
+        titlepreface="preface;"
+        titlemenuseparator ="titlemodifierseparator;"  
+        windowtype="css:mirror"
+        width="600" height="300"
+        screenX="100" screenY="100"
+        persist="screenX screenY width height sizemode">
+	
+	<h:head>
+		<h:link rel="icon"        href="../turnoff.gif"/>
+		<h:link rel="stylesheet"  href="chrome://shadia/content/css/global.css" type="text/css" />
+		<h:link rel="stylesheet"  href="chromeMirror.css" type="text/css" />
+	</h:head>
+		
+	<script type="application/javascript" src="cssMirror.js"/>
+	<script type="application/javascript" src="chrome://shadia/content/utils/prefUtils.js"/>
+	<script type="application/javascript" src="chrome://shadia/content/utils/fileUtils.js"/>
+	<script type="application/javascript" src="../property_database.js"/>
+	
+
+	<toolbox id="viewSource-toolbox">
+		<menubar id="viewSource-main-menubar">
+			<toolbarbutton onclick="document.location=document.location">reload</toolbarbutton>
+			<toolbarbutton onclick="">/*</toolbarbutton>
+			<toolbarbutton onclick="">{</toolbarbutton>
+			<toolbarbutton onclick="">(</toolbarbutton>
+			<toolbarbutton onclick="">[</toolbarbutton>
+			<toolbarbutton onclick="toggleWrap()" type='checkbox'>wrap</toolbarbutton>
+			<toolbarbutton onclick="initTree()"	label='manage'></toolbarbutton> 
+			<spacer flex='1'/>
+			<shadiaglue/>
+		</menubar> 			
+	</toolbox>
+	<hbox id="appcontent" flex="1">
+		<vbox  width='256' persist='width' id='sm-left'>
+			<tree id="style-list-tree" flex="1" persist="sortDirection sortResource" sortDirection="ascending" sortResource="description" 
+				seltype="" treelines="true" editable="false" disableKeyNavigation="false">
+				<treecols>
+					<splitter class="tree-splitter"/>
+					<treecol id="name" label="name" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" primary="true"/>
+					<splitter class="tree-splitter"/>
+					<treecol id="enabled" label="enabled" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" sortDirection="ascending"/>
+				</treecols>
+				<treechildren/>
+			</tree>
+			<hbox>
+				<button label='new' onclick='cssMirror.createStyle()' flex='1'/>
+				<button label='delete' onclick='cssMirror.deleteStyle()'/>
+			</hbox>
+		</vbox>
+		<splitter collapse="before" state="collapsed2"><grippy/></splitter>
+		<vbox  flex='1'>		
+			<textbox id='codebox' multiline='true' flex='1' wrap='off'/>
+			<hbox id="errors" style="display:none;color:green;width:100%;-moz-user-select:text!important">
+				<vbox></vbox>
+				<toolbarbutton class="findbar-closebutton" oncommand='errorListener.clearErrors()'>1</toolbarbutton>
+			</hbox>
+			<statusbar id="status-bar" class="chromeclass-status">
+
+				<toolbarbutton label='preview' oncommand='cssMirror.preview()'>preview</toolbarbutton>
+				<toolbarbutton id='unpreview-button' style='display:none' label='unpreview' oncommand='cssMirror.unpreview()'>unpreview</toolbarbutton>
+				<toolbaritem id="ToggleEnabledItem">
+					<checkbox id="ToggleEnabled" label="Enabled" 
+						tooltiptext="Enable or disable the style when you save it" oncommand='cssMirror.toggle()'/>
+				</toolbaritem>
+				<toolbarbutton id='save-button' label='save' oncommand='cssMirror.saveStyle()'></toolbarbutton>
+				<spacer flex='1'/>
+				<textbox type='search' id='findbar'/>
+				<!--<statusbarpanel id="statusbar-line-col" label="" flex="1"/>/-->
+			</statusbar>
+		</vbox>
+		<vbox  width='256' persist='width' id='sm-auto'>
+			<tree id="autotree" flex="1" persist="sortDirection sortResource" sortDirection="ascending" sortResource="description" 
+				onselect="" seltype="" treelines="true" editable="false" disableKeyNavigation="false">
+				<treecols>
+					<splitter class="tree-splitter"/>
+					<treecol id="name" label="name" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" primary="true"/>
+					<splitter class="tree-splitter"/>
+					<treecol id="enabled" label="enabled" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" sortDirection="ascending"/>
+				</treecols>
+				<treechildren id="tree-children" onclick='autotreeClicked(event)'	/>
+			</tree>
+			<textbox id='autobox' multiline='true' label='new' flex='1'/>
+		</vbox>
+	</hbox> 
+		
+	<hbox style="display:none" flex="1">
+		<iframe id='hiddenframe'/>
+	</hbox> 
+
+<!-- 	
+<tree id="elementList" flex="1">
+  <treecols>
+    <treecol id="element" label="Element" primary="true" flex="1"/>
+  </treecols>
+  <treechildren/>
+</tree> -->
+
+</window>

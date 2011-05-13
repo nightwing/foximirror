@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="css.css" type="text/css"?>  
+<?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>  
+
+
+<window
+    id="executeJSWindow"
+    title="JSMirror"
+    orient="horizontal"
+    width="800"
+    height="550"
+    persist="screenX screenY width height sizemode"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    onload="EJS_doOnload()"
+    onunload="EJS_doOnUnload()"
+	windowtype='shadia:jsMirror'
+    >
+	
+	<script type="application/javascript" src="../shadia.js"/>
+    <script type="application/x-javascript" src="jsMirror.js"/>
+	
+
+	<keyset>
+		<key keycode="VK_F5" oncommand="EJS_ReopenWin()"/>
+	</keyset>
+	
+    <popupset>
+        <menupopup id="pupCommandAbbr" position="after_end" ignorekeys="false"/>
+        <menupopup id="pupCodeCompletion" position="after_end" ignorekeys="false"/>
+		
+		<panel id="autocomplate" noautofocus="true" noautohide="true">
+			<vbox>
+			<tree id="window-tree" class="plain" seltype="single" treelines="false" flex="1" tabindex='-1'
+					hidecolumnpicker='true' style='-moz-user-focus:none'>
+				<treecols>
+					<treecol id="colNodeName" hideheader="true" primary="true" flex="1" />
+				</treecols>
+				<treechildren id="inspector-tree-body"/>
+			</tree>  
+			</vbox>
+		</panel>
+		<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
+		<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
+			<hbox>
+				<toolbarbutton label='qi'  accesskey='q' onclick='jsExplore.qi()'/>
+				<toolbarbutton label='all' accesskey='a' onclick='jsExplore.all()'/>
+				<toolbarbutton label='_p'  accesskey='p' onclick='jsExplore._p()'/>
+				<toolbarbutton label='si'  accesskey='s' onclick='jsExplore.si()'/>
+				<toolbarbutton label='gs'  accesskey='g' onclick='jsExplore.gs()'/>
+				<spacer flex='1'/>
+				<label/>
+			</hbox>
+			<hbox>
+				<tree id="window-tree" class="plain1" seltype="single" treelines="false" flex="1" tabindex='-1'
+						hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
+					<treechildren id="inspector-tree-body"/>
+
+					<treecols>
+						<treecol id="name" hideheader="true" primary="true" flex="2" />
+						<splitter class="tree-splitter"/>
+						<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
+						<splitter class="tree-splitter"/>
+						<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
+					</treecols>
+				</tree> 
+				<splitter/>
+				<textbox multiline='true' id='autocomplate-bubble' flex='1' wrap='off' width='200' />
+			</hbox>
+			<resizer object='autocomplatePanel' dir='bottom-right'/>
+		</panel>
+    </popupset>
+
+
+   <vbox flex="1">
+<toolbar id='actionsp'>	
+	<toolbarbutton label="//" oncommand="EJS_commentLine();" tabindex="8"/>
+	<toolbarbutton label="/*" oncommand="EJS_commentBlock();"/>
+	<toolbarbutton label="\t" oncommand="codebox.value=codebox.value.replace('\t','  ','g');"/>
+	<spacer flex='1'/>
+	<shadiaglue/>		
+</toolbar>
+      
+		<menubar align="center">
+			<label control="targetWin" accesskey="w" value="Target window" />
+			<menulist id="targetWin" oncommand="EJS_targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
+				<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+					<template>
+						<rule>
+							<menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+						</rule>
+					</template>
+				</menupopup>
+			</menulist>
+			<checkbox id="contentWinCB" persist="checked" disabled="false" label="Content Window" accesskey="t" 
+				oncommand="EJS_targetWinChanged()" tabindex="2"/>
+		</menubar>
+		<vbox flex="10">
+			<textbox id="jsCode" multiline="true" flex="1"  wrap='off'
+				style="overflow:hidden;font-family:monospace;font-size:9.5pt;-moz-tab-size:2" persist='height' />
+	  
+			<splitter>
+				<hbox align="left" flex="1">
+					<toolbarbutton label="Clear" accesskey="r" oncommand="EJS_clearResult()" tabindex="8"></toolbarbutton>
+					<toolbarbutton label="Execute" accesskey="e" oncommand="EJS_executeJS()" tabindex="4" ></toolbarbutton>
+					<toolbarbutton label="Properties" accesskey="p" oncommand="EJS_printProperties()"  tabindex="5"></toolbarbutton>
+					<spacer flex='1'/>
+					<toolbarbutton label="Execute Selection" accesskey="e" oncommand="EJS_executeJS('selected')" tabindex="4" ></toolbarbutton>
+
+					<toolbarbutton label="timer" accesskey="p" oncommand="insertTimer()"  tabindex="5"></toolbarbutton>
+				</hbox>
+			</splitter >
+			<textbox id="result" multiline="true" flex="1" tabindex="7" wrap='on'  persist='height'></textbox>
+		</vbox>
+    </vbox>
+
+</window>

@@ -1,0 +1,679 @@
+<?xml version="1.0"?>  
+ <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>  
+ <?xml-stylesheet href="0.css" type="text/css"?>  
+
+
+
+<window
+	title="Sorting a custom tree view example"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	onload="initAll()">
+	
+	<!--<script type="application/javascript" src="sort.js"/>-->
+<script>
+function initAll(){
+init();init2()
+}
+
+</script>
+
+<script type="application/javascript;version=1.8">
+<![CDATA[{
+
+target=window
+Ci=Components.interfaces
+function supportedInterfaces(element){
+	var ans=[]
+	for each(i in Ci){
+		if(element instanceof i)
+			ans.push(i)
+	}
+	return ans;
+}
+function setget(){
+	return targetPropName+'>\n'+target.__lookupSetter__(targetPropName).toSource(5)+'\n'+target.__lookupGetter__(targetPropName).toSource(5)
+}
+function qi(){
+	var ins= supportedInterfaces(target)
+	target=target.QueryInterface(ins[0])
+	
+	data=getProps(target)
+	inputFilter({target:document.getElementById("filter")})
+}
+function wr(){	
+	target=unwrap(target)	
+	data=getProps(target)
+	inputFilter({target:document.getElementById("filter")})
+}
+
+say= function(el){
+	var name=el.toString()
+	if(typeof el==='object') {
+		if(el.nodeName)
+			name+=el.nodeName
+		if(el.id)
+			name+="#"+el.id		
+		if(el.className)
+			name+="."+el.className.toString().replace(" ",".",'g')
+		if(el.value)
+			name+="="+value
+	}	
+	return name
+}
+say1= function(x){
+	if(x == null) return String(x);
+	var name,t = typeof x;
+	switch(t){
+		case 'object': break;
+		//case 'string': return x;
+		case 'function': 
+			name=x.toSource()
+			var i=name.indexOf("{")			
+			var t=name.substr(i)=='{[native code]}'?'function[n]': 'function'
+			
+			name=t+name.substring(name.indexOf(" "),i)+'~'+x.length
+			
+			return name
+		case 'xml': x = x.toXMLString();
+		default: return  t+' '+x;
+	}
+	var name = x.toString()//O2S.call(x);//\u25b7'\u25ba'
+	//for dom nodes
+	
+	if(x.nodeName)
+		name+=x.nodeName
+	if(x.id)
+		name+="#"+x.id    
+	if(x.className)
+		name+="."+x.className.toString().replace(" ",".",'g')
+	if(x.value)
+		name+="="+x.value
+	if(x.nodeValue)
+		name+="@"+x.nodeValue
+	var l=x.length
+	if(typeof l==='number')
+		name+='~'+l
+
+
+	return name
+	
+}
+
+
+const O2S = Object.prototype.toString;
+function inspect(x){
+  if(x == null) return String(x);
+  var t = typeof x;
+  switch(t){
+    case 'object': break;
+    case 'string': return x;
+    case 'function': return x.toSource(0);
+    case 'xml': x = x.toXMLString();
+    default: return x +'  '+ t;
+  }
+  var os = O2S.call(x), t = os.slice(8, -1);
+  switch(t){
+    case 'XPCNativeWrapper': case 'XPCCrossOriginWrapper':
+    let wos = O2S.call(unwrap(x));
+    os = t[3] === 'N' ? '[object '+ t +' '+ wos +']' : wos;
+    t += ':'+ wos.slice(8, -1);
+  }
+  var s, nt = x.nodeType;
+  if(nt === 1) s = xmls(x.cloneNode(0)).replace(/ xmlns=".+?"/, '');
+  else if(nt) s = x.nodeValue;
+  if(s == null && (s = String(x)) === os)
+    s = '{'+ keys(unwrap(x)).join(', ') +'}';
+  return s +'  '+ t;
+}
+function unwrap(x){
+   try { return XPCNativeWrapper(x).wrappedJSObject || x }
+   catch([]){ return x }
+ }
+
+
+/*[element.QueryInterface(i),*/
+var table = null;
+var data = null;
+var tree;
+var filterText = "";
+var number;
+
+function init() {
+	tree = document.getElementById("tree");
+	number = document.getElementById("number");
+	answer=document.getElementById("answer");
+	loadTable();
+
+//tree.startEditing(1, 3)
+}
+//
+function getProps(targetObj){
+	var data=[]
+	for(var i in targetObj){
+		var obj={object: i}
+		try{
+			obj.content=say1(targetObj[i])
+		}catch(e){obj.content=say(e.toString())}
+		data.push(obj);
+	}
+	return data;
+}
+this
+//this function is called every time the tree is sorted, filtered, or reloaded
+function loadTable() {
+	//remember scroll position. this is useful if this is an editable table
+	//to prevent the user from losing the row they edited
+	var topVisibleRow = null;
+	if (table) {
+		topVisibleRow = getTopVisibleRow();
+	}
+	if (data == null) {
+		//put object loading code here. for our purposes, we'll hard code it.
+		data = getProps(target);
+		//the property names match the column ids in the xul. this way, we don't have to deal with
+		//mapping between the two
+	}
+	if (filterText == "") {
+		//show all of them
+		table = data;
+	} else {
+		//filter out the ones we want to display
+		table = [];
+		data.forEach(function(element) {
+			//we'll match on every property
+			var val=""
+			for (var i in element) {
+				val+=prepareForComparison(element[i])
+			}
+			
+			var lastI=val.indexOf(filterText)
+			if ( lastI != -1) {
+				table.push(element);
+			}else{					
+				for (var j=0;j<filterText.length;j++){
+					lastI=val.indexOf(filterText[j],lastI+1)
+					if(lastI===-1)
+						break;
+				}			
+				if (lastI != -1) {
+					table.push(element);
+				}
+			}
+		});
+	}
+	
+	sort();
+	//restore scroll position
+	if (topVisibleRow) {
+		setTopVisibleRow(topVisibleRow);
+	}
+	
+	number.value=table.length
+}
+
+
+
+
+
+
+//generic custom tree view stuff
+function treeView(table) {
+	this.rowCount = table.length;
+	this.getCellText = function(row, col) {
+		return table[row][col.id];
+	};
+	this.getCellValue = function(row, col) {
+		return table[row][col.id];
+	};
+	this.setTree = function(treebox) {
+		this.treebox = treebox;
+	};
+	this.isEditable = function(row, col) {
+		return true;
+	};
+	this.isContainer = function(row){ return false; };
+	this.isSeparator = function(row){ return false; };
+	this.isSorted = function(){ return false; };
+	this.getLevel = function(row){ return 0; };
+	this.getImageSrc = function(row,col){}// return "chrome://global/skin/checkbox/cbox-check.gif"; };
+	this.getRowProperties = function(row,props){};
+	this.getCellProperties = function(row,col,props){
+		if ((row %4) == 0){
+			var aserv=Components.classes["@mozilla.org/atom-service;1"].
+					  getService(Components.interfaces.nsIAtomService);
+			props.AppendElement(aserv.getAtom("makeItBlue"));
+		}	
+	};
+	this.getColumnProperties = function(colid,col,props){};
+	this.cycleHeader = function(col, elem) {};
+
+}
+
+function sort(column) {
+	var columnName;
+	var order = tree.getAttribute("sortDirection") == "ascending" ? 1 : -1;
+	//if the column is passed and it's already sorted by that column, reverse sort
+	if (column) {
+		columnName = column.id;
+		if (tree.getAttribute("sortResource") == columnName) {
+			order *= -1;
+		}
+	} else {
+		columnName = tree.getAttribute("sortResource");
+	}
+
+	function columnSort(a, b) {
+		if (prepareForComparison(a[columnName]) > prepareForComparison(b[columnName])) return 1 * order;
+		if (prepareForComparison(a[columnName]) < prepareForComparison(b[columnName])) return -1 * order;
+		//tie breaker: name ascending is the second level sort
+		if (columnName != "object") {
+			if (prepareForComparison(a["object"]) > prepareForComparison(b["object"])) return 1;
+			if (prepareForComparison(a["object"]) < prepareForComparison(b["object"])) return -1;
+		}
+		return 0;
+	}
+	table.sort(columnSort);
+	//setting these will make the sort option persist
+	tree.setAttribute("sortDirection", order == 1 ? "ascending" : "descending");
+	tree.setAttribute("sortResource", columnName);
+	tree.view = new treeView(table);
+	//set the appropriate attributes to show to indicator
+	var cols = tree.getElementsByTagName("treecol");
+	for (var i = 0; i < cols.length; i++) {
+		cols[i].removeAttribute("sortDirection");
+	}
+	document.getElementById(columnName).setAttribute("sortDirection", order == 1 ? "ascending" : "descending");
+}
+
+//prepares an object for easy comparison against another. for strings, lowercases them
+function prepareForComparison(o) {
+	if (typeof o == "string") {
+		return o.toLowerCase();
+	}
+	return o;
+}
+
+function getTopVisibleRow() {
+	return tree.treeBoxObject.getFirstVisibleRow();
+}
+
+function setTopVisibleRow(topVisibleRow) {	
+	return tree.treeBoxObject.scrollToRow(Math.min(topVisibleRow, tree.treeBoxObject.getLastVisibleRow()));
+}
+
+function inputFilter(event) {
+	//do this now rather than doing it at every comparison
+	var value = prepareForComparison(event.target.value);
+	setFilter(value);
+	document.getElementById("clearFilter").disabled = value.length == 0;
+}
+
+function clearFilter() {
+	document.getElementById("clearFilter").disabled = true;
+	var filterElement = document.getElementById("filter");
+	filterElement.focus();
+	filterElement.value = "";
+	setFilter("");
+}
+
+function setFilter(text) {
+	filterText = text;
+	loadTable();
+}
+
+//
+function onTreeClicked(event){
+	var tree = document.getElementById("tree");
+	var tbo = tree.treeBoxObject;
+
+	// get the row, col and child element at the point
+	var row = { }, col = { }, child = { };
+	tbo.getCellAt(event.clientX, event.clientY, row, col, child);
+	var cellText = tree.view.getCellText(row.value, tbo.columns[0]);
+	if(event.detail==2){
+		target=target[cellText]
+		
+		data=getProps(target)
+		inputFilter({target:document.getElementById("filter")})
+	}else
+	targetPropName=cellText;
+	targetProp=target[cellText];
+	answer.value=targetProp;
+}
+
+/**
+ <tree id="my-tree" onclick="onTreeClicked(event)">
+ 
+ var start = {}, end = {}, numRanges = tree.view.selection.getRangeCount(), selectedIndices = [];
+
+  for (var t = 0; t < numRanges; t++){
+    tree.view.selection.getRangeAt(t, start, end);
+    for (var v = start.value; v <= end.value; v++)
+      selectedIndices.push(v);
+  }
+
+  var view = document.getElementById("my-tree").view;
+var sel = view.selection.currentIndex; //returns -1 if the tree is not focused
+var treeItem = view.getItemAtIndex(sel);
+
+
+function onTreeSelected(){
+   var tree = document.getElementById("my-tree");
+   var cellIndex = 0;
+   var cellText = tree.view.getCellText(tree.currentIndex, tree.columns.getColumnAt(cellIndex));
+   alert(cellText);
+ }
+
+ 
+  var treeView = tree.treeBoxObject.view;
+ for (var i = 0; i < treeView.rowCount; i++) {
+   if (treeView.isContainer(i) && !treeView.isContainerOpen(i))
+     treeView.toggleOpenState(i);
+ }
+
+// |c| is the XPCOM component instance
+for each (i in Components.interfaces) { if (c instanceof i) { alert(i); } }
+
+*/
+}]]></script>
+
+
+
+
+<toolbar>
+	<button onclick="document.location=document.location"  label="reload"/>
+	<button onclick="answer.value=supportedInterfaces(targetProp)" label="si"/>
+	<button onclick="answer.value=setget()" label="setget"/>
+	<button onclick="qi()" label="qi"/>
+	<button onclick="wr()" label="wr"/>
+	
+
+</toolbar>
+<hbox flex='1'>
+<vbox flex='1'>
+	<hbox align="center" id="search-box">
+		<label id="number" value="Filter"/>
+
+		<label accesskey="F" control="filter">Filter</label>
+		<textbox id="filter" oninput="inputFilter(event)" flex="1"/>
+		<button id="clearFilter" oncommand="clearFilter()" label="Clear" accesskey="C" disabled="true"/>		
+	</hbox>
+
+	<tree id="tree" flex="1" persist="sortDirection sortResource" sortDirection="ascending" sortResource="description" 
+	onselect="" 
+	seltype="" 
+	treelines="true" 
+	editable="false"
+	disableKeyNavigation="false"
+	onclick='onTreeClicked(event)'	
+>
+		<treecols>
+
+			<splitter class="tree-splitter"/>
+			<treecol id="object" label="object" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" primary="true"/>
+			<splitter class="tree-splitter"/>
+			<treecol id="content" label="content" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" sortDirection="ascending"/>
+		
+		</treecols>
+		<treechildren id="tree-children"/>
+	</tree>
+</vbox>
+<splitter></splitter>
+	<textbox id ='answer' multiline='true' flex="1"/>
+</hbox>
+
+
+<script type='text/javascript'><![CDATA[{
+///////////////////////////////////////////////////////////////////////////
+//// InspectorTreeView
+Cc =Components.classes
+/*
+ * TreeView object to manage the view of the DOM tree. Wraps and provides an
+ * interface to an inIDOMView object
+ */
+function InspectorTreeView()
+{
+  this.tree = document.getElementById("inspector-tree");
+  this.treeBody = document.getElementById("inspector-tree-body");
+  this.view = Cc["@mozilla.org/inspector/dom-view;1"]
+              .createInstance(Ci.inIDOMView);
+  this.view.showSubDocuments = true;
+  this.view.whatToShow = NodeFilter.SHOW_ALL;
+  this.tree.view = this.view;
+}
+
+InspectorTreeView.prototype = {
+  get editable() { return false; },
+  get selection() { return this.view.selection; },
+
+  /**
+   * Initialize the view from the given window object.
+   *
+   * @param aWindow
+   *        a top-level window object
+   */
+  initialize: function ITV_init(aWindow){
+    this.contentWindow = aWindow;
+    this.view.rootNode = aWindow.document;
+    this.view.rebuild();
+  },
+
+  /**
+   * Destroy the view.
+   */
+  destroy: function ITV_destroy()
+  {
+    this.tree.treeBoxObject.view = null;
+  },
+
+  /**
+   * Get the cell text at a given row and column.
+   *
+   * @param aRow
+   *        The row index of the desired cell.
+   * @param aCol
+   *        The column index of the desired cell.
+   * @returns string
+   */
+  getCellText: function ITV_getCellText(aRow, aCol){
+    let rowIndex = this.selectionIndex;
+    let na=this.view.getNodeFromRowIndex(rowIndex);
+	na=say1(na)
+	na+=this.view.getCellText(aRow, aCol);
+	return na
+  },
+
+  /**
+   * Get the index of the selected row.
+   *
+   * @returns number
+   */
+  get selectionIndex()
+  {
+    return this.selection.currentIndex;
+  },
+
+  /**
+   * Get the corresponding node for the currently-selected row in the tree.
+   *
+   * @returns DOMNode
+   */
+  get selectedNode()
+  {
+    let rowIndex = this.selectionIndex;
+    return this.view.getNodeFromRowIndex(rowIndex);
+  },
+
+  /**
+   * Set the selected row in the table to the specified index.
+   *
+   * @param anIndex
+   *        The index to set the selection to.
+   */
+  set selectedRow(anIndex)
+  {
+    this.view.selection.select(anIndex);
+    this.tree.treeBoxObject.ensureRowIsVisible(anIndex);
+  },
+
+  /**
+   * Set the selected node to the specified document node.
+   *
+   * @param aNode
+   *        The document node to select in the tree.
+   */
+  set selectedNode(aNode)
+  {
+    let rowIndex = this.view.getRowIndexFromNode(aNode);
+    if (rowIndex > -1) {
+      this.selectedRow = rowIndex;
+    } else {
+      this.selectElementInTree(aNode);
+    }
+  },
+
+  /**
+   * Select the given node in the tree, searching for and expanding rows
+   * as-needed.
+   *
+   * @param aNode
+   *        The document node to select in the three.
+   * @returns boolean
+   *          Whether a node was selected or not if not found.
+   */
+  selectElementInTree: function ITV_selectElementInTree(aNode)
+  {
+    if (!aNode) {
+      this.view.selection.select(null);
+      return false;      
+    }
+
+    // Keep searching until a pre-created ancestor is found, then 
+    // open each ancestor until the found element is created.
+    let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].
+                    getService(Ci.inIDOMUtils);
+    let line = [];
+    let parent = aNode;
+    let index = null;
+
+    while (parent) {
+      index = this.view.getRowIndexFromNode(parent);
+      line.push(parent);
+      if (index < 0) {
+        // Row for this node hasn't been created yet.
+        parent = domUtils.getParentForNode(parent,
+          this.view.showAnonymousContent);
+      } else {
+        break;
+      }
+    }
+
+    // We have all the ancestors, now open them one-by-one from the top
+    // to bottom.
+    let lastIndex;
+    let view = this.tree.treeBoxObject.view;
+
+    for (let i = line.length - 1; i >= 0; --i) {
+      index = this.view.getRowIndexFromNode(line[i]);
+      if (index < 0) {
+        // Can't find the row, so stop trying to descend.
+        break;
+      }
+      if (i > 0 && !view.isContainerOpen(index)) {
+        view.toggleOpenState(index);
+      }
+      lastIndex = index;
+    }
+
+    if (lastIndex >= 0) {
+      this.selectedRow = lastIndex;
+      return true;
+    }
+    
+    return false;
+  },
+};
+
+
+
+function init2(){
+	tree2=document.getElementById('inspector-tree')
+	treeView1=new InspectorTreeView()
+	treeView1.initialize(wind)
+
+	//treeView1
+	treeView1.view.whatToShow =
+	NodeFilter.FILTER_ACCEPT
+	NodeFilter.SHOW_ELEMENT|
+	/*NodeFilter.SHOW_ATTRIBUTE|*/
+	NodeFilter.SHOW_TEXT|
+	NodeFilter.SHOW_CDATA_SECTION|
+	NodeFilter.SHOW_ENTITY_REFERENCE|
+	NodeFilter.SHOW_ENTITY|
+	NodeFilter.SHOW_PROCESSING_INSTRUCTION|
+	NodeFilter.SHOW_COMMENT|
+	NodeFilter.SHOW_DOCUMENT|
+	NodeFilter.SHOW_DOCUMENT_TYPE|
+	NodeFilter.SHOW_DOCUMENT_FRAGMENT|
+	NodeFilter.SHOW_NOTATION
+}
+
+
+
+
+var winService = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+fWins=winService.getEnumerator('navigator:browser');
+while(fWins.hasMoreElements()) {			
+	wind=fWins.getNext()			
+} 
+
+}]]></script>
+
+<splitter collapse="after" state="collapsed"><grippy/></splitter>
+
+	<tree id="inspector-tree" class="plain"
+            seltype="single"
+            treelines="true"
+            flex="1">
+        <treecols>
+          <treecol id="colNodeName" label="nodeName" primary="true"
+                   persist="width,hidden,ordinal" flex="1"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="col@id" label="id" persist="width,hidden,ordinal"
+                   flex="1"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="col@class" label="class" persist="width,hidden,ordinal"
+                   flex="1"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="colNodeValue" label="nodeValue"
+                   persist="width,hidden,ordinal" flex="1"/>
+        </treecols>
+        <treechildren id="inspector-tree-body"/>
+     </tree>
+
+
+
+
+</window>
+
+
+<!-- 
+function asyncLoadDom(uri, callback) {
+  let doc = Cc['@mozilla.org/appshell/window-mediator;1']
+              .getService(Ci.nsIWindowMediator)
+              .getMostRecentWindow("mail:3pane").document;
+  let frame = doc.createElement("iframe");
+  frame.setAttribute("type", "content");
+  frame.setAttribute("collapsed", "true");
+  doc.documentElement.appendChild(frame);
+  let ds = frame.webNavigation;
+  ds.allowPlugins = ds.allowJavascript = ds.allowImages = false;
+  ds.allowSubframes = false;
+  ds.allowMetaRedirects = true;
+  frame.addEventListener("load", function (event) {
+    if (event.originalTarget.location.href == "about:blank") return;
+    callback(frame.contentDocument);
+    doc.documentElement.removeChild(frame);
+  }, true);
+  frame.contentDocument.location.href = uri;
+} -->

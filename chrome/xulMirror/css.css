@@ -1,0 +1,20 @@
+.menulist-editable-box{
+	padding-top: 0px;
+	padding-bottom: 0px;
+	-moz-padding-start: 0px;
+	-moz-padding-end: 0px;
+}
+menulist{
+	margin:0px;
+	-moz-appearance: textfield;
+
+}
+
+/*******************/
+treechildren::-moz-tree-row(hover) { background-color: #FFFFAA!important ;color:red}
+
+treechildren::-moz-tree-row(selected) { background-color: #97C6E7; }
+treechildren::-moz-tree-row(odd) { background-color: #FAFAFA; }
+treechildren::-moz-tree-row(odd, selected) { background-color: #97C6E7; }
+treechildren::-moz-tree-cell-text(selected) { color: #000000; }
+treechildren::-moz-tree-cell-text(odd, selected) { color: #000000; }

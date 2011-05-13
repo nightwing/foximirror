@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<meta http-equiv="content-type" content="application/xul; charset=UTF-8">
+<title>js notebook</title>
+<link rel="stylesheet" type="text/css" media="screen" href="1.css" />
+<style base="/content/" type="text/css" href='1.css'></style>
+
+<script>
+window.onload=function(){
+	proto=document.getElementById("x")
+	proto.removeAttribute("id")
+	proto=proto.cloneNode(true)
+	mainEditBox=document.getElementById("main-edit-box")
+	
+	document.querySelector('.cell-area').addEventListener('overflow',function(e){this.parentNode.style.height=this.scrollHeight+10+"px"},true)
+	document.querySelector('.cell-area').addEventListener('underflow',function(e){this.parentNode.style.height=this.scrollHeight+10+"px"},true)
+
+}
+createNewCell=function(target,text){
+	newTarget=target.cloneNode(true);
+	target.parentNode.insertBefore(newTarget,target);
+	newCell=proto.cloneNode(true);
+	newCell.contentCell=newCell.children[1].firstChild;
+	newCell.contentCell.textContent=text;
+	target.parentNode.insertBefore(newCell,target)
+	newCell.contentCell.focus()
+}
+toggleCell=function(triangle){
+	triangle.parentNode
+}
+ /*var par = event.originalTarget;
+          if (par.nodeName == 'div' && par.className == 'expander') {
+            if (par.parentNode.className == 'expander-closed') {
+              par.parentNode.className = 'expander-open';
+              event.originalTarget.firstChild.data = '\u2212';
+            }
+            else {
+              par.parentNode.className = 'expander-closed';
+              event.originalTarget.firstChild.data = '+';
+            }
+          }*/
+</script>
+
+
+<style base="" type="text/css">
+</style>
+
+</head>
+
+<body spellcheck="false" >
+<vbox style='height:100%'>
+	<button class="im im1" ondblclick="createNewCell(this,':) hello')"
+		onkeydown="createNewCell(this,event.which)"  
+	></button>
+	
+<!-- 	<hbox id='x' class="cell" ><k> </k><vbox><div class="cell-content" contenteditable="true" spellcheck="false">  <br _moz_dirty=''></div></vbox><button class="im bracket"/></hbox>
+ -->	
+	<hbox id='x' class="cell" ><k></k><vbox><textarea id='main-edit-box' spellcheck="false"></textarea>
+		</vbox>
+		<button class="im bracket"/>
+	</hbox>
+	<button class="im im1" ondblclick="createNewCell(this,':) hello')"
+		onkeydown="createNewCell(this,event.which)"  
+	></button>
+</vbox>
+
+</body>
+
+
+
+
+</html>

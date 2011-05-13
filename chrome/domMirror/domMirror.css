@@ -1,0 +1,203 @@
+/* #right-deck,#left-deck{
+	width:100%;
+	min-width:100%;
+	max-width:100%;
+} */
+
+menupopup{
+	-moz-appearance:none !important;
+} 
+/*.split-menuitem-menu{
+	-moz-box-flex:1
+}*/
+
+tabs,tab{
+	-moz-user-focus:none
+}
+#actionsp{
+	border-bottom:2px solid ;
+	-moz-border-bottom-colors: threeddarkshadow rgb(223, 234, 248);
+}
+/* #actionsp>*{
+	-moz-appearance:tab !important;
+} */
+
+#windowViewerButton:not([checked]){
+	-moz-appearance:tab !important;
+}
+#windowViewerButton{
+	max-width:300px !important;
+}
+
+tree#window-tree.plain{
+	-moz-appearance:none;
+}
+
+/*::bindings::*/
+tree{-moz-binding:url("chrome://shadia/content/bindings/tree.xml#tree")}
+treechildren{-moz-binding:url("chrome://shadia/content/bindings/tree.xml#treebody")}
+
+
+/*treechildren::-moz-tree-row(hover) { background-color: #FFFFAA!important ;color:red}
+
+
+treechildren::-moz-tree-row(selected) { background-color: #97C6E7; }
+treechildren::-moz-tree-row(odd) { background-color: #FAFAFA; }
+treechildren::-moz-tree-row(odd, selected) { background-color: #97C6E7; }
+treechildren::-moz-tree-cell-text(selected) { color: #000000; }
+treechildren::-moz-tree-cell-text(odd, selected) { color: #000000; }*/
+
+treechildren::-moz-tree-row(odd){
+	background-color: #FAFAFA;
+}
+
+treechildren::-moz-tree-row(lit){ 
+	background-color: #FFFFAA;	
+}
+treechildren::-moz-tree-row(head){ 
+	background-color: #AAFFAA;
+	border: 1px solid green;
+	 -moz-border-radius: 8px 2px;
+}
+treechildren::-moz-tree-row(selected){ 
+	background-color: #E0EBF8; 
+	border: 1px solid /*  #8FB1DA*/ transparent;
+}
+treechildren::-moz-tree-row(selected focus){ 
+	 -moz-border-radius: 15px 15px  
+}
+treechildren::-moz-tree-cell-text(selected){
+	color: #000;
+}
+treechildren::-moz-tree-row(hover){ 
+	/*background-color: #97C6E7!important ;*/
+	border: 1px solid rgb(213, 80, 255);
+	 -moz-border-radius: 2px 8px;
+}
+
+.treeVertRow{pointer-events:none;}
+.treeVertRow{ 
+	/*background-color: #97C6E7!important ;*/
+	border: 1px solid rgb(213, 80, 255);
+	-moz-border-radius: 8px 8px;
+	margin-top:10px;
+	pointer-events:none;
+}
+
+treechildren::-moz-tree-checkbox(checked){
+    /* css for checked cells */
+    list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+treechildren::-moz-tree-row{
+	font:10px!important;
+}
+
+/*treechildren::-moz-tree-cell-text(makeItBlue) {
+cursor: pointer;
+color:red
+}
+
+treechildren::-moz-tree-separator {
+margin-top: 1px;
+border-top: 1px solid ThreeDShadow;
+border-right: 1px solid ThreeDHighlight;
+border-bottom: 1px solid ThreeDHighlight;
+border-left: 1px solid ThreeDShadow;
+height: 2px;
+}
+/**{
+  -moz-user-select: text!important;
+}*/
+tree{
+  -moz-user-input:auto
+  -moz-user-focus: normal;
+  -moz-user-modify:read-write
+}
+
+treechildren::-moz-tree-cell-text(blue){
+  color: darkblue!important;
+}
+
+/*tree{-moz-user-focus:none}*/
+
+/* example code for userContent.css or any web pages;
+   a red/yellow arrow indicates the target element */  
+
+:target { 
+    -moz-box-shadow:  0.2em 0.2em 0.3em #888;
+ -webkit-box-shadow:  0.2em 0.2em 0.3em #888;
+}
+
+:target:before {
+  font:           70% Arial,"Nimbus Sans L",sans-serif !important;
+  content:        "\25ba";  /* > */
+  color:          red;
+  background:     gold;
+  border:         solid thin;
+  padding-left:   1px;
+  display:        inline-block;
+  margin-right:   0.13em;
+  vertical-align: 20%;
+}
+
+
+
+
+/***************************************
+ *
+ **/
+
+/*@import url("chrome://inspector/skin");
+
+/* :::::::: node type color coding :::::::: */
+
+treechildren::-moz-tree-cell-text(ACCESSIBLE_NODE) {
+  font-weight: bold;
+}
+
+treechildren::-moz-tree-cell-text(ELEMENT_NODE) {
+  color: #000000;
+}
+
+treechildren::-moz-tree-cell-text(ATTRIBUTE_NODE) {
+  color: #556b2f;
+}
+
+treechildren::-moz-tree-cell-text(CDATA_SECTION_NODE),
+treechildren::-moz-tree-cell-text(TEXT_NODE) {
+  color: #0000AA;
+}
+
+treechildren::-moz-tree-cell-text(COMMENT_NODE) {
+  color: #228b22;
+}
+
+treechildren::-moz-tree-cell-text(DOCUMENT_NODE) {
+  color: #800080;
+}
+
+treechildren::-moz-tree-cell-text(DOCUMENT_TYPE_NODE) {
+  color: #606000;
+}
+
+treechildren::-moz-tree-cell-text(PROCESSING_INSTRUCTION_NODE) {
+  color: #808080;
+}
+
+treechildren::-moz-tree-cell-text(anonymous) {
+  color: #2595A9;
+}
+/*
+treechildren::-moz-tree-cell-text(selected, focus) {
+  color: #FFFFFF;
+}*/
+
+/* :::::::: drag and drop insertion indicators :::::::: */
+
+treechildren::-moz-tree-column(dnd-insert-before) {
+  border-left: 2px solid #000000;
+}
+
+treechildren::-moz-tree-column(dnd-insert-after) {
+  border-right: 2px solid #000000;
+}

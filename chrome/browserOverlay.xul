@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+
+<overlay id="shadia-overlay" 
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+ <script type="application/x-javascript" src="shadia.js"/>
+
+ <statusbar id="status-bar">
+	<statusbarpanel id="shadiaButton" onclick="shadowInspector.browserPopup(event,null)" 
+		context="_child">
+        <image src="chrome://shadia/content/turnon.gif"/>
+			<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+				<menuitem label="start inspector"/>
+				<menuitem label="help"/>
+				<menuseparator/>
+				<template>
+				    <rule>
+				        <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+				    </rule>
+				</template>	
+			</menupopup>
+	</statusbarpanel>
+	<toolbarbutton class='bookmark-item' oncommand="document.location.reload()" type='menu-button' tooltiptext='reload'>
+		<menupopup><menuitem oncommand="try{
+		var s=Cc['@mozilla.org/browser/sessionstore;1']
+			.getService(Ci.nsISessionStore);
+		for(var i=10;--i;)s.forgetClosedWindow(0)
+		}catch(e){};" label='reload and forget'/>
+		</menupopup>		
+	</toolbarbutton>
+ </statusbar>
+
+ <menupopup id="menu_ToolsPopup">
+		<shadiaglue buttons='jsMirror,cssMirror,inspector,chromeMirror' style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")'/>
+ </menupopup>
+ <menupopup id="appmenu-popup">
+		<shadiaglue insertbefore='appmenu_webDeveloper'
+		buttons='jsMirror,cssMirror,chromeMirror,errorConsole'
+		style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")'/>
+ </menupopup>
+ 
+</overlay>

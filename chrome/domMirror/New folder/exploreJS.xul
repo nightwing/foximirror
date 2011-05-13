@@ -1,0 +1,651 @@
+<?xml version="1.0"?>  
+ <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>  
+<window
+	title="Sorting a custom tree view example"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:h="http://www.w3.org/1999/xhtml"
+	id="xqjs" width="600" height="300"
+	persist="screenX screenY width height sizemode"
+	onload="initAll()">
+<h:head>
+	<h:link rel="icon"        href="turnoff.gif"/>
+	<h:link rel="stylesheet"  href="0.css" type="text/css" />
+</h:head>
+	<!--<script type="application/javascript" src="sort.js"/>-->
+<script>
+function initAll(){
+	init();initActionBar(document.getElementById('actions'))
+}
+</script>
+
+<script type="application/javascript;version=1.8">
+<![CDATA[{
+Ci=Components.interfaces
+
+/*********************************************************************
+ *  utils 
+ *********/ 
+function supportedInterfaces(element){
+	var ans=[]
+	for each(var i in Ci)
+		if(element instanceof i)
+			ans.push(i)	
+	return ans;
+}
+function setget(){
+	return targetPropName+'>\n'+target.__lookupSetter__(targetPropName).toSource(5)+'\n'+target.__lookupGetter__(targetPropName).toSource(5)
+}
+function qAllInterfaces(target){
+	var ins= supportedInterfaces(target)
+	target=target.QueryInterface(ins[0])
+	return target
+}
+
+
+
+/*********************************************************************
+ * eval utils
+ **********/ 
+ 
+ 
+ /*********************************************************************
+ *
+ **********/ 
+target=window
+
+say= function(el){
+	var name=''
+	if(typeof el==='object'){
+		if(el.nodeName)
+			name+=el.nodeName
+		if(el.id)
+			name+=" #"+el.id		
+		if(el.className)
+			name+="."+el.className.toString().replace(" ",".",'g')
+		if(el.nodeValue)
+			name+="="+value
+		if(typeof el.hasAttribute=='function' &&el.hasAttribute('src'))
+			name+="->"+el.getAttribute('src')
+	}
+	return name
+}
+say1= function(x){
+	if(x == null) return String(x);
+	var name,t = typeof x;
+	switch(t){
+		case 'object': break;
+		//case 'string': return x;
+		case 'function': 
+			name=x.toSource()
+			var i=name.indexOf("{")			
+			var t=name.substr(i)=='{[native code]}'?'function[n]': 'function'
+			
+			name=t+name.substring(name.indexOf(" "),i)+'~'+x.length
+			
+			return name
+		case 'xml': x = x.toXMLString();
+		default: return  t+' '+x;
+	}
+	var name = x.toString()//O2S.call(x);//\u25b7'\u25ba'
+	//for dom nodes
+	
+	if(x.nodeName)
+		name+=x.nodeName
+	if(x.id)
+		name+="#"+x.id    
+	if(x.className)
+		name+="."+x.className.toString().replace(" ",".",'g')
+	if(x.value)
+		name+="="+x.value
+	if(x.nodeValue)
+		name+="@"+x.nodeValue
+	var l=x.length
+	if(typeof l==='number')
+		name+='~'+l
+
+
+	return name
+	
+}
+
+
+const O2S = Object.prototype.toString;
+function inspect(x){
+  if(x == null) return String(x);
+  var t = typeof x;
+  switch(t){
+    case 'object': break;
+    case 'string': return x;
+    case 'function': return x.toSource(0);
+    case 'xml': x = x.toXMLString();
+    default: return x +'  '+ t;
+  }
+  var os = O2S.call(x), t = os.slice(8, -1);
+  switch(t){
+    case 'XPCNativeWrapper': case 'XPCCrossOriginWrapper':
+    let wos = O2S.call(unwrap(x));
+    os = t[3] === 'N' ? '[object '+ t +' '+ wos +']' : wos;
+    t += ':'+ wos.slice(8, -1);
+  }
+  var s, nt = x.nodeType;
+  if(nt === 1) s = xmls(x.cloneNode(0)).replace(/ xmlns=".+?"/, '');
+  else if(nt) s = x.nodeValue;
+  if(s == null && (s = String(x)) === os)
+    s = '{'+ keys(unwrap(x)).join(', ') +'}';
+  return s +'  '+ t;
+}
+function unwrap(x){
+   try { return XPCNativeWrapper(x).wrappedJSObject || x }
+   catch([]){ return x }
+ }
+
+
+
+var table = null;
+var data = null;
+var tree;
+var filterText = "";
+var number;
+
+function init(){
+	tree = document.getElementById("tree");
+	number = document.getElementById("number");
+	answer=document.getElementById("answer");
+	loadTable();
+//tree.startEditing(1, 3)
+}
+//
+function getProps(targetObj){
+	var data=[]
+	for(var i in targetObj){
+		var obj={object: i}
+		try{
+			obj.content=say1(targetObj[i])
+		}catch(e){obj.content=say(e.toString())}
+		data.push(obj);
+	}
+	return data;
+}
+/*******************/
+function getProps(targetObj){
+	targetObj=targetObj.wrappedJSObject||targetObj
+	var data=[]
+	var protoList=[targetObj]
+	var p=targetObj
+	while(p=p.__proto__)
+		protoList.push(p)
+	for(var i in targetObj){
+		for(var depth in protoList){
+			if(protoList[depth].hasOwnProperty(i))
+				break
+		}
+		try{
+			var description=say1(targetObj[i])
+		}catch(e){description=say(e.toString())}
+		
+		data.push({name: i, depth: depth, description: description})
+	}	
+	return data;
+}
+
+
+if(!Object.getOwnPropertyNames)
+	var getProps=function(targetObj){
+		targetObj=targetObj.wrappedJSObject||targetObj
+		var data=[]
+		var protoList=[targetObj]
+		var p=targetObj
+		while(p=p.__proto__)
+			protoList.push(p)
+		for(var i in targetObj){
+			for(var depth in protoList){
+				if(protoList[depth].hasOwnProperty(i))
+					break
+			}
+			try{
+				var description=say1(targetObj[i])
+			}catch(e){description=say(e.toString())}
+			
+			data.push({name: i, depth: depth, description: description})
+		}
+		
+		return data;
+	}
+else
+	var getProps=function(targetObj){		
+		var x= window,data=[],protoList=[],depth=0
+		while(x){
+			props=Object.getOwnPropertyNames(x)
+			for each(var i in props){
+				try{
+					var description=say1(targetObj[i])
+				}catch(e){description=say(e.toString())}
+				data.push({name: i, depth: depth, description: description})
+			}
+			protoList.push(x);x=x.__proto__;depth++
+		}
+		return data
+	}
+
+
+//this function is called every time the tree is sorted, filtered, or reloaded
+function loadTable(){
+	//remember scroll position.
+	var topVisibleRow = null;
+	if(table){
+		topVisibleRow = getTopVisibleRow();
+	}
+	if(data == null){		
+		data = getProps(target);		
+	}
+	if(filterText == ""){	
+		table = data;
+	} else {
+		//filter out the ones we want to display
+		table = [];
+		data.forEach(function(element){
+			//we'll match on every property
+			var val=""
+			for (var i in element){
+				val+=prepareForComparison(element[i])
+			}
+			
+			var lastI=val.indexOf(filterText)
+			if( lastI != -1){
+				table.push(element);
+			}else{					
+				for (var j=0;j<filterText.length;j++){
+					lastI=val.indexOf(filterText[j],lastI+1)
+					if(lastI===-1)
+						break;
+				}			
+				if(lastI != -1){
+					table.push(element);
+				}
+			}
+		});
+	}
+	
+	sort();
+	//restore scroll position
+	if(topVisibleRow){
+		setTopVisibleRow(topVisibleRow);
+	}	
+	number.value=table.length
+}
+
+
+	filter=function(){
+		var table = [];
+		var filterText=this.text.toLowerCase()
+		var filterTextCase=this.text
+		if(!filterText){
+			var arr=[]
+			this.propsArray.forEach(function(val){arr.push(val[1])})
+			arr.sort()
+			this.sortedArray=arr
+			return;
+		}
+		this.propsArray.forEach(function(val){
+			var lowVal=val[0]
+			var priority=0,lastI=0,ind1=0;
+			//exact match
+			if(val[1].indexOf(filterTextCase)===0){
+				table.push([-2,val[0],val[1]]);
+				return;
+			}
+			//vague matches
+			for(var j=0;j<filterText.length;j++){
+				lastI = lowVal.indexOf(filterText[j],ind1);
+				priority += lastI-ind1
+				ind1 = lastI+1;
+				if(lastI===-1)
+					break;
+			}
+			if(lastI != -1){
+				table.push([priority,val[0],val[1]]);
+			}
+		})
+		table.sort(function (a, b){
+			for(i in a){
+			  if(a[i]<b[i]) return -1;
+			  if(a[i]>b[i]) return 1;
+			}
+			return 0;
+		})
+		var arr=[]
+		table.forEach(function(val){arr.push(val[2])})
+		this.sortedArray=arr
+	}
+
+
+
+//generic custom tree view stuff
+function treeView(table){
+	this.rowCount = table.length;
+	this.getCellText = function(row, col){return table[row][col.id]}
+	this.getCellValue = function(row, col){return table[row][col.id]}
+	this.setTree = function(treebox){this.treebox = treebox}
+	this.isEditable = function(row, col){return true}
+	
+	this.isContainer = function(row){return false}
+	this.isContainerOpen = function(row){return false}
+	this.isContainerEmpty = function(row){return true }
+	this.getParentIndex = function(row){ return 0}
+	this.getLevel = function(row){return 0}
+	this.hasNextSibling = function(row){return false}
+
+	this.isSeparator = function(row){return false}
+	this.isSorted = function(){ return false}
+	this.getImageSrc = function(row,col){}// return "chrome://global/skin/checkbox/cbox-check.gif"; };
+	this.getRowProperties = function(row,props){
+		/* if((row %4) == 0){
+			var aserv=Components.classes["@mozilla.org/atom-service;1"].
+					  getService(Components.interfaces.nsIAtomService);
+			props.AppendElement(aserv.getAtom("makeItBlue"));
+		} */
+	};
+	this.getCellProperties = function(row,col,props){
+		/* if((row %4) == 0){
+			var aserv=Components.classes["@mozilla.org/atom-service;1"].
+					  getService(Components.interfaces.nsIAtomService);
+			props.AppendElement(aserv.getAtom("makeItBlue"));
+		}	 */
+	};
+	this.getColumnProperties = function(colid,col,props){}
+	this.cycleHeader = function(col, elem){}
+}
+
+function sort(column){
+	var columnName;
+	var order = tree.getAttribute("sortDirection") == "ascending" ? 1 : -1;
+	//if the column is passed and it's already sorted by that column, reverse sort
+	if(column){
+		columnName = column.id;
+		if(tree.getAttribute("sortResource") == columnName){
+			order *= -1;
+		}
+	} else {
+		columnName = tree.getAttribute("sortResource");
+	}
+
+	function columnSort(a, b){
+		if(prepareForComparison(a[columnName]) > prepareForComparison(b[columnName])) return 1 * order;
+		if(prepareForComparison(a[columnName]) < prepareForComparison(b[columnName])) return -1 * order;
+		//tie breaker: name ascending is the second level sort
+		if(columnName != "object"){
+			if(prepareForComparison(a["object"]) > prepareForComparison(b["object"])) return 1;
+			if(prepareForComparison(a["object"]) < prepareForComparison(b["object"])) return -1;
+		}
+		return 0;
+	}
+	table.sort(columnSort);
+	//setting these will make the sort option persist
+	tree.setAttribute("sortDirection", order == 1 ? "ascending" : "descending");
+	tree.setAttribute("sortResource", columnName);
+	tree.view = new treeView(table);
+	//set the appropriate attributes to show to indicator
+	var cols = tree.getElementsByTagName("treecol");
+	for (var i = 0; i < cols.length; i++){
+		cols[i].removeAttribute("sortDirection");
+	}
+	//document.getElementById(columnName).setAttribute("sortDirection", order == 1 ? "ascending" : "descending");
+}
+
+//prepares an object for easy comparison against another. for strings, lowercases them
+function prepareForComparison(o){
+	if(typeof o == "string"){
+		return o.toLowerCase();
+	}
+	return o;
+}
+
+function getTopVisibleRow(){
+	return tree.treeBoxObject.getFirstVisibleRow();
+}
+
+function setTopVisibleRow(topVisibleRow){	
+	return tree.treeBoxObject.scrollToRow(Math.min(topVisibleRow, tree.treeBoxObject.getLastVisibleRow()));
+}
+
+function inputFilter(event){
+	//do this now rather than doing it at every comparison
+	var value = prepareForComparison(event.target.value);
+	setFilter(value);
+	document.getElementById("clearFilter").disabled = value.length == 0;
+}
+
+function clearFilter(){
+	document.getElementById("clearFilter").disabled = true;
+	var filterElement = document.getElementById("filter");
+	filterElement.focus();
+	filterElement.value = "";
+	setFilter("");
+}
+
+function setFilter(text){
+	filterText = text;
+	loadTable();
+}
+
+//
+function onTreeClicked(event){
+	var tree = document.getElementById("tree");
+	var tbo = tree.treeBoxObject;
+
+	// get the row, col and child element at the point
+	var row = { }, col = { }, child = { };
+	tbo.getCellAt(event.clientX, event.clientY, row, col, child);
+	try{
+		var cellText = tree.view.getCellText(row.value, tbo.columns[0]);
+	}catch(e){return}
+	if(event.detail==2){
+		target=target[cellText]
+		
+		data=getProps(target)
+		inputFilter({target:document.getElementById("filter")})
+	}else
+	targetPropName=cellText;
+	targetProp=target[cellText];
+	answer.value=targetProp;
+}
+inspectElInJS=function(el){
+	target=el		
+	data=getProps(target)
+	inputFilter({target:document.getElementById("filter")})
+}
+
+/**
+ <tree id="my-tree" onclick="onTreeClicked(event)">
+ 
+ var start = {}, end = {}, numRanges = tree.view.selection.getRangeCount(), selectedIndices = [];
+
+  for (var t = 0; t < numRanges; t++){
+    tree.view.selection.getRangeAt(t, start, end);
+    for (var v = start.value; v <= end.value; v++)
+      selectedIndices.push(v);
+  }
+
+  var view = document.getElementById("my-tree").view;
+var sel = view.selection.currentIndex; //returns -1 if the tree is not focused
+var treeItem = view.getItemAtIndex(sel);
+
+
+function onTreeSelected(){
+   var tree = document.getElementById("my-tree");
+   var cellIndex = 0;
+   var cellText = tree.view.getCellText(tree.currentIndex, tree.columns.getColumnAt(cellIndex));
+   alert(cellText);
+ }
+
+ 
+  var treeView = tree.treeBoxObject.view;
+ for (var i = 0; i < treeView.rowCount; i++){
+   if(treeView.isContainer(i) && !treeView.isContainerOpen(i))
+     treeView.toggleOpenState(i);
+ }
+
+// |c| is the XPCOM component instance
+for each (i in Components.interfaces){ if(c instanceof i){ alert(i); } }
+
+*/
+}]]></script>
+
+
+
+<script type="application/javascript;version=1.8">
+<![CDATA[{
+actions={
+reload:function(){document.location=document.location},
+reopen:function(){window.openDialog(document.location)},
+setget:function(){answer.value=setget()},
+si:function(){answer.value=supportedInterfaces(targetProp).join('\n')},
+
+pl:function(){var protoList=[targetProp]
+	var p=targetProp
+	while(p=p.__proto__)
+		protoList.push(p)
+	answer.value=protoList.join('\n')
+	}
+}
+actionNames={reload:'reload',reopen:':)'}
+initActionBar=function(el){
+	for(let i in actions){
+		var newEl=document.createElement('button')
+		newEl.setAttribute('onclick', "actions['"+i+"']()");
+		newEl.setAttribute('label', actionNames[i]||i);
+		newEl.setAttribute('tooltiptext', actions[i].toString());
+
+		el.appendChild(newEl)
+	}
+	//el.removeChild(el)
+}
+}]]></script>
+
+
+
+
+<toolbar id='actions'></toolbar>
+<hbox flex='1'>
+<vbox flex='1'>
+	<hbox align="center" id="search-box">
+		<label id="number" value="Filter"/>
+
+		<label accesskey="F" control="filter">Filter</label>
+		<textbox id="filter" oninput="inputFilter(event)" flex="1"/>
+		<button id="clearFilter" oncommand="clearFilter()" label="Clear" accesskey="C" disabled="true"/>		
+	</hbox>
+
+	<tree id="tree" flex="1" persist="sortDirection sortResource" sortDirection="ascending" sortResource="description" 
+		onselect="" 
+		seltype="" 
+		treelines="true" 
+		editable="false"
+		disableKeyNavigation="false">
+		<treecols>
+			
+			<treecol id="name" label="name" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" primary="true"/>
+			<splitter class="tree-splitter"/>
+			<treecol id="description" label="description" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" sortDirection="ascending"/>
+			<splitter class="tree-splitter"/>
+			<treecol id="depth" label="depth" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" sortDirection="ascending"/>
+			<splitter class="tree-splitter"/>
+		</treecols>
+		<treechildren id="tree-children" onclick='onTreeClicked(event)'	/>
+	</tree>
+</vbox>
+<splitter></splitter>
+	<textbox id ='answer' multiline='true' flex="1"/>
+</hbox>
+
+
+<script id='xqjs' type='text/javascript'><![CDATA[{
+
+
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+Cu.import('resource://xqjs/Services.jsm');
+Cu.import('resource://xqjs/Preferences.jsm');
+
+var prefs = new Preferences('extensions.xqjs.');
+
+function qs(s) document.querySelector(s);
+function qsa(s) Array.slice(document.querySelectorAll(s));
+function lmn(name, atrs){
+  var lm = document.createElement(name);
+  for(let key in atrs) lm.setAttribute(key, atrs[key]);
+  return lm;
+}
+function empty(lm){
+  while(lm.hasChildNodes()) lm.removeChild(lm.lastChild);
+  return lm;
+}
+function main() Services.wm.getMostRecentWindow('navigator:browser');
+function hurl() let(b = main().gBrowser) b.addTab.apply(b, arguments);
+
+
+function fillwin(menu){
+	const {nsIXULWindow, nsIDocShell} = Ci;
+	const FS = (Cc['@mozilla.org/browser/favicon-service;1'].getService(Ci.nsIFaviconService));
+	var type = Ci.nsIDocShellTreeItem['typeAll'], len = 0;
+	var winum = Services.wm.getXULWindowEnumerator(null);
+	while(winum.hasMoreElements()) try {
+		let nwin=winum.getNext(); //add(nwin);
+		let {docShell} = nwin.QueryInterface(nsIXULWindow);
+		let dshenum = docShell.getDocShellEnumerator(type, nsIDocShell.ENUMERATE_FORWARDS);
+		let i=0
+		while(dshenum.hasMoreElements()) try {
+			
+			let nextDSh=dshenum.getNext()
+			let win = (nextDSh.QueryInterface(nsIDocShell).contentViewer.DOMDocument.defaultView);
+			
+			if(win.location.href !== 'about:blank'); add(win,i,nextDSh.appType);
+			i++
+		} catch(e){ Cu.reportError(e) }
+	} catch(e){ Cu.reportError(e) }
+
+	function add(win,i,t){
+		var label = fmtitle(win,i),
+			mi = lmn('menuitem', {
+				class: 'menuitem-iconic',
+				image: FS.getFaviconImageForPage(win.document.documentURIObject).spec,
+			});
+		if(win === target.win) mi.setAttribute('disabled', true);
+		
+		mi.setAttribute('label', label);
+		menu.appendChild(mi).win = win;
+	}
+menu.style.fontFamily='monospace'
+	menu.hasChildNodes() ||menu.appendChild(lmn('menuitem', {label: '-', disabled: true}));
+}
+
+function fmtitle(win,i){
+  const LEN = 80;
+  var ttl = (i==0?'': "    :")+win.document.title.trim();
+  var url = win.location.href.replace(/^http:\/+/, '');
+  //if(!ttl) return ellipsize(url, LEN);
+  ttl = ellipsize(ttl, LEN, true);
+  
+  return ttl + ' ->'+ ellipsize(url, LEN );
+}
+function ellipsize(str, num, end){
+  if(num < 1) return '';
+  if(str.length <= num){
+	for(var i=num-str.length;i>0;i-- )
+		str+='-'
+	return str;  
+  }
+  const E = '..';
+  if(end) return str.slice(0, num - 1) + E;
+  var i = num / 2;
+  return str.slice(0, num - i) + E + str.slice(str.length - i + 1);
+}
+
+
+
+
+}]]></script>
+
+
+</window>
+
+

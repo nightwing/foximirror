@@ -1,0 +1,79 @@
+hdd health{
+	//make sqlite writes async
+	>>>("toolkit.storage.synchronous", 0) {type: integer, values: "0"= "don't use fsynch()",} see bug 421482
+	//disable urlclassifier
+	>>>("browser.safebrowsing.malware.enabled", false)
+	>>>("browser.safebrowsing.enabled", false)
+	//sessionstore
+	>>>("browser.sessionstore.interval", 1000000)
+}
+
+ui{
+	>>>("keyword.URL", "http://www.google.com/search?q=")
+	>>>("general.autoScroll", false)
+	>>>("ui.SpellCheckerUnderline", "lime")
+	>>>("layout.selectanchor", true)
+}
+
+addon management{
+	//update
+	>>>("app.update.enabled", false)
+	>>>("extensions.update.enabled", false)
+	>>>("browser.search.update", false)
+	//
+	>>>("plugins.update.url", "")
+	>>>("extensions.update.url", "")
+
+	//
+	>>>("security.dialog_enable_delay", 0)
+	
+	//
+	>>>("extensions.checkCompatibility.3.6", false)
+	>>>("extensions.checkCompatibility.4.0b", false)
+	>>>("extensions.checkCompatibility.4.0", false)
+	>>>("extensions.checkCompatibility.5.0a", false)
+	>>>("extensions.checkCompatibility.6.0a", false)
+}
+
+development{
+	// see https://developer.mozilla.org/en/setting_up_extension_development_environment
+	>>>("security.fileuri.strict_origin_policy", false) //Bug 230606	
+	>>>("dom.allow_XUL_XBL_for_file", true) 
+	
+	>>>("javascript.options.showInConsole", true) 
+	>>>("javascript.options.strict", false)
+	>>>("dom.report_all_js_exceptions", true)
+	
+	>>>("nglayout.debug.disable_xul_cache", true)	
+	>>>("nglayout.debug.disable_xul_fastload", true) //For Gecko 2.0+ Bug 531886
+	>>>("extensions.logging.enabled", true) 
+
+	// disable history for quick location.reload
+	>>>("browser.sessionhistory.max_entries", 1)
+	>>>("browser.sessionstore.interval", 100000000)
+	>>>("browser.sessionstore.max_resumed_crashes", 0)
+	>>>("browser.sessionstore.max_tabs_undo", 0)
+	>>>("browser.sessionstore.max_windows_undo", 0)
+	>>>("browser.sessionstore.resume_from_crash", false)
+	>>>("browser.startup.page", 0)
+}
+
+
+
+don't annoy after install{
+	>>>("browser.warnOnRestart", false)
+	>>>("security.warn_viewing_mixed", false)
+	>>>("browser.shell.checkDefaultBrowser", false)	
+
+
+	>>>("browser.download.manager.alertOnEXEOpen", false)
+	>>>("browser.download.manager.showAlertOnComplete", false)
+	>>>("browser.feeds.showFirstRunUI", false)
+
+}
+
+bartab {
+	>>>("browser.sessionstore.max_concurrent_tabs", 0)
+}
+
+

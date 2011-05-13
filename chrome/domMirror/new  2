@@ -1,0 +1,97 @@
+ NS_CHROME_MANIFESTS_FILE_LIST = "ChromeML";
+ XUL_CACHE_PREF = "nglayout.debug.disable_xul_cache";
+
+ Cc = Components.classes;
+ Ci = Components.interfaces;
+ Cr = Components.results;
+
+let gDirSvc    = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIDirectoryService).QueryInterface(Ci.nsIProperties);
+let gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+let gPrefs     = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+
+
+function convertChromeURI(chromeURI){
+  let uri = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService).newURI(chromeURI, null, null);
+  return gChromeReg.convertChromeURL(uri);
+}
+
+function chromeURIToFile(chromeURI){
+  return convertChromeURI(chromeURI).QueryInterface(Ci.nsIFileURL).file;
+}  
+
+// Register a chrome manifest temporarily and return a function which un-does
+// the registrarion when no longer needed.
+function registerManifestTemporarily(manifestURI){
+  gPrefs.setBoolPref(XUL_CACHE_PREF, true);
+
+  let file = chromeURIToFile(manifestURI);
+  let tempfile = copyToTemporaryFile(file);
+  Components.manager.QueryInterface(Ci.nsIComponentRegistrar).autoRegister(tempfile);
+
+  gChromeReg.refreshSkins();
+
+  return function() {
+    tempfile.fileSize = 0; // truncate the manifest
+    gChromeReg.checkForNewChrome();
+    gChromeReg.refreshSkins();
+    gPrefs.clearUserPref(XUL_CACHE_PREF);
+  }
+}
+
+function registerManifestPermanently(manifestURI){
+  Components.manager.QueryInterface(Ci.nsIComponentRegistrar).autoRegister(chromeURIToFile(manifestURI));
+}
+
+
+
+
+
+
+
+//Components.manager.QueryInterface(Ci.nsIComponentRegistrar).autoRegister(tempfile);
+//gChromeReg.refreshSkins();
+
+
+
+mani=getManifests()[34]
+iosvc.newURI(mani, null, null)
+
+manif=localFile(mani)
+
+
+manif.fileSize=0
+
+
+        var f = fopen(mani, "<");
+        var contents = f.read();
+        f.close();
+contents 
+manif
+//Components.manager.QueryInterface(Ci.nsIComponentRegistrar).autoRegister(copyToTemporaryFile(manif))
+
+
+
+
+var f = fopen(mani, ">");
+        var contents = f.write(contents5);
+        f.close();
+contents
+
+
+    gChromeReg.checkForNewChrome();
+
+
+Components.manager.QueryInterface(Ci.nsIComponentRegistrar).autoRegister(manif.parent)
+
+d=manif.parent.parent
+d.append('quickdrag@mozilla.ktechcomputing.com')
+d.path
+Components.manager.QueryInterface(Ci.nsIComponentRegistrar).autoRegister(d)
+
+
+
+getManifests()
+
+
+
+openDialog('chrome://quickdrag/content/quickdrag.js')

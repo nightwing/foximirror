@@ -1,0 +1,150 @@
+textbox[type='search']{
+	-moz-binding:url("chrome://shadia/content/bindings/debug.xml#search-textbox");
+	min-width: 0px!important;	
+	width: 0px!important;	
+}
+description{min-width:0px!important;}
+
+/*****/
+.bottomDelim{
+   border-bottom: 2px solid;
+   -moz-border-bottom-colors: threeddarkshadow rgb(223, 234, 248);
+}
+/*::bindings::*/
+tree{-moz-binding:url("chrome://shadia/content/bindings/tree.xml#tree")}
+treechildren{-moz-binding:url("chrome://shadia/content/bindings/tree.xml#treebody")}
+/*treerows{-moz-binding: url("chrome://shadia/content/bindings/tree.xml#treerows");}*/
+shadiaglue{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")}
+tree{
+	-moz-appearance:none
+}
+/*treechildren::-moz-tree-row(hover) { background-color: #FFFFAA!important ;color:red}*/
+
+treechildren::-moz-tree-row(odd){
+	background-color: #FAFAFA;
+}
+
+treechildren::-moz-tree-row(lit){ 
+	background-color: #FFFFAA;	
+}
+treechildren::-moz-tree-row(head){ 
+	background-color: #AAFFAA;
+	border: 1px solid green;
+	 -moz-border-radius: 8px 2px;
+}
+treechildren::-moz-tree-row(selected){ 
+	background-color: #E0EBF8; 
+	border: 1px solid /*  #8FB1DA*/ transparent;
+}
+treechildren::-moz-tree-row(selected focus){ 
+	 -moz-border-radius: 15px 15px  
+}
+treechildren::-moz-tree-cell-text(selected){
+	color: #000;
+}
+treechildren::-moz-tree-row(hover){ 
+	/*background-color: #97C6E7!important ;*/
+	border: 1px solid rgb(213, 80, 255);
+	 -moz-border-radius: 2px 8px;
+}
+/*treechildren::-moz-tree-cell{
+	//margin: -3px 0px 3px 0px;
+	vertical-align:middle
+}
+treechildren::-moz-tree-cell-text{
+	//margin: -3px 0px 3px 0px;
+	vertical-align:middle;
+	line-height:10px!important;
+}
+ treechildren::-moz-tree-row{
+	font-size:10px!important;
+}*/
+
+/***/
+.treeVertRow{pointer-events:none;}
+.treeVertRow{ 
+	/*background-color: #97C6E7!important ;*/
+	border: 1px solid rgb(213, 80, 255);
+	-moz-border-radius: 8px 8px;
+	margin-top:10px;
+	pointer-events:none;
+}
+treechildren::-moz-tree-checkbox(checked){
+    /* css for checked cells */
+    list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
+
+/*treechildren::-moz-tree-cell-text(makeItBlue) {
+cursor: pointer;
+color:red
+}
+
+treechildren::-moz-tree-separator {
+margin-top: 1px;
+border-top: 1px solid ThreeDShadow;
+border-right: 1px solid ThreeDHighlight;
+border-bottom: 1px solid ThreeDHighlight;
+border-left: 1px solid ThreeDShadow;
+height: 2px;
+}
+/**{
+  -moz-user-select: text!important;
+}
+tree{
+  -moz-user-input:auto;
+  -moz-user-focus: normal;
+  -moz-user-modify:read-write
+}*/
+
+treechildren::-moz-tree-cell-text(blue){
+  color: darkblue!important;
+}
+
+
+
+
+
+/* :::::::: node type color coding :::::::: */
+
+treechildren::-moz-tree-cell-text(ACCESSIBLE_NODE) {
+	font-weight: bold;
+}
+treechildren::-moz-tree-cell-text(ELEMENT_NODE) {
+	color: #000000;
+}
+treechildren::-moz-tree-cell-text(ATTRIBUTE_NODE) {
+	color: #556b2f;
+}
+treechildren::-moz-tree-cell-text(CDATA_SECTION_NODE),treechildren::-moz-tree-cell-text(TEXT_NODE) {
+	color: #0000AA;
+}
+treechildren::-moz-tree-cell-text(COMMENT_NODE) {
+	color: #228b22;
+}
+treechildren::-moz-tree-cell-text(DOCUMENT_NODE) {
+	color: #800080;
+}
+treechildren::-moz-tree-cell-text(DOCUMENT_TYPE_NODE) {
+	color: #606000;
+}
+treechildren::-moz-tree-cell-text(PROCESSING_INSTRUCTION_NODE) {
+	color: #808080;
+}
+treechildren::-moz-tree-cell-text(anonymous) {
+	color: #2595A9;
+}
+/*
+treechildren::-moz-tree-cell-text(selected, focus) {
+  color: #FFFFFF;
+}*/
+
+/* :::::::: drag and drop insertion indicators :::::::: */
+
+treechildren::-moz-tree-column(dnd-insert-before) {
+  border-left: 2px solid #000000;
+}
+
+treechildren::-moz-tree-column(dnd-insert-after) {
+  border-right: 2px solid #000000;
+}

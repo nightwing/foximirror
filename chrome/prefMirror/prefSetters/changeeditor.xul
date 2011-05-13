@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://mozapps/content/preferences/preferences.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
+
+
+<?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>  
+
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        buttons="accept,cancel"
+        id="firebug-external-editors-change"
+        title="Editor Configuration"
+        onload="onLoad();"
+        ondialogaccept="return onAccept();"
+        persist="screenX screenY">
+
+  <script type="application/x-javascript" src="changeeditor.js"/>
+  <script type="application/x-javascript" src="../prefUtils.js"/>
+
+
+  <vbox flex="1">
+	  <shadiaglue/>
+      <separator class="groove"/>
+
+      <hbox align="center">
+         <label id="fbNameLabel" control="name" value="Name"/>
+         <textbox id="name" flex="1" oninput="onChange()"/>
+      </hbox>
+      <separator class="groove"/>
+      <hbox align="center">
+         <label id="fbExecutableLabel" control="executable" align="baseline"
+            value="Executable"/>
+         <filefield id="executable" flex="1"/>
+         <button id="browse-button" oncommand="onBrowse();" label="browse"/>
+      </hbox>
+      <separator class="thin"/>
+      <hbox align="center">
+          <label id="fbCmdLineLabel" control="cmdline" value="CmdLine"/>
+          <textbox id="cmdline" flex="1" oninput="onChange()"/>
+          <toolbarbutton type='menu' label=''>
+            <panel onpopupshowing='suggestionPopupShowing(this)'
+                onclick='if(event.target.className=="text-link")insertText(event.target.value,true)'
+                position="after_end"/>
+          </toolbarbutton>
+      </hbox>
+      <vbox align="left" onclick='if(event.target.className=="text-link")insertText(event.target.textContent)'>
+          <description> supplied arguments:</description>
+          <description><label class='text-link'>%file </label>path to the local file</description>
+          <description><label class='text-link'>%line </label>line number (if avaliable)</description>
+      </vbox>
+	  <separator class="groove"/>
+  </vbox>
+</dialog>

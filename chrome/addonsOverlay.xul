@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<overlay id="shadia-overlay" 
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+ <script type="application/x-javascript" src="shadia.js"/>
+
+ <hbox id="header">
+	<toolbarbutton label='addons' position='3' onclick="
+	var win=Services.wm.getMostRecentWindow('navigator:browser');
+win.openUILink('https://addons.mozilla.org/en-US/firefox/?browse=featured',event);
+win.focus()	
+	"/>
+	<shadiaglue position='5' buttons='jsMirror,chromeMirror' style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")'/>
+
+ </hbox>
+
+ <menupopup id="menu_ToolsPopup">
+ </menupopup>
+</overlay>

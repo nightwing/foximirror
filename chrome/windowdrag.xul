@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/" type="text/css"?>
+<?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>
+
+
+<window id="yourwindow" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+drawintitlebar='true'
+chromemargin='0,1,1,1'
+chromehidden=''
+
+>
+<script type="text/javascript">
+<![CDATA[
+// put some js code here
+]]>
+</script>
+<hbox id='titlebar' flex='1' style='-moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox")'/>
+<shadiaglue/>
+<label value="Put your XUL here!"/>
+<label value="Put your XUL here!"/>
+<label value="Put your XUL here!"/>
+<label value="Put your XUL here!"/>
+<label value="Put your XUL here!"/>
+<label value="Put your XUL here!"/>
+</window>
+
+
+
+
+a=Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm")
+
+a.WindowDraggingElement.prototype.mouseDownCheck=function(e){dump(e);return false}
+
+
+function insertText(iText, inputField) {
+	var editor=inputField.QueryInterface(Ci.nsIDOMNSEditableElement).editor
+    editor.QueryInterface(Ci.nsIPlaintextEditor).insertText(iText);
+}
+
+window.focus()
+window.getInterface(Ci.nsIDOMWindowUtils).sendMouseEvent(
+'mousedown',
+200,10,
+0,
+1,
+0)
+window.getInterface(Ci.nsIDOMWindowUtils).sendMouseEvent(
+'mousemove',
+220,10,
+0,
+1,
+0)
+window.getInterface(Ci.nsIDOMWindowUtils).sendMouseEvent(
+'mousemove',
+240,20,
+0,
+1,
+0)

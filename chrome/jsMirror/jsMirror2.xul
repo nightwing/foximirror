@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="css.css" type="text/css"?>
+<?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>
+
+
+<window id="jsirror"
+		title="JSMirror"
+		orient="horizontal"
+		width="800"	height="550"
+		persist="screenX screenY width height sizemode"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		xmlns:html="http://www.w3.org/1999/xhtml"
+		onload="EJS_doOnload()"
+		onunload="EJS_doOnUnload()"
+		windowtype='shadia:jsMirror'>
+
+	<script type="application/javascript" src="../utils/prefUtils.js"/>
+	<script type="application/javascript" src="../utils/fileUtils.js"/>
+	<script type="application/x-javascript" src="menuUtils.js"/>
+	<script type="application/x-javascript" src="autocompleter.js"/>
+
+    <script type="application/x-javascript" src="jsMirror2.js"/>
+
+
+
+    <popupset>
+		<panel id="autocomplate" noautofocus="true" noautohide="true">
+			<vbox>
+			<tree id="window-tree" class="plain" seltype="single" treelines="false" flex="1" tabindex='-1'
+					hidecolumnpicker='true' style='-moz-user-focus:none'>
+				<treecols>
+					<treecol id="colNodeName" hideheader="true" primary="true" flex="1" />
+				</treecols>
+				<treechildren id="inspector-tree-body"/>
+			</tree>
+			</vbox>
+		</panel>
+		<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
+		<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
+			<hbox>
+				<toolbarbutton label='qi'  accesskey='q' onclick='jsExplore.qi()'/>
+				<toolbarbutton label='all' accesskey='a' onclick='jsExplore.all()'/>
+				<toolbarbutton label='_p'  accesskey='p' onclick='jsExplore._p()'/>
+				<toolbarbutton label='si'  accesskey='s' onclick='jsExplore.si()'/>
+				<toolbarbutton label='gs'  accesskey='g' onclick='jsExplore.gs()'/>
+				<spacer flex='1'/>
+				<label/>
+			</hbox>
+			<hbox>
+				<tree id="window-tree" class="plain1" seltype="single" treelines="false" flex="1" tabindex='-1'
+						hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
+					<treechildren id="inspector-tree-body"/>
+
+					<treecols>
+						<treecol id="name" hideheader="true" primary="true" flex="2" />
+						<splitter class="tree-splitter"/>
+						<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
+						<splitter class="tree-splitter"/>
+						<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
+					</treecols>
+				</tree>
+				<splitter/>
+				<textbox multiline='true' id='autocomplate-bubble' flex='1' wrap='off' width='200' />
+			</hbox>
+			<resizer object='autocomplatePanel' dir='bottom-right'/>
+		</panel>
+		<menupopup id='main-context' onpopupshowing='MenuUtils.onContextShowing(event)'/>
+    </popupset>
+
+
+   <vbox flex="1">
+		<toolbar id='actionsp'>
+			<toolbarbutton label="//" oncommand="win1.editor.execCommand('togglecomment')" />
+			<toolbarbutton label="/*" oncommand="win1.editor.execCommand('toggleStreamComment')"/>
+			<toolbarbutton label="load" oncommand="Ace.loadFile(win1.editor)"/>
+			<toolbarbutton label="save" oncommand="Ace.saveFile(win1.editor)"/>
+			<spacer flex='1'/>
+			<shadiaglue/>
+		</toolbar>
+
+		<vbox flex="10">
+			<browser id="jsCode" context='main-context'
+				type='content' persist='height' src='chrome://shadia/content/fbace/fbeditor.html'/>
+			<splitter>
+				<hbox align="left" flex="1">
+					<toolbarbutton label="Clear" oncommand="win2.editor.execCommand('clear')" ></toolbarbutton>
+					<toolbarbutton label="Execute" oncommand="EJS_executeJS()" ></toolbarbutton>
+					<toolbarbutton label="Properties" oncommand="EJS_printProperties()"  ></toolbarbutton>
+					<spacer flex='1'/>
+					<toolbarbutton label="timer" oncommand="insertTimer()" ></toolbarbutton>
+				</hbox>
+			</splitter >
+			<browser id="result"  context='main-context' flex='1'
+				type='content' src='chrome://shadia/content/fbace/fbeditor.html'/>
+		</vbox>
+    </vbox>
+
+</window>

@@ -1,0 +1,22 @@
+.dirTree::-moz-tree-image(closed) {
+  list-style-image: url("chrome://chromelist/skin/icons/folders.png");
+  margin-right: 2px;
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.fileTree::-moz-tree-image(isFolder) {
+  list-style-image: url("chrome://chromelist/skin/icons/folders.png");
+  margin-right: 2px;
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.dirTree::-moz-tree-image(open) {
+  list-style-image: url("chrome://chromelist/skin/icons/folders.png");
+  -moz-image-region: rect(0px 32px 16px 16px);
+  margin-right: 2px;
+}
+
+.fileTree::-moz-tree-image
+{
+  margin-right: 2px;
+}

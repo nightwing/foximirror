@@ -1,0 +1,458 @@
+<?xml version="1.0"?>
+
+<bindings id="debugBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <binding id="parseerror">
+    <content hidevscroll="true" hidehscroll="true">
+      <children/>
+      1222
+    </content>
+	<implementation>
+      <constructor>
+        
+      </constructor>
+
+      <field name="_lastSelectedRow">
+        -1
+      </field>
+    </implementation>
+    <handlers>
+      <handler event="click" button="0" clickcount="1">
+      <![CDATA[
+       document.location=document.location
+      ]]>
+      </handler> 
+	 <handler event="click" button="2" clickcount="1">
+      <![CDATA[
+      	openDialog("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", document.location, null, null, lineNumber, null);
+      ]]>
+      </handler> 
+    </handlers>
+  </binding>
+  
+  
+  
+  
+<binding id="shadiaGlue">
+    <content>
+		<xul:arrowscrollbox id='actionbar'/>	
+		<xul:toolbarbutton type='menu' label='tools'>
+			<xul:menupopup class='plain'>
+				<xul:hbox>
+					<xul:vbox flex='1' id='actionpopup' ></xul:vbox>
+					<xul:groupbox flex='1'>
+						<xul:caption label='description      '/>
+						<html:div/>
+					</xul:groupbox>			
+				</xul:hbox>
+			</xul:menupopup>	
+		</xul:toolbarbutton>
+    </content>
+	
+	<resources>
+      <stylesheet src="debug.css"/>
+    </resources>
+	
+	<implementation>
+		<constructor><![CDATA[{
+  //**********************************************************
+ //* actions
+//****/
+actions={//external
+	 reload:function(){document.location=document.location}
+	,reopen:function(){
+		((window.Services&&Services.ww)||Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher))
+		.openWindow(null, window.location.href, "_blank", 
+			"chrome,extrachrome,resizable,modal=no," + /*"centerscreen"+*/'top=' + (screenY +10)+ ',left=' + (screenX+10),
+			null).focus();		
+		return;
+	}
+	//,startShadia:function(){shadowInspector.start(mWindow)}
+	,jsMirror:function(){toOpenWindowByType('shadia:jsMirror', "chrome://shadia/content/jsMirror/jsMirror.xul")}
+	,errorConsole:function(){toOpenWindowByType("global:console", "chrome://global/content/console.xul")}
+	,domi:function(){shadia.domi(window.mNode||window.mWindow||document)}
+	,inspector:function()   {toOpenWindowByType('shadia:inspector', "chrome://shadia/content/domMirror/domMirror.xul")}
+	//,chromeMirroro:function(){toOpenWindowByType('shadia:chromeMirror', "chrome://shadia/content/i.xul")}
+	,chromeMirror:function(){toOpenWindowByType('shadia:chromeMirror', "chrome://shadia/content/chromeMirror/chromeMirror.xul")}
+	,jsMirror:function()   {toOpenWindowByType('shadia:jsMirror', "chrome://shadia/content/jsMirror/jsMirror.xul")}
+	,cssMirror:function()   {toOpenWindowByType('shadia:cssMirror', "chrome://shadia/content/cssMirror/cssMirror.xul")}
+	,xulMirror:function()   {toOpenWindowByType('shadia:xulMirror', "chrome://shadia/content/xulMirror/xulMirror.xul")}
+	,prefMirror:function()  {toOpenWindowByType('shadia:prefMirror', "chrome://shadia/content/prefMirror/prefMirror.xul")}
+	,magnifier:function()   {getLocalFile('chrome://shadia/content/magnifier.ahk').launch()}
+	,restartApp:function()  {
+		if(typeof Application=='object') Application.restart()
+		else
+		var appStartup = Ci.nsIAppStartup;
+		Cc['@mozilla.org/toolkit/app-startup;1'].getService(appStartup).quit(appStartup.eRestart|appStartup.eAttemptQuit);	
+	}
+	,reloadChrome:function()  {gChromeReg.reloadChrome()}
+	,refreshSkins:function()  {gChromeReg.refreshSkins()}
+}
+activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','errorConsole','jsMirror','domi']
+actionNames={reload:'reload',reopen:':)',errorConsole:'errors',restartApp:'restart firefox'}
+    
+function toOpenWindowByType(inType, uri, features) {
+    var windowManager = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
+    var topWindow = windowManager.getMostRecentWindow(inType);
+	if(topWindow&&(topWindow!=window)){
+        topWindow.focus();
+    }else if(features){
+        window.open(uri, "_blank", features);
+    }else{
+        window.open(uri, "_blank", "modal=no,chrome,extrachrome,menubar,resizable=yes,scrollbars,status,toolbar");
+    }
+}
+dump= function(){
+    var aMessage = "aMessage: ";
+    for(var i = 0; i < arguments.length; ++i){
+		var a=arguments[i]
+        aMessage += (a&&!a.toString?'[object call]':a) + " , ";
+    }
+    var consoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
+    consoleService.logStringMessage("" + aMessage);
+}
+
+
+var el1=this.actionbar,el2=this.actionpopup
+for(var i in actions){
+	if(activeactions.indexOf(i)>-1){
+		var newEl=document.createElement('toolbarbutton')
+		newEl.id=i;
+		newEl.setAttribute('label', actionNames[i]||i);
+		el1.appendChild(newEl)
+	}else{
+		var newEl=document.createElement('menuitem')
+		newEl.id=i;
+		newEl.setAttribute('label', actionNames[i]||i);		
+		el2.appendChild(newEl)
+	}
+}
+
+					
+  //**********************************************************
+ //* io
+//****/
+if(typeof Cc=='undefined')Cc=Components.classes
+if(typeof Ci=='undefined')Ci=Components.interfaces
+if(typeof Cu=='undefined')Cu=Components.utils
+
+gDirSvc    = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIDirectoryService).QueryInterface(Ci.nsIProperties);
+gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+ios        = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService)
+
+viewFileURI=function viewFileURI(selectedURI,lineNumber){
+	openDialog("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", selectedURI, null, null, lineNumber, null);
+}
+
+getLocalFile=function getLocalFile(mPath){
+	var uri = ios.newURI(mPath, null, null),file;
+	if(uri.schemeIs('resource')){//about?
+		var ph=ios.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)
+		abspath=ph.getSubstitution(uri.host)
+		uri=ios.newURI(uri.path.substr(1), null, abspath)
+	}
+	while(uri.schemeIs('chrome')) uri=gChromeReg.convertChromeURL(uri)
+	while(uri.schemeIs('jar')) uri=uri.QueryInterface(Ci.nsIJARURI).JARFile
+	if(uri.schemeIs('file'))file=uri.QueryInterface(Ci.nsIFileURL).file
+
+	return file&&file.QueryInterface(Ci.nsILocalFile)
+}
+/**-----------//////**************************/
+makeReq=function makeReq(href){
+//dump('makeReq',href)
+	var req = new XMLHttpRequest;
+	req.overrideMimeType('text/plain')
+	req.open("GET", href, false);
+	try{
+		req.send(null);
+	}catch(e){}
+	return req.responseText;
+
+}
+makeReqAsync=function makeReqAsync(href,callback){
+    req = new XMLHttpRequest();
+    req.open('GET', href, true);
+	req.overrideMimeType('text/plain')
+
+    req.onreadystatechange = function() {
+        if (req.readyState == 0){
+            callback(req.responseText);
+        }
+    };
+    req.send(null);
+}
+	
+   //**********************************************************
+  //* 
+ //****/
+// prefs for debugging.  true should mean enabled.
+var debuggingPrefs = ["nglayout.debug.disable_xul_cache", "javascript.options.showInConsole", "browser.dom.window.dump.enabled"];
+  
+
+function doSetDebuggingPrefs(v){
+    try{
+		var mPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+		for(var i=0; i<debuggingPrefs.length; i++)
+			mPrefs.setBoolPref(debuggingPrefs[i], v);    
+    }catch(e){}
+}
+/*    var mPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    try {
+      for(var i=0; i<debuggingPrefs.length; i++)
+	rv = rv || mPrefs.getBoolPref(debuggingPrefs[i]);
+    }
+    catch(e){}
+  
+    doSetDebuggingPrefs(rv);
+    document.getElementById("extensiondev_toggleprefs").setAttribute("checked", rv);
+*/
+var nppItem
+function getNppPath(){try{
+	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+	var path="C:\\Program Files\\Notepad++\\notepad++.exe"
+	file.initWithPath(path);
+	if(file.exists())
+		return path
+	var path="C:\\Program Files (x86)\\Notepad++\\notepad++.exe"
+	file.initWithPath(path);
+	if(file.exists())
+		return path
+	}catch(e){}
+}
+function initializeNppItem(){
+	var npp=getNppPath()
+	if(npp){
+		nppItem={label:'notepad++', executable: npp, cmdline: '-n%line %file'}
+		return
+	}
+	var gPrefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+	var prefBranch = gPrefBranch = gPrefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2)
+	try{
+		var a=prefBranch.getCharPref('extensions.shadia.editor')
+	}catch(e){}
+	
+	
+	if(a&&( (a=a.split(',')) [1]) ){		
+		nppItem={label:a[0], executable: a[1], cmdline: a[2]}
+	}else{
+		window.openDialog('chrome://shadia/content/prefMirror/prefSetters/changeeditor.xul')
+		return
+	}
+	return nppItem
+}
+
+npp=function(path,line){// create an nsILocalFile for the executable
+	if(!nppItem||!nppItem.executable)
+		initializeNppItem()
+	if(!nppItem||!nppItem.executable)
+		return
+	var args = ["-n"+line, path];
+	
+	var args = [];
+	var targetAdded = false;
+	var cmdline = nppItem.cmdline
+	if (cmdline){
+		cmdline = cmdline.replace(' ', '\x00', 'g')
+		
+		line = parseInt(line);
+		if(typeof line == 'number' && !isNaN(line)){
+			cmdline = cmdline.replace('%line', line, 'g');
+		}else{//don't send argument with bogus line number
+			var i = cmdline.indexOf("%line");
+			var i2 = cmdline.indexOf("\x00", i);
+			if(i2 == -1)
+				i2 = cmdline.length;
+			var i1 = cmdline.lastIndexOf("\x00", i);
+			if(i1 == -1)
+				i1 = 0;
+			cmdline = cmdline.substring(0, i1) + cmdline.substr(i2);
+		}
+		
+		if (cmdline.indexOf("%file")>-1 ){
+			cmdline = cmdline.replace('%file', path, 'g');
+			targetAdded = true;
+		}
+		cmdline.split(/\x00+/).forEach(function(x){ if(x) args.push(x) })		
+	}		
+	if (!targetAdded)
+		args.push(path);
+	
+	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);	
+	file.initWithPath(nppItem.executable);	
+	// create an nsIProcess
+	var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+	process.init(file);	
+	process.run(false, args, args.length);
+}
+
+//inject shadia
+if(!window.shadia)
+Cc["@mozilla.org/moz/jssubscript-loader;1"].createInstance(Ci.mozIJSSubScriptLoader)
+					.loadSubScript('chrome://shadia/content/shadia.js', window);
+
+}]]></constructor>
+		
+<field name="actionbar">
+	document.getAnonymousElementByAttribute(this, "id", "actionbar");
+</field>
+<field name="actionpopup">
+	document.getAnonymousElementByAttribute(this, "id", "actionpopup");
+</field>
+    
+    </implementation>
+	<handlers>
+		<handler event="command">
+		dump(event.originalTarget.id)
+			actions[event.originalTarget.id]()
+		</handler>
+	</handlers>
+</binding>
+
+
+
+
+<binding id="pm" >
+    <content extends="chrome://global/content/bindings/textbox.xml#textbox">      
+	  <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck" align="center">
+        <html:input class="textbox-input" flex="1" anonid="input"/>
+        <ui>78</ui>
+      </xul:hbox>
+    </content>
+</binding>
+
+
+
+ <binding id="search-textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <content>
+      <children/>
+      <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck" align="center">
+        <html:input class="textbox-input" flex="1" anonid="input"
+                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
+        <xul:deck class="textbox-search-icons" anonid="search-icons">		
+          <xul:image class="textbox-search-icon"
+                     onclick="document.getBindingParent(this)._iconClick();"
+                     xbl:inherits="src=image,searchbutton,disabled"/>
+          <xul:image class="textbox-search-clear"
+                     onclick="document.getBindingParent(this)._clearSearch();"
+                     xbl:inherits="disabled"/>
+        </xul:deck>
+		<xul:descripton anonid="match-count" class='textboxMatchCount' />
+      </xul:hbox>
+    </content>
+    <implementation>
+      <field name="_searchIcons">
+        document.getAnonymousElementByAttribute(this, "anonid", "search-icons");
+      </field>
+	  <field name="_matchCounter">
+        document.getAnonymousElementByAttribute(this, "anonid", "match-count");
+      </field>
+      <property name="matchCount"
+                onset="this._matchCounter.textContent=val; return val;"
+                onget="return this._matchCounter.textContent"/>
+      <property name="searchButton"
+                onget="return this.getAttribute('searchbutton') == 'true';">
+        <setter><![CDATA[
+          if (val) {
+            this.setAttribute("searchbutton", "true");
+          } else {
+            this.removeAttribute("searchbutton");
+          }
+          return val;
+        ]]></setter>
+      </property>
+      <property name="value"
+                onget="return this.inputField.value;">
+        <setter><![CDATA[
+          this.inputField.value = val;
+
+          if (val)
+            this._searchIcons.selectedIndex = this.searchButton ? 0 : 1;
+          else
+            this._searchIcons.selectedIndex = 0;
+
+          if (this._timer)
+            clearTimeout(this._timer);
+
+          return val;
+        ]]></setter>
+      </property>
+      <constructor><![CDATA[       
+      ]]></constructor>
+      <method name="_fireCommand">
+        <parameter name="me"/>
+        <body><![CDATA[
+          if (me._timer)
+            clearTimeout(me._timer);
+          me._timer = null;
+          me.doCommand();
+        ]]></body>
+      </method>
+      <method name="_iconClick">
+        <body><![CDATA[
+          if (this.searchButton)
+            this._enterSearch();
+          else
+            this.focus();
+        ]]></body>
+      </method>
+      <method name="_enterSearch">
+        <body><![CDATA[
+          if (this.disabled)
+            return;
+          if (this.searchButton && this.value && !this.readOnly)
+            this._searchIcons.selectedIndex = 1;
+          this._fireCommand(this);
+        ]]></body>
+      </method>
+      <method name="_clearSearch">
+        <body><![CDATA[
+          if (!this.disabled && !this.readOnly && this.value) {
+            this.value = "";
+            this._fireCommand(this);
+            this._searchIcons.selectedIndex = 0;
+            return true;
+          }
+          return false;
+        ]]></body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="input">
+        <![CDATA[
+          if (this.searchButton) {
+            this._searchIcons.selectedIndex = 0;
+            return;
+          }
+          if (this._timer)
+            clearTimeout(this._timer);
+          this._timer = this.timeout && setTimeout(this._fireCommand, this.timeout, this);
+          this._searchIcons.selectedIndex = this.value ? 1 : 0;
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_ESCAPE">
+        <![CDATA[
+          if (this._clearSearch()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_RETURN">
+        <![CDATA[
+          this._enterSearch();
+          event.preventDefault();
+          event.stopPropagation();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+
+
+
+</bindings>
+

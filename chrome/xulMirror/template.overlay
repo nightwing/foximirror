@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!-- <very stupid way to include same styleseets twice> -->
+
+<overlay 
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:html="http://www.w3.org/1999/xhtml">
+
+
+<window id="XULPlayground">
+
+  <hbox id='b' flex='1'>
+    this is b
+  </hbox>
+
+  <hbox id='c' flex='1' insertbefore='a'>
+    this is c
+  </hbox>
+
+  <hbox id='d' flex='1' insertafter='b'>
+    hi from overlay
+  </hbox>
+</window>
+
+<script type="application/javascript;version=1.8"><![CDATA[
+	$=function(x)document.getElementById(x)
+    onLoad=function(){
+		
+		$('a').style.background='CadetBlue'
+		$('b').style.background='Cornsilk'
+		$('c').style.background='gold'
+		$('d').style.background='inactiveborder'
+		
+	}
+  ]]></script>
+
+
+</overlay>

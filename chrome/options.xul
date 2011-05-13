@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>
+
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:html="http://www.w3.org/1999/xhtml"
+	title="shadia help"
+	autosize="true"
+	resizable="yes"
+	ondialogaccept=""
+	ondialogextra1 = ""
+	ondialogextra2 = "openDialog('chrome://shadia/content/options.xul','resizable').focus();"
+	buttonlabelextra2=":)"
+	buttons="accept,extra2"
+	persist="screenX,screenY,sizemode"
+	id="foxiFrameOptDlg"	
+	>
+
+<html:style>
+	p{-moz-user-select:text}
+	#vbox{outline:2px solid #67B6E7;-moz-outline-radius:2px}
+	#window-menu menuitem:hover{outline:2px solid #67B6E7;-moz-outline-radius:2px}
+</html:style>
+
+<vbox id="vbox1">
+  <toolbar id='actionsp'>
+	<shadiaglue/>	
+  </toolbar>
+  <toolbarbutton label='set editor' oncommand="window.openDialog('chrome://shadia/content/prefMirror/prefSetters/changeeditor.xul')"/>
+  <p>
+   keys:
+  </p>
+  <p id="input-wrapper">
+   F1 - toggle inspector
+  </p>
+  <p id="input-wrapper">
+   arrows - navigate the tree
+  </p>
+  <p>
+   numpad 0 - freeze mouse inspection
+  </p>
+  <p>
+   numpad 7  -  inspect with built-in experimental inspector
+  </p>
+  <p>
+   numpad 5  -  inspect with dom inspector
+  </p>
+  <p>
+   numpad 8  -  inspect with firebug
+  </p>
+  <p>
+   numpad 9  -  copy selector
+  </p> 
+<!--   <vbox onclick="shadowInspector.browserPopup(event,null)">
+    <vbox id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+		<template>
+			<rule>
+				<menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+			</rule>
+		</template>	
+    </vbox>
+ </vbox> -->
+</vbox>
+<script type="application/x-javascript" ><![CDATA[
+var Cc = Components.classes
+var Ci = Components.interfaces
+var prefB = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch('')
+
+
+function $(x)document.getElementById(x)
+
+
+
+
+]]></script>
+
+</dialog>

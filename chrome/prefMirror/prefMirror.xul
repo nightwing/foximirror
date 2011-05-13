@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="css.css" type="text/css"?>  
+<?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>  
+
+
+<window
+    id="executeJSWindow"
+    title="prefMirror"
+    orient="horizontal"
+    width="800"
+    height="550"
+    persist="screenX screenY width height sizemode"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    onload="onLoad()"
+    onunload="onUnload()"
+    sizemode="maximized"
+	windowtype='shadia:prefMirror'
+    >
+	
+    <script type="application/x-javascript" src="prefMirror.js"/>
+    <script type="application/x-javascript" src="../utils/prefUtils.js"/>
+	
+	
+	<vbox flex="1">
+		<box id='wrap' orient='horizontal' flex="1" >
+<tabbox id='tabbox' flex="1" selectedIndex="0">
+  <tabs>
+    <tab label="xul"/>
+    <tab label="xbl"/> 
+    <tab label="config"/>
+	<shadiaglue/>
+  </tabs>
+  <tabpanels flex="1">
+    <tabpanel>
+		<textbox id="plainCode" multiline="true" flex="1" wrap='off' 
+					style="overflow:hidden;font-family:monospace;font-size:9.1pt;-moz-tab-size:2" 
+					/>			
+	</tabpanel>
+	<tabpanel>
+		<browser id="content" flex='1' src='prefSlate.html'/>
+	</tabpanel>
+    <tabpanel>
+		<browser id="result" flex='1' src='about:config'/>
+	</tabpanel>
+
+  </tabpanels>
+</tabbox>			
+		</box>
+    </vbox>
+
+</window>
