@@ -91,6 +91,7 @@ actions={//external
 	}
 	,reloadChrome:function()  {gChromeReg.reloadChrome()}
 	,refreshSkins:function()  {gChromeReg.refreshSkins()}
+	,revealCurDoc:function()  {getLocalFile(location.href).reveal()}
 }
 activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','errorConsole','jsMirror','domi']
 actionNames={reload:'reload',reopen:':)',errorConsole:'errors',restartApp:'restart firefox'}
@@ -119,16 +120,17 @@ dump= function(){
 
 var el1=this.actionbar,el2=this.actionpopup
 for(var i in actions){
+	var newEl=document.createElement('menuitem')
+	newEl.id=i;
+	newEl.setAttribute('label', actionNames[i]||i);	
+	el2.appendChild(newEl)
+
 	if(activeactions.indexOf(i)>-1){
+		newEl.style.color='graytext'
 		var newEl=document.createElement('toolbarbutton')
 		newEl.id=i;
 		newEl.setAttribute('label', actionNames[i]||i);
 		el1.appendChild(newEl)
-	}else{
-		var newEl=document.createElement('menuitem')
-		newEl.id=i;
-		newEl.setAttribute('label', actionNames[i]||i);		
-		el2.appendChild(newEl)
 	}
 }
 
@@ -455,4 +457,3 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"].createInstance(Ci.mozIJSSubScriptLoa
 
 
 </bindings>
-

@@ -33,6 +33,7 @@ addon management{
 	>>>("extensions.checkCompatibility.4.0", false)
 	>>>("extensions.checkCompatibility.5.0a", false)
 	>>>("extensions.checkCompatibility.6.0a", false)
+	>>>("extensions.checkCompatibility.nightly", false)
 }
 
 development{

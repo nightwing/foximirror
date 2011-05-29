@@ -52,10 +52,10 @@ function getCssMirrorDir(){
 //t=Date.now()//t-Date.now()
 //register enabled styles
 function registerStyles(){
-	var ios= Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
-	var sss= Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService)
+	var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
+	var sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService)
 
-	var cssMirrorJarPath=getCssMirrorJarPath()
+	var cssMirrorJarPath = getCssMirrorJarPath()
 
 	var gPrefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
 	var prefBranch = gPrefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2)

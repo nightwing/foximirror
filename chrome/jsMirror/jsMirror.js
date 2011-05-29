@@ -233,6 +233,46 @@ jn.getParent=function(a){
 }
 jn.getClass=getClass
 
+jn.bait=(function(a){
+	var desc = {configurable:true,enumerable:true,value:null,writable:true}
+	var toString = function()"[object jane's bait proxy]"
+	var pr = {
+		getOwnPropertyDescriptor: function(name) desc,
+		getPropertyDescriptor: function(name) desc,	   
+		getOwnPropertyNames: function() [],
+		defineProperty: function(name, desc) {
+			
+		},
+		delete: function(name) { return true },
+		fix: function() {
+			if (Object.isFrozen(obj)) {
+			return Object.getOwnProperties(obj); // assumed
+			}
+			// As long as obj is not frozen, the proxy won't allow itself to be fixed
+			return undefined; // will cause a TypeError to be thrown
+		},
+
+		has: function(name) true,
+		hasOwn: function(name) true,
+		get: function(receiver, name) {
+			dump( name); 
+			if(name =='toString') return toString; 
+			if(name =='__proto__') return null;
+			else return receiver;
+		},
+		
+		set: function(receiver, name, val) { dump( name, val); return true; }, // bad behavior when set fails in non-strict mode
+		enumerate:    function() {
+			var result = [];
+			return result;
+		},
+		keys: function() { return []; }
+
+	};
+	return Proxy.create(pr)
+})()
+
+
 jn.exec=function go(s){
   _win=EJS_currentTargetWin
 
@@ -1238,37 +1278,46 @@ else//4.0b2+
 		var d, o, x = targetObj
 		var data = [], protoList = [], depth = 0, allProps = [];
 
-		if(typeof x !== "object" && typeof x !== "function")
-			x = x.constructor;
+        if (typeof x !== "object" && typeof x !== "function")
+            x = x.constructor.prototype;
 
-		if(typeof x === "xml")
-			return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
-		
-		if(typeof x === "object")
-			x = XPCNativeWrapper.unwrap(targetObj)
-		
-		if(targetObj != x){
-			data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
-			targetObj = x
+        if (typeof x === "xml")
+            return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
+
+        if (typeof targetObj === "object") {
+            x = XPCNativeWrapper.unwrap(targetObj)
+
+			if (targetObj != x) {
+				data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
+				targetObj = x
+			}
 		}
 
+		var maxProtoDepth = 20;
 		while(x){
 			var props = Object.getOwnPropertyNames(x);
 			innerloop: for each(var i in props) {
-				//if (allProps.indexOf(i) > -1)
-				//	continue innerloop;
+				if (allProps.indexOf(i) > -1)
+					continue innerloop;
 				try{o=targetObj[i];d=jn.inspect(o);}catch(e){d=e.message;o="error";}
 				
 				data.push({name: i, comName: i.toLowerCase(), description: d, depth:depth, object: o});
 			}
-			protoList.push(x);x = x.__proto__;depth++;allProps = allProps.concat(props);
+			protoList.push(x);
+			// some objects (XML, Proxy) may have infinite list of __proto__
+			if(!maxProtoDepth--)
+				break;
+			x = x.__proto__;depth++;allProps = allProps.concat(props);
 		}
 		return data;
 		
-		if('QueryInterface' in x)
-			data.push({name:'QueryInterface', comName: 'queryinterface',description:'', depth:-1})
-		if('Components' in x)
-			data.push({name:'Components', comName: 'components',description:'', depth:-1})
+		// sometimes these are not found by previous code
+		i = 'QueryInterface'
+		if(i in x && allProps.indexOf(i) == -1)
+			data.push({name:i, comName: i.toLowerCase(),description:'', depth:-1})
+		i = 'Components'
+		if(i in x && allProps.indexOf(i) == -1)
+			data.push({name:i, comName: i.toLowerCase(),description:'', depth:-1})
 	};
 
 /**======================-==-======================*/
@@ -1750,6 +1799,5 @@ getClass(Element.prototype)
 getClass(gURLBar.constructor.prototype)
 
 */
-
 
 

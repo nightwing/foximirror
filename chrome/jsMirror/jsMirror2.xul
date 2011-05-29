@@ -81,7 +81,7 @@
 
 		<vbox flex="10">
 			<browser id="jsCode" context='main-context'
-				type='content' persist='height' src='chrome://shadia/content/fbace/fbeditor.html'/>
+				type='content' persist='height' src='chrome://shadia/content/fbace/simple-editor.html'/>
 			<splitter>
 				<hbox align="left" flex="1">
 					<toolbarbutton label="Clear" oncommand="win2.editor.execCommand('clear')" ></toolbarbutton>
@@ -92,7 +92,7 @@
 				</hbox>
 			</splitter >
 			<browser id="result"  context='main-context' flex='1'
-				type='content' src='chrome://shadia/content/fbace/fbeditor.html'/>
+				type='content' src='chrome://shadia/content/fbace/simple-editor.html'/>
 		</vbox>
     </vbox>
 
