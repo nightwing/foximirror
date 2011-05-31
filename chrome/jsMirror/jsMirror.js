@@ -185,50 +185,58 @@ jn.getParent=function(a){
 
 
 	function handlerMaker(obj) {
-	  return {
-	   getOwnPropertyDescriptor: function(name) {
-		 var desc = Object.getOwnPropertyDescriptor(obj, name);
-		 // a trapping proxy's properties must always be configurable
-		 desc.configurable = true;
-		 return desc;
-	   },
-	   getPropertyDescriptor:  function(name) {
-		 var desc = Object.getPropertyDescriptor(obj, name); // assumed
-		 // a trapping proxy's properties must always be configurable
-		 desc.configurable = true;
-		 return desc;
-	   },
-	   getOwnPropertyNames: function() {
-		 return Object.getOwnPropertyNames(obj);
-	   },
-	   defineProperty: function(name, desc) {
-		 Object.defineProperty(obj, name, desc);
-	   },
-	   delete:       function(name) { return delete obj[name]; },
-	   fix:          function() {
-		 if (Object.isFrozen(obj)) {
-		   return Object.getOwnProperties(obj); // assumed
-		 }
-		 // As long as obj is not frozen, the proxy won't allow itself to be fixed
-		 return undefined; // will cause a TypeError to be thrown
-	   },
+		var objStr = Object.prototype.toString.call(obj)
+		function toS()'[proxy wrapped'+objStr
+		return {
+			getOwnPropertyDescriptor: function(name) {
+				var desc = Object.getOwnPropertyDescriptor(obj, name);
+				// a trapping proxy's properties must always be configurable
+				desc.configurable = true;
+				return desc;
+			},
+			getPropertyDescriptor:  function(name) {
+				var desc = Object.getPropertyDescriptor(obj, name); // assumed
+				// a trapping proxy's properties must always be configurable
+				desc.configurable = true;
+				return desc;
+			},
+			getOwnPropertyNames: function() {
+				if(objStr=='[object Call]')
+					return Object.getOwnPropertyNames(obj);
+				// [object With]
+				var ans = []
+				for(var i in obj)
+					ans.push(i)
+				return ans
+			},
+			defineProperty: function(name, desc) {
+				Object.defineProperty(obj, name, desc);
+			},
+			delete: function(name) { return delete obj[name]; },
+			fix: function() {
+				if (Object.isFrozen(obj)) {
+					return Object.getOwnProperties(obj); // assumed
+				}
+				// As long as obj is not frozen, the proxy won't allow itself to be fixed
+				return undefined; // will cause a TypeError to be thrown
+			},
 
-	   has:          function(name) { return name in obj; },
-	   hasOwn:       function(name) { return ({}).hasOwnProperty.call(obj, name); },
-	   get:          function(receiver, name) { return name=='toString'?function(){return '[object functionCall proxy]'}:obj[name]; },
-	   set:          function(receiver, name, val) { obj[name] = val; return true; }, // bad behavior when set fails in non-strict mode
-	   enumerate:    function() {
-		 var result = [];
-		 for (var name in obj) { result.push(name); };
-		 return result;
-	   },
-	   keys: function() { return Object.keys(obj); }
-
-	  };
+			has: function(name) { return name in obj; },
+			hasOwn: function(name) { return ({}).hasOwnProperty.call(obj, name); },
+			get: function(receiver, name) {				
+				return name=='toString'?toS:obj[name]; },
+			set: function(receiver, name, val) { obj[name] = val; return true; }, // bad behavior when set fails in non-strict mode
+			enumerate:    function() {
+				var result = [];
+				for (var name in obj) { result.push(name); };
+				return result;
+			},
+			keys: function() { return Object.keys(obj); }
+		};
 	}
 
 	var parent=utils.getParent(a)
-	if(parent.toString) return parent
+	if(parent.toString) try{parent.toString();return parent}catch(e){}// in [with] have toString which throws
 	return Proxy.create(handlerMaker(parent))
 }
 jn.getClass=getClass

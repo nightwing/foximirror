@@ -299,12 +299,12 @@ fileHelper = {
                 file.append(name + '.' + session.extension);
             }
 
-            writeFile(file, session.getValue());
+            writeToFile(file, session.getValue());
 			if(!session.filePath)
 				session.setFileInfo(ios.newFileURI(file).spec);
         }
         else if(result == Ci.nsIFilePicker.returnReplace){
-            writeFile(fp.file, session.getValue());
+            writeToFile(fp.file, session.getValue());
 			if(!session.filePath)
 				session.setFileInfo(ios.newFileURI(file).spec);
         }
