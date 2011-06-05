@@ -135,6 +135,7 @@
 				<menupopup class='plain' style='-moz-appearance:listbox'>								
 					<toolbarbutton label='highlight' type='checkbox' oncommand='domLighter.toggle()'/>					
 					<toolbarbutton label='autoposition '  type='checkbox' oncommand='' hidden='true'/>
+					<toolbarbutton label='showWhitespaceNodes'  type='checkbox' oncommand='domViewer.changeWhatToShow({showWhitespaceNodes:this.checked})' />
 					
 					<toolbarbutton label='reload' oncommand="mWindow.document.location.reload();setTimeout('domViewer.setWindow(mWindow)',300)"/>
 				</menupopup>

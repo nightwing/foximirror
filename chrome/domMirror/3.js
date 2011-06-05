@@ -256,7 +256,7 @@ domViewer={
 	},
 	setNode: function (aNode){
 		this.active||this.activate(true)
-frt=aNode
+
 		if(!aNode){
 			this.tree.view.selection.select(null);
 			return false;
@@ -328,10 +328,10 @@ frt=aNode
 		this.setNode.mNode()
 	},
 	changeWhatToShow:function(data){
-		domViewer.mDOMView.showWhitespaceNodes=false
+		domViewer.mDOMView.showWhitespaceNodes=data.showWhitespaceNodes
 		this.tree.view=null
 		this.mDOMView.rebuild()
-		this.setNode.mNode()
+		this.setNode(mNode)
 	},
 	currentNode:function(){
 		var i=this.tree.currentIndex
