@@ -39,6 +39,7 @@ function doURICommand(command){
 }
 function $(x)document.getElementById(x)
 var req = new XMLHttpRequest, reqUITimeout, gFixupURI={spec:'empty1'};
+//req.onerror=alert
 req.onload = function(){
 	stopReq('noAbort')
 	var val = req.responseText;
