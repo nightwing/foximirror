@@ -36,6 +36,7 @@ Ci=Components.interfaces
 /*location.assign('edit:about:support')//='s'*/
 function doURICommand(command){
 	gCommand=''
+	command.split(';')
 }
 function $(x)document.getElementById(x)
 var req = new XMLHttpRequest, reqUITimeout, gFixupURI={spec:'empty1'};
@@ -47,7 +48,8 @@ req.onload = function(){
 	var mime = req.getResponseHeader('Content-Type')
 	if(uri[uri.length-1]=='/' && uri.search(/^(file|jar):/)==0){//directory listing
 		val = decodeURIComponent(val.replace(' ','\t','g'))
-		var s=createSession(val, uri, mime)
+		var s = createSession(val, uri, mime)
+		s.mimeType = 'file-listing'
 	}else
 		var s=createSession(val, uri, mime)
 	editor.setSession(s)
@@ -213,6 +215,26 @@ getContextMenuItems = function() {
 		}
     }	
     );
+	if(editor.session.mimeType == 'file-listing')
+		items.push('-')
+		items.push({
+			label: "open file",
+			command: function() {
+				var newUri = location.href
+				if(editorText)
+					newUri += editorText
+				else {
+					var row = editor.selection.getCursor().row
+					var match = editor.session.getLine(row).match(/201\:\t*([^\t]*)/)
+					if(match){
+						newUri = newUri+match[1]
+					}else
+						newUri = ''
+				}
+				if(newUri)
+					location.assign(newUri)
+			}
+		})
 	return items
 }
 
