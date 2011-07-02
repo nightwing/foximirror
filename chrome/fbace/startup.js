@@ -355,6 +355,8 @@ exports.launch = function(env, options) {
 		s.setTabSize(options.tabsize);
 		s.setWrapLimitRange(null, null);
 		
+		s.setUseWorker(options.validateasyoutype);
+		
 		//hack to support folding
 		s.$init()
 
@@ -405,7 +407,6 @@ exports.launch = function(env, options) {
     editor.setHighlightActiveLine(options.highlightactiveline);
     editor.setShowPrintMargin(false);
     editor.setHighlightSelectedWord(options.highlightselectedword);
-    editor.session.setUseWorker(options.validateasyoutype);
     editor.renderer.setHScrollBarAlwaysVisible(false);
 	editor.setBehavioursEnabled(true);
 
@@ -790,7 +791,7 @@ exports.launch = function(env, options) {
 			}
 		}
 	}
-	env.editor.renderer.on('gutterclick',onGutterClick)
+	env.editor.renderer.on('gutterclick', onGutterClick)
 
 };
 });
