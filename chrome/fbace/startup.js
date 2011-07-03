@@ -72,33 +72,266 @@ function HashHandler(config) {
             }
         }
     }
-}).call(HashHandler.prototype)
+}).call(HashHandler.prototype);
 
 exports.HashHandler = HashHandler;
+});
+
+
+define('ace/layer/gutter', function(require, exports, module) {
+var dom = require("pilot/dom");
+
+var Gutter = function(parentEl) {
+    this.element = dom.createElement("div");
+    this.element.className = "ace_layer ace_gutter-layer";
+    parentEl.appendChild(this.element);
+
+    this.$breakpoints = [];
+    this.$annotations = [];
+    this.$decorations = [];
+};
+
+(function() {
+
+    this.setSession = function(session) {
+        this.session = session;
+    };
+
+    this.addGutterDecoration = function(row, className){
+        if (!this.$decorations[row])
+            this.$decorations[row] = "";
+        this.$decorations[row] += " ace_" + className;
+    }
+
+    this.removeGutterDecoration = function(row, className){
+        this.$decorations[row] = this.$decorations[row].replace(" ace_" + className, "");
+    };
+
+    this.setBreakpoints = function(rows) {
+    };
+
+    this.setAnnotations = function(annotations) {
+        // iterate over sparse array
+        this.$annotations = [];
+        for (var row in annotations) if (annotations.hasOwnProperty(row)) {
+            var rowAnnotations = annotations[row];
+            if (!rowAnnotations)
+                continue;
+
+            var rowInfo = this.$annotations[row] = {
+                text: []
+            };
+            for (var i=0; i<rowAnnotations.length; i++) {
+                var annotation = rowAnnotations[i];
+                rowInfo.text.push(annotation.text.replace(/"/g, "&quot;").replace(/'/g, "&#8217;").replace(/</, "&lt;"));
+                var type = annotation.type;
+                if (type == "error")
+                    rowInfo.className = "ace_error";
+                else if (type == "warning" && rowInfo.className != "ace_error")
+                    rowInfo.className = "ace_warning";
+                else if (type == "info" && (!rowInfo.className))
+                    rowInfo.className = "ace_info";
+            }
+        }
+    };
+
+    this.update = function(config) {
+        this.$config = config;
+
+        var emptyAnno = {className: "", text: []};
+        var breakpoints = this.session.$breakpoints;
+        var html = [];
+        var i = config.firstRow;
+        var lastRow = config.lastRow;
+        var fold = this.session.getNextFold(i);
+        var foldStart = fold ? fold.start.row : Infinity;
+
+        while (true) {
+            if(i > foldStart) {
+                i = fold.end.row + 1;
+                fold = this.session.getNextFold(i);
+                foldStart = fold ?fold.start.row :Infinity;
+            }
+            if(i > lastRow)
+                break;
+
+            var annotation = this.$annotations[i] || emptyAnno;
+            html.push("<div class='ace_gutter-cell",
+                this.$decorations[i] || "",
+                breakpoints[i] ? " ace_breakpoint " : " ",
+                annotation.className,
+                "' title='", annotation.text.join("\n"),
+                "' style='height:", config.lineHeight, "px;'>" 
+				);
+			if (this.session.isLineFoldable(i)){
+				html.push(
+					"<span class='ace_fold-widget ",
+					i == foldStart?"closed":"open",
+					"'>", i, "</span>"
+				)
+			} else
+				html.push(i)
+
+            var wrappedRowLength = this.session.getRowLength(i) - 1;
+            while (wrappedRowLength--) {
+                html.push("</div><div class='ace_gutter-cell' style='height:", config.lineHeight, "px'>&brvbar;</div>");
+            }
+
+            html.push("</div>");
+
+            i++;
+        }
+        this.element = dom.setInnerHtml(this.element, html.join(""));
+        this.element.style.height = config.minHeight + "px";
+    };
+
+}).call(Gutter.prototype);
+
+exports.Gutter = Gutter;
+
 });
 
 
 define('fbace/startup', function(require, exports, module) {
 
 exports.launch = function(env, options) {
-	// requires
-	event = require("pilot/event");
+    // requires
+    event = require("pilot/event");
     Editor = require("ace/editor").Editor;
     Renderer = require("ace/virtual_renderer").VirtualRenderer;
+
+    Range = require("ace/range").Range;
 
     EditSession = require("ace/edit_session").EditSession;
     UndoManager = require("ace/undomanager").UndoManager;
 
     CSSMode = require("ace/mode/css").Mode;
     HTMLMode = require("ace/mode/html").Mode;
-    XMLMode = require("ace/mode/xml").Mode;	
+    XMLMode = require("ace/mode/xml").Mode;
 	JSMode = require("ace/mode/javascript").Mode;
+
+	HashHandler = require("ace/keyboard/hash_handler").HashHandler;
+	Search = require("ace/search").Search;	
 	
-	var HashHandler = require("ace/keyboard/hash_handler").HashHandler;
-	var Search = require("ace/search").Search;	
+	
+	/**************************** breakpoint handler *********************************************/
+
+	function CStyleFolding() {
+		this.isLineFoldable = function(row) {			
+			if (this.foldWidgets[row] != null)
+				return this.foldWidgets[row]
+			else {
+				return this.foldWidgets[row] = this.getLine(row).search(/(\{|\[)\s*(\/\/.*)?$/) != -1 ||
+					(this.getState(row).isHeader == 1 && row + 1 < env.editor.session.getLength())
+			}
+		}
+
+		this.setBreakpoints = function(rows) {
+			this.$breakpoints = [];
+			for (var i=0; i<rows.length; i++) {
+				this.$breakpoints[rows[i]] = true;
+			}
+			this.$lastBreakpoint = this.$breakpoints.lastIndexOf(true);
+			this._dispatchEvent("changeBreakpoint", {});
+		};
+
+		this.clearBreakpoints = function() {
+			this.$breakpoints = [];
+			this.$breakpoints.last = 0;
+			this._dispatchEvent("changeBreakpoint", {});
+		};
+
+		this.setBreakpoint = function(row) {
+			this.$breakpoints[row] = true;
+			this.$breakpoints.last = this.$breakpoints.lastIndexOf(true);
+			this._dispatchEvent("changeBreakpoint", {});
+		};
+
+		this.clearBreakpoint = function(row) {
+			delete this.$breakpoints[row];
+			this.$breakpoints.last = this.$breakpoints.lastIndexOf(true);
+			this._dispatchEvent("changeBreakpoint", {});
+		};
+
+		this.getBreakpoints = function() {
+			return this.$breakpoints;
+		};
+
+		this._delayedDispatchEvent = function(eventName, e, delay) {
+			if (this[eventName+'_Timeout'] !=null || !this._eventRegistry) return;
+
+			var listeners = this._eventRegistry[eventName];
+			if (!listeners || !listeners.length) return;
+
+			var self = this;
+			this[eventName+'_Timeout'] = setTimeout(function(){
+				self[eventName+'_Timeout'] = null
+				self._dispatchEvent(eventName, e)
+			}, delay || 20)
+		};
+
+		this.updateDataOnDocChange = function(e) {
+			var delta = e.data;
+			var range = delta.range;
+			var len, firstRow, f1;
+			
+			if (delta.action == "insertText") {
+				len = range.end.row - range.start.row
+				firstRow = range.start.column == 0? range.start.row: range.start.row + 1;
+			} else if (delta.action == "insertLines") {
+				len = range.end.row - range.start.row;
+				firstRow = range.start.row;
+			} else if (delta.action == "removeText") {
+				len = range.end.row - range.start.row;
+				firstRow = range.start.row;
+			} else if (delta.action == "removeLines") {
+				len = range.start.row - range.end.row
+				firstRow = range.start.row;
+			}
+
+			if (len > 0) {
+				args = Array(len);
+				this.$breakpoints.last += len;
+				args.unshift(firstRow, 0)
+				this.$breakpoints.splice.apply(this.$breakpoints, args);
+				
+				args[0] = range.start.row
+				this.foldWidgets.splice.apply(this.foldWidgets, args);
+			} else if (len < 0) {
+				var rem = this.$breakpoints.splice(firstRow + 1, -len);
+				if(!this.$breakpoints[firstRow] && rem.indexOf(true) != -1)
+					this.$breakpoints[firstRow] = true;
+
+				this.foldWidgets.splice(firstRow, -len);
+			} else if (len == 0) {
+				this.foldWidgets[range.start.row] = null;
+			}
+		}
+		
+		this.$init = function() {
+			this.foldWidgets = [];
+			this.doc.on('change', this.updateDataOnDocChange.bind(this));
+		}
+	};
+	CStyleFolding.call(EditSession.prototype);
+	
+	/**************************** initialize ****************************************************/
+	
 	// global functions
     toggleGutter = function() {
         editor.renderer.setShowGutter(!env.editor.renderer.showGutter);
+    };
+	toggleWrapMode = function(useWrap, session) {
+		session = session || editor.session
+		if (useWrap == null)
+			useWrap = !session.$useWrapMode;
+
+		if (useWrap) {
+            session.setUseWrapMode(true);
+            session.setWrapLimitRange(null, null);
+		} else {
+            session.setUseWrapMode(false);		
+		}
     };
 	getExtension = function(name, mime) {
 		if(mime) return (mime.toLowerCase().match(/(xml|html?|css|jsm?|xul|rdf)/i)||[,'js'])[1]
@@ -118,60 +351,69 @@ exports.launch = function(env, options) {
 		s.setUndoManager(new UndoManager());
 
 		s.setUseSoftTabs(options.softtabs);
-		s.setUseWrapMode(options.wordwrap);
+		toggleWrapMode(options.wordwrap, s);
 		s.setTabSize(options.tabsize);
 		s.setWrapLimitRange(null, null);
-		return s
-	}
-	EditSession.prototype.setFileInfo = function(path, mime){
-		this.extension = getExtension(path, mime)
-		this.href = path;
-		if(path.slice(0,5) == 'file:')
-			this.filePath = path
-		else
-			this.filePath = ''
-	}
-    env.setKeybinding = function(name){
-		if(name !='Vim' && name != 'Emacs'){
-			env.editor.setKeyboardHandler(null);
-			return;
-		}
-		var path = "ace/keyboard/keybinding/" + name.toLowerCase();
-		var module = require(path);
-		if(!module)
-			require([path], function(module){
-				env.editor.setKeyboardHandler(env.editor.normalKeySet = module[name]);
-			});
-		else
-			env.editor.setKeyboardHandler(env.editor.normalKeySet = module[name]);
-	};
-	
-    //since we are using separate window make everything global for now
-    window.env = env;
-    
-    // worker is more of a nuisance now
-    JSMode.prototype.createWorker = function(session) {
-        return null;
+		
+		s.setUseWorker(options.validateasyoutype);
+		
+		//hack to support folding
+		s.$init()
+
+        return s;
+    };
+    EditSession.prototype.setFileInfo = function(path, mime) {
+        this.extension = getExtension(path, mime);
+        this.href = path;
+        if (path.slice(0,5) == 'file:')
+            this.filePath = path;
+        else
+            this.filePath = '';
+    };
+    env.setKeybinding = function(name) {
+        if (name !='Vim' && name != 'Emacs') {
+            env.editor.setKeyboardHandler(null);
+            return;
+        }
+        var path = "ace/keyboard/keybinding/" + name.toLowerCase();
+        var module = require(path);
+        if (!module)
+            require([path], function(module) {
+                env.editor.setKeyboardHandler(env.editor.normalKeySet = module[name]);
+            });
+        else
+            env.editor.setKeyboardHandler(env.editor.normalKeySet = module[name]);
     };
 
+    //since we are using separate window make everything global for now
+    window.env = env;
+
     jsDoc = createSession('', '.js');
-    
+	
+	// not needed in acebug
+    Renderer.prototype.moveTextAreaToCursor =
+	require("ace/layer/text").Text.prototype.$pollSizeChanges=function(){}
+	Editor.prototype.setFontSize= function(size){
+		this.container.fontSize = size
+		this.renderer.$textLayer.checkForSizeChanges()
+	}
+
     var container = document.getElementById("editor");
     editor = env.editor = new Editor(new Renderer(container, options.theme));
-	editor.setTheme(options.theme);
+    editor.setTheme(options.theme);
     editor.setSession(jsDoc);
 
     editor.setShowInvisibles(options.showinvisiblecharacters);
-    editor.setHighlightActiveLine(true);
+    editor.setHighlightActiveLine(options.highlightactiveline);
     editor.setShowPrintMargin(false);
-	editor.setHighlightSelectedWord(true);
+    editor.setHighlightSelectedWord(options.highlightselectedword);
     editor.renderer.setHScrollBarAlwaysVisible(false);
+	editor.setBehavioursEnabled(true);
 
-	// not needed in acebug
-	editor.renderer.moveTextAreaToCursor =
-	editor.textInput.onContextMenu = function(){};
-	// don't let firebug's commandLinePopup to interfere
-	editor.textInput.getElement().classList.add("textEditorInner")
+    // not needed in acebug
+    editor.textInput.onContextMenu = function() {};
+    // don't let firebug's commandLinePopup to interfere
+    editor.textInput.getElement().classList.add("textEditorInner");
 
     function onResize() {
         editor.resize();
@@ -184,145 +426,372 @@ exports.launch = function(env, options) {
     });
 
     event.addListener(container, "drop", function(e) {
+        try {
+            if(!/javascript|text|html/.test(e.dataTransfer.files[0].type))
+                return event.preventDefault(e);
+
+            var file = e.dataTransfer.files[0];
+        } catch(e) {
+            return event.preventDefault(e);
+        }
+
+        if (window.FileReader) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                env.editor.getSelection().selectAll();
+                env.editor.onTextInput(reader.result);
+            };
+            reader.readAsText(file);
+        }
+
         return event.preventDefault(e);
     });
-
 
     editor.addCommand = function(cmd) {
         canon.addCommand({
             name: cmd.name,
-			bindKey: {win: cmd.key, mac: cmd.key, sender: "editor"},
+            bindKey: {win: cmd.key, mac: cmd.key, sender: "editor"},
             exec: function(env, args, request) {
                 cmd.exec(env, args);
             }
         });
     };
-    /**********  handle keyboard *****/	
+    /**********  handle keyboard *****/
     env.canon = canon = require("pilot/canon");
 
-	env.setKeybinding(options.keybinding);
+    env.setKeybinding(options.keybinding);
 
-	editor.addCommands = function(commandSet) {
-		for (var i in commandSet) {
-			var exec = commandSet[i];
-			var command = {name: i, exec: exec};
-			if(bindings[i])
-				command.bindKey = {win: bindings[i], mac: bindings[i], sender: "editor"}
-			if(typeof exec === "function")
-				canon.addCommand(command);
-		}
-	};
+    editor.addCommands = function(commandSet) {
+        for (var i in commandSet) {
+            var exec = commandSet[i];
+            var command = {name: i, exec: exec};
+            if (bindings[i])
+                command.bindKey = {win: bindings[i], mac: bindings[i], sender: "editor"};
+            if (typeof exec === "function")
+                canon.addCommand(command);
+        }
+    };
 
-	editor.execCommand = function(name){
-		canon.getCommand(name).exec(env);
-	};
+    editor.execCommand = function(name) {
+        canon.getCommand(name).exec(env);
+    };
 
-	// add key bindings
-	var bindings = {
-		startAutocompleter: "Ctrl-Space|Ctrl-.|Alt-.",
-		execute: "Ctrl-Return",
-		duplicate: "Ctrl-D|Alt-D"
-	}
+    // add key bindings
+    var bindings = {
+        startAutocompleter: "Ctrl-Space|Ctrl-.|Alt-.",
+        execute: "Ctrl-Return",
+		dirExecute: "Ctrl-Shift-Return",
+        duplicate: "Ctrl-D|Alt-D",
+		beautify: "Ctrl-Shift-B"
+    };
 
-	editor.autocompletionKeySet = new HashHandler({
-		startAutocompleter: 'Ctrl-Space',
-		complete: 'Return',
-		dotComplete: 'Ctrl-.|Alt-.',
-		execute: 'Ctrl-Return',
-		cancelCompletion: 'Esc',
-		nextEntry: 'Down',
-		previousEntry: 'Up'
-	});
+    editor.autocompletionKeySet = new HashHandler({
+        startAutocompleter: 'Ctrl-Space',
+        complete: 'Return',
+        completeAndReplace: 'Shift-Return',
+        dotComplete: 'Ctrl-.|Alt-.',
+        cancelCompletion: 'Esc',
+        nextEntry: 'Down',
+        previousEntry: 'Up'
+    });
 
-    // add commands       
-	editor.addCommands({
-		duplicate: function(env, args, request) { 
-			var editor = env.editor
-			var sel = editor.selection
-			var doc = editor.session
-			var range=sel.getRange()
-			if(range.isEmpty()){
-				var row=range.start.row
-				doc.duplicateLines(row,row)
-				//ed.copyLinesDown();
-			}else{
-				doc.insert(sel.selectionLead, doc.getTextRange(range), false)
-			}
-		},
-		startAutocompleter: function(env, args, request) {
-            var editor = env.editor
-			startAcebugAutocompleter(editor);
+    // add commands
+    editor.addCommands({
+        duplicate: function(env, args, request) {
+            var editor = env.editor;
+            var sel = editor.selection;
+            var doc = editor.session;
+            var range = sel.getRange();
+            if (range.isEmpty()) {
+                var row = range.start.row;
+                doc.duplicateLines(row, row);
+                //ed.copyLinesDown();
+            } else {
+                doc.insert(sel.selectionLead, doc.getTextRange(range), false);
+            }
         },
-		toggleStreamComment: function() {
-			// TODO: handle space in ' */' while toggling
-			var range = editor.getSelection().getRange();
+        startAutocompleter: function(env, args, request) {
+            var editor = env.editor;
+            startAcebugAutocompleter(editor);
+        },
+        toggleStreamComment: function() {
+            // TODO: handle space in ' */' while toggling
+            var range = editor.getSelection().getRange();
 
-			if (range.isEmpty()){
-				range.start.column -= 2;
-				range.end.column += 2;
-				var session = editor.session,
-					text = session.getTextRange(range),
-					oi = text.indexOf('/*'),
-					ci = text.indexOf('*/');
+            if (range.isEmpty()) {
+                range.start.column -= 2;
+                range.end.column += 2;
+                var session = editor.session,
+                    text = session.getTextRange(range),
+                    oi = text.indexOf('/*'),
+                    ci = text.indexOf('*/');
 
-				if (oi==0 && ci==2){
-					editor.session.remove(range);
-					return;
-				} else if (oi > ci) {
-					editor.moveCursorToPosition(range.end);
-				} else if (oi < ci) {
-					editor.moveCursorToPosition(range.start);
+                if (oi==0 && ci==2) {
+                    editor.session.remove(range);
+                    return;
+                } else if (oi > ci) {
+                    editor.moveCursorToPosition(range.end);
+                } else if (oi < ci) {
+                    editor.moveCursorToPosition(range.start);
+                }
+
+                var currentOptions = editor.$search.getOptions();
+                var newOptions = {
+                    backwards: false,
+                    wrap: false,
+                    caseSensitive: false,
+                    wholeWord: false,
+                    regExp: false
+                };
+                newOptions.needle = "*/";
+                editor.$search.set(newOptions);
+                var endRange = editor.$search.find(session);
+                if (endRange) {
+                    editor.moveCursorToPosition(endRange.start);
+                    newOptions.needle = '/*';
+                    newOptions.backwards = true;
+                    editor.$search.set(newOptions);
+                    var startRange = editor.$search.find(session);
+                    if (startRange) {
+                        editor.session.remove(endRange);
+                        editor.session.remove(startRange);
+                        editor.selection.setSelectionAnchor(startRange.start.row, startRange.start.column);
+                    }
+                }
+                editor.$search.set(currentOptions);
+            } else {
+                editor.clearSelection();
+                editor.moveCursorToPosition(range.end);
+                editor.insert("*/");
+                var newPos = editor.getCursorPosition();
+                editor.moveCursorToPosition(range.start);
+                editor.insert("/*");
+                if (range.start.row == newPos.row)
+                    newPos.column += 2;
+                editor.moveCursorTo(newPos.row, newPos.column);
+            }
+        },
+
+        clear: function() {
+            editor.session.doc.setValue("");
+        },
+
+		beautify: function(){
+			function a(){
+				var session = editor.session
+				var sel = session.selection
+				var range = sel.getRange()
+				
+				var options = {};
+				if (session.getUseSoftTabs()) {
+					options.indent_size = session.getTabSize();
+				} else {
+					options.indent_char = "\t";
+					options.indent_size = 1;
 				}
+				
+				var line = session.getLine(range.start.row)
+				var indent = line.match(/^\s*/)[0]
+				if(range.start.column<indent.length){
+					var doNotTrim = true;
+					range.start.column = 0
+				}
+				var value = session.getTextRange(range)
+				value = (/^\s*<!?\w/.test(value)? style_html :js_beautify)(value, options)
+				value = value.replace(/^/gm, indent)
+				if(!doNotTrim)
+					value = value.trim()
 
-				var currentOptions = editor.$search.getOptions();
-				var newOptions = {
-					backwards: false,
-					wrap: false,
-					caseSensitive: false,
-					wholeWord: false,
-					regExp: false
-				};
-				newOptions.needle = "*/";
-				editor.$search.set(newOptions);
-				var endRange = editor.$search.find(session);
-				if (endRange) {
-					editor.moveCursorToPosition(endRange.start);
-					newOptions.needle = '/*';
-					newOptions.backwards = true;
-					editor.$search.set(newOptions);
-					var startRange = editor.$search.find(session);
-					if(startRange) {
-						editor.session.remove(endRange);
-						editor.session.remove(startRange);
-						editor.selection.setSelectionAnchor(startRange.start.row, startRange.start.column);
+				var end = session.replace(range, value);
+				sel.setSelectionRange(Range.fromPoints(range.start, end));
+			}
+			if (window.js_beautify)
+				a()
+			else
+				require(["res/beautify","res/beautify-html"], a)
+		}
+    });
+ 
+ 	/**************************** folding commands ***********************************************/
+	canon.addCommand({
+        name: "newCell",
+        bindKey: {
+            win: "Shift-Return",
+            mac: "Shift-Return",
+            sender: "editor"
+        },
+        exec: function(env) {
+			var editor = env.editor, session = editor.session
+            var c = editor.getCursorPosition()
+			if((c.column!=0 || c.row==0) && c.column != session.getLine(c.row).length)
+				var addNewLine = true
+				
+			if (c.column==0)
+				c1 = session.insert(c,'#>>')
+			else
+				c1 = session.insert(c,'\n#>>')
+
+			if (addNewLine) {
+				session.insert(c1,'\n')
+				editor.selection.setSelectionRange({start:c1,end:c1})
+			}
+        }
+    });
+	
+	canon.addCommand({
+        name: "fold",
+        bindKey: {
+            win: "Alt-L",
+            mac: "Alt-L",
+            sender: "editor"
+        },
+        exec: function(env) {
+            toggleFold(env, false)
+        }
+    });
+
+    canon.addCommand({
+        name: "unfold",
+        bindKey: {
+            win: "Alt-Shift-L",
+            mac: "Alt-Shift-L",
+            sender: "editor"
+        },
+        exec: function(env) {
+            toggleFold(env, true)
+        }
+    });
+
+    function isCommentRow(row) {
+        var session = env.editor.session;
+        var token;
+        var tokens = session.getTokens(row, row)[0].tokens;
+        var c = 0;
+        for (var i = 0; i < tokens.length; i++) {
+            token = tokens[i];
+            if (/^comment/.test(token.type)) {
+                return c;
+            } else if (!/^text/.test(token.type)) {
+                return false;
+            }
+            c += token.value.length;
+        }
+        return false;
+    };
+
+    function toggleFold(env, tryToUnfold) {
+        var session = env.editor.session;
+        var selection = env.editor.selection;
+        var range = selection.getRange();
+        var addFold;
+
+        if(range.isEmpty()) {
+            var br = session.findMatchingBracket(range.start);
+            var fold = session.getFoldAt(range.start.row, range.start.column);
+            var column;
+
+            if(fold) {
+                session.expandFold(fold);
+                selection.setSelectionRange(fold.range)
+            } else if(br) {
+                if(range.compare(br.row,br.column) == 1)
+                    range.end = br;
+                else
+                    range.start = br;
+                addFold = true;
+            } else if ((column = isCommentRow(range.start.row)) !== false) {
+                var firstCommentRow = range.start.row;
+                var lastCommentRow = range.start.row;
+                var t;
+                while ((t = isCommentRow(firstCommentRow - 1)) !== false) {
+                    firstCommentRow --;
+                    column = t;
+                }
+                while (isCommentRow(lastCommentRow + 1) !== false) {
+                    lastCommentRow ++;
+                }
+                range.start.row = firstCommentRow;
+                range.start.column = column + 2;
+                range.end.row = lastCommentRow;
+                range.end.column = session.getLine(lastCommentRow).length - 1;
+                addFold = true;
+            }
+        } else {
+            var folds = session.getFoldsInRange(range);
+            if(tryToUnfold && folds.length)
+                session.expandFolds(folds);
+            else if(folds.length == 1 ) {
+                var r1 = folds[0].range
+                if (r1.start.row == range.start.row &&
+                      r1.end.row ==  range.end.row &&
+                      r1.start.column == range.start.column &&
+                      r1.end.column == range.end.column)
+                    session.expandFold(folds[0]);
+                else
+                    addFold = true;
+            } else
+                addFold = true;
+        }
+        if(addFold) {
+            var placeHolder = session.getTextRange(range);
+            if(placeHolder.length < 3)
+                return;
+            placeHolder = placeHolder.trim().substring(0, 3).replace(' ','','g') + "...";
+            session.addFold(placeHolder, range);
+        }
+    }
+
+	function onGutterClick(e) {
+		var editor = env.editor, s = editor.session, row = e.row;
+		if (e.htmlEvent.target.className.indexOf('ace_fold-widget') < 0)
+			s[s.$breakpoints[e.row]?'clearBreakpoint':'setBreakpoint'](row);
+		else {
+			var line = s.getLine(row)
+			var match = line.match(/(\{|\[)\s*(\/\/.*)?$/)
+			if (match) {
+				var i = match.index
+				var fold = s.getFoldAt(row, i+1, 1)
+				if (fold) {
+					s.expandFold(fold)
+					//editor.renderer.scrollCursorIntoView()
+					//editor.renderer.scrollToRow(row)
+				} else {
+					var start = {row:row,column:i+1}
+					var end = s.$findClosingBracket(match[1], start)
+					if (end)
+						s.addFold("...", Range.fromPoints(start, end));
+				}
+				return
+			}
+			var mode = s.$mode
+			if (!mode.delimiter)
+				return
+
+			if (line.substr(0, mode.dl) == mode.delimiter) {
+				var fold = s.getFoldAt(row, 0, 1)
+				if (!fold){
+					var foldLine = s.getFoldLine(row);
+					if(foldLine && foldLine.start.row != foldLine.end.row) {
+						s.expandFolds(foldLine.folds)
+						return
 					}
 				}
-		        editor.$search.set(currentOptions);
-			} else {
-				editor.clearSelection();
-				editor.moveCursorToPosition(range.end);
-				editor.insert("*/");
-				var newPos = editor.getCursorPosition();
-				editor.moveCursorToPosition(range.start);
-				editor.insert("/*");
-				if (range.start.row == newPos.row)
-					newPos.column += 2;
-				editor.moveCursorTo(newPos.row, newPos.column);
+				
+				if (fold) {
+					s.expandFold(fold)
+					//editor.renderer.scrollCursorIntoView()
+				} else {
+					var cell = mode.getCellBounds(row)
+					var start = {row: row, column: 0};
+					var end = {row: cell.bodyEnd, column: s.getLine(cell.bodyEnd).length};
+					var placeholder = s.getLine(cell.headerStart).slice(0,10) + "_______";
+					s.addFold(placeholder, Range.fromPoints(start, end));
+				}
+				return
 			}
 		}
-	});
-	
-	// breakpoint handler
-	event.addListener(editor.renderer.$gutter, 'mousedown', function(e){
-		if(e.target.className.indexOf('gutter-cell') === -1)
-			return;
-		var lineNo = parseInt(e.target.textContent, 10) - 1;
-        var state;
-		if(state = editor.session.$breakpoints[lineNo])
-			editor.session.clearBreakpoint(lineNo);
-		else
-			editor.session.setBreakpoint(lineNo);
-		//editor.session.panel.setBreakpoint(lineNo, state)
-	});
+	}
+	env.editor.renderer.on('gutterclick', onGutterClick)
+
 };
 });

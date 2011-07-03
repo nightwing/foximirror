@@ -1,20 +1,3 @@
-<!DOCTYPE html>
-
-<html lang="en">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Editor</title>
-
-    <link rel="stylesheet" href="styles.css" type="text/css" media="screen" charset="utf-8">
-</head>
-<body>
-    <div id="editor">
-        <div id="toggleWrap" onclick="toggleWrapMode();"></div>
-        <div id="toggleGutter" onclick="toggleGutter();"></div>
-		<img id="reqUI" onclick="stopReq();" src='chrome://shadia/content/icons/lightbox-ico-loading.gif'></img>		
-    </div>
-
-    <script type="text/javascript">
 //add stub console since ace calls console.error
 if (!window.console) {
     console={};
@@ -152,7 +135,13 @@ var startAce = function(callback, options, deps) {
     // "ace/mode/javascript", "ace/mode/css", are loaded with html  // "ace-uncompressed" for debugging
     var rootDeps = ["fbace/scrollbar", "fbace/startup", "ace-uncompressed", "ace/mode/xml", "ace/mode/html"];
     if (!options)
-        options = {};
+        options = {
+			softtabs: true,
+			wordwrap: false,
+			highlightactiveline: true,
+			highlightselectedword: true,
+			validateasyoutype: true
+		};
     //"ace/theme/textmate" is built into ace.js so there's no need to load that
     if (!options.theme)
         options.theme = "ace/theme/textmate";
@@ -172,6 +161,3 @@ var startAce = function(callback, options, deps) {
         });
     });
 };
-    </script>
-</body>
-</html>
