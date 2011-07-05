@@ -1,3 +1,5 @@
+// ************************************************************************************************
+
 /*****************************************************************
  *  code completion utils
  *****************************************************************/
@@ -32,22 +34,12 @@ function treeView(table) {
 }
 
 /**************************************/
-
-
-function extend(a,b){
-	var newOb = {}
-	for(var i in a){
-		newOb[i] = a[i]
-	}
-	for(var i in b){
-		newOb[i] = b[i]
-	}
-	return newOb
-}
-
-aceManager.startAutocompleter = function(editor) {
+Firebug.Ace.startAutocompleter = FBL.bind(function(editor) {
     var type = editor.session.autocompletionType;
-    if (type == 'js')
+
+	if (type == 'console')
+       this.autocompleter = this.JSAutocompleter;
+    else if (type == 'js')
         this.autocompleter = this.JSAutocompleter;
     else if (type == 'css')
         this.autocompleter = this.CSSAutocompleter;
@@ -55,9 +47,9 @@ aceManager.startAutocompleter = function(editor) {
         return;
 
     this.autocompleter.start(editor);
-}
+}, Firebug.Ace);
 
-aceManager.BaseAutocompleter = {
+Firebug.Ace.BaseAutocompleter = {
     initPanel: function(panelH, panelW) {
         this.panel = FBL.$("aceAutocompletePanel");
         this.panel.height = panelH;
@@ -67,12 +59,12 @@ aceManager.BaseAutocompleter = {
 
         this.bubble = document.getElementById("autocomplate-info-bubble");
         //set handlers
-        this.panel.setAttribute('onpopupshown', 'aceManager.autocompleter.setView(0)');
-        this.panel.setAttribute('onpopuphidden', 'aceManager.autocompleter.finish()');
-        this.tree.setAttribute('ondblclick', 'aceManager.autocompleter.insertSuggestedText();aceManager.autocompleter.finish()');
-        this.tree.setAttribute('onclick', 'aceManager.autocompleter.editor.focus()');
-        this.tree.setAttribute('onselect', 'aceManager.autocompleter.onSelect()');
-        this.panel.getElementsByTagName('toolbarbutton')[0].setAttribute('oncommand', 'aceManager.autocompleter.compare()');
+        this.panel.setAttribute('onpopupshown', 'Firebug.Ace.autocompleter.setView(0)');
+        this.panel.setAttribute('onpopuphidden', 'Firebug.Ace.autocompleter.finish()');
+        this.tree.setAttribute('ondblclick', 'Firebug.Ace.autocompleter.insertSuggestedText();Firebug.Ace.autocompleter.finish()');
+        this.tree.setAttribute('onclick', 'Firebug.Ace.autocompleter.editor.focus()');
+        this.tree.setAttribute('onselect', 'Firebug.Ace.autocompleter.onSelect()');
+        this.panel.getElementsByTagName('toolbarbutton')[0].setAttribute('oncommand', 'Firebug.Ace.autocompleter.compare()');
     },
 
     showPanel: function() {
@@ -109,6 +101,13 @@ aceManager.BaseAutocompleter = {
             this.addComandsToEditor();
         if (!this.selectionListener)
             this.selectionListener = FBL.bind(this.$selectionListener, this);
+		
+		for each(var i in this.$markers)
+			this.editor.session.removeMarker(i)
+		this.$markers = [
+			editor.session.addMarker(this.$q.filterRange, "ace_bracket k"),
+			editor.session.addMarker(this.$q.baseRange, "ace_bracket k")
+		];
 
         this.editor.selection.on('changeCursor', this.selectionListener);
 
@@ -124,16 +123,20 @@ aceManager.BaseAutocompleter = {
     },
 
     $selectionListener: function(e) {
-        e.data = this.editor.selection.getCursor();
-        if (this.baseRange.contains(e.data.row, e.data.column) || this.hidden)
+        var point = this.editor.selection.getCursor();
+		var range = this.$q.filterRange
+		if(range.compare(point.row, point.column) < 0 || this.hidden)
             return this.finish();
 
-        this.filterRange.end = e.data;
-        this.text = this.editor.session.getTextRange(this.filterRange);
+        range.end = point;
+        this.text = this.editor.session.getTextRange(range);
 
         if (this.invalidCharRe.test(this.text))
             return this.finish();
-        this.filter(this.unfilteredArray,this.text);
+		if (this.chainRe && this.chainRe.test(this.text))
+            return this.chain();
+
+        this.filter(this.unfilteredArray, this.text);
         this.setView(0);
     },
 
@@ -150,20 +153,19 @@ aceManager.BaseAutocompleter = {
 
             dotComplete: function() {
                 var o = self.sortedArray[self.tree.currentIndex];
-                if (o) {
+                if (o && self.chain) {
                     self.insertSuggestedText('.');
-                    var cursor = self.editor.selection.getCursor();
-                    self.baseRange.end.column = cursor.column - 1;
-                    var fr = self.filterRange;
-                    fr.end.column = fr.start.column = cursor.column;
-                    fr.end.row = fr.start.row = cursor.row;
-                    self.text = '';
-                    self.onEvalSuccess(o.object);
+					self.chain(o.object);
                 }
             },
 
             complete: function() {
                 self.insertSuggestedText();
+                self.finish();
+            },
+
+            completeAndReplace: function() {
+                self.insertSuggestedText('', true);
                 self.finish();
             },
 
@@ -186,7 +188,7 @@ aceManager.BaseAutocompleter = {
         /**     doOnselect  **/
         this.onSelectTimeOut = null;
 
-        if(aceManager.getOptions().showautocompletionhints) {
+        if(Firebug.Ace.showautocompletionhints) {
             try {
                 var index = this.tree.currentIndex;
                 this.number.value = index + ':' +this.sortedArray.length + "/" + this.unfilteredArray.length;
@@ -197,12 +199,14 @@ aceManager.BaseAutocompleter = {
     },
 
     sayInBubble: function(text) {
+		if (!this.bubble)
+			this.initPanel()
         if (!text) {
             this.bubble.hidePopup();
             return;
         }
-        if (this.hidden)
-            return;
+        //if (this.hidden)
+        //    return;
         var item = this.bubble.firstChild;
         item.value = text;
         if (this.bubble.state!='open')
@@ -320,6 +324,9 @@ aceManager.BaseAutocompleter = {
     finish: function(i) {
         if (this.hidden)
             return;
+		for each(var i in this.$markers)
+			this.editor.session.removeMarker(i)
+
         this.hidden = true;
         this.editor.selection.removeEventListener('changeCursor', this.selectionListener);
         this.text = this.sortedArray = this.unfilteredArray = this.object = this.text = null;
@@ -330,14 +337,36 @@ aceManager.BaseAutocompleter = {
 
 };
 
-aceManager.JSAutocompleter = extend(aceManager.BaseAutocompleter, {
-    invalidCharRe: /[\+\-;,= \(\)\[\]\{\}\!><]/,
+Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
+    invalidCharRe: /[\+\-;:,= \(\)\[\]\{\}\!><]/,
+	chainRe: /\.$/,
+	chain: function(o) {
+		var t = this.text.slice(0, -1)
+		var o = o || this.object[t]
+		if (!o)
+			return this.finish()
+
+		var br = this.$q.baseRange
+		var fr = this.$q.filterRange
+		br.end.row = fr.end.row
+		br.end.column = fr.end.column - 1;
+		
+		var cursor = this.editor.selection.getCursor();
+		fr.end.column = fr.start.column = cursor.column;
+		fr.end.row = fr.start.row = cursor.row;
+		this.text = '';
+		this.onEvalSuccess(o);
+	},
     onEvalSuccess: function(result, context) {
         this.object = result;
-        this.unfilteredArray = getProps(result);
 
-        if (this.funcName)
+        if (this.$q.functionName) {
+			this.unfilteredArray = getProps(context.global);
             this.appendSpecialEntries();
+			this.object = context.global;
+		} else {
+			this.unfilteredArray = getProps(result);
+		}
 
         this.filter(this.unfilteredArray, this.text);
         this.showPanel();
@@ -360,23 +389,22 @@ aceManager.JSAutocompleter = extend(aceManager.BaseAutocompleter, {
 
     start: function(editor) {
         this.editor = editor || this.editor;
-        var range = editor.selection.getRange();
-        this.filterRange = range.clone();
-        range.end.column = range.start.column;
-        range.start.column = 0;
-        var evalString = editor.session.getTextRange(range);
+		
+		var cell = Firebug.Ace.win2.editor.session.getMode().getCurrentCell();
+		if(cell.cursor <= cell.headerEnd){
+			if (cell.coffeeText)
+				this.sayInBubble(cell.coffeeText)
+		}
 
-        var [objString, filterText, funcName] = this.parseJSFragment(evalString);
-        this.funcName = funcName;
+        var $q = this.$q = backParse.js(editor);
+        this.text = $q.nameFragment;
 
-        range.end.column = range.end.column - filterText.length - 1;
-        range.start.column = range.end.column - objString.length -1;
-        this.baseRange = range;
-
-        this.filterRange.start.column = this.filterRange.end.column - filterText.length;
-
-        this.text = filterText;
-        this.eval(objString);
+		if ($q.eqName) { // style.eqName = '
+			this.unfilteredArray = Firebug.Ace.CSSAutocompleter.propValue([null,null,null,$q.eqName])
+			this.filter(this.unfilteredArray, this.text);
+			this.showPanel();
+		}else
+			this.eval(Firebug.largeCommandLineEditor.setThisValue($q.evalString));
     },
 
     // *****************
@@ -395,7 +423,7 @@ aceManager.JSAutocompleter = extend(aceManager.BaseAutocompleter, {
         return longDescriptor;
     },
 
-    insertSuggestedText: function(additionalText) {
+    insertSuggestedText: function(additionalText, replaceWord) {
         var c = this.tree.view.selection.currentIndex;
         if (c<0)
             return;
@@ -403,169 +431,127 @@ aceManager.JSAutocompleter = extend(aceManager.BaseAutocompleter, {
         var isSpecial = c.isSpecial;
         var text = c.name;
 
-        var s = this.baseRange.end.column + 1;
+        var $q = this.$q;
+        var range = $q.filterRange;
+
         if (isSpecial) {
             text=text.substr(1);
-        } else if (/^\d*$/.test(text)) {
-            text = "[" + text + "]";
-            s--;
-        } else if (!/^[a-z$_][a-z$_0-9]*$/i.test(text)) {
-            text = '["' + text + '"]';
-            s--;
-        }
+        } else if ($q.dotPosition){
+			if (/^\d*$/.test(text)) {
+				text = "[" + text + "]";
+				range.start = $q.dotPosition;
+			} else if (!/(^[a-z$_][a-z$_0-9]*$)|(^[\[\{\(]?".*"[\]\}\)]?$)|(^[\[\{\(]?'.*'[\]\}\)]?$)/i.test(text)) {
+				text = '["' + text + '"]';
+				range.start = $q.dotPosition;
+			}
+		}
+		
 
         if (additionalText) {
             text = text+additionalText;
             //l -= additionalText.length + 1;
         }
-        var range = this.editor.selection.getRange();
-        range.start.column = s;
-        this.editor.selection.setSelectionRange(range);
-        this.editor.onTextInput(text);
+
+		var curLine = this.editor.session.getLine(range.end.row)
+		if (replaceWord){
+			var col = range.end.column;
+			var rx = /[a-z$_0-9]/i;
+			while((ch=curLine[col++]) && rx.test(ch)); //select word forward
+			range.end.column = col-1;
+		}
+
+		// do not add last )|}|] if it is already there
+		var lastChar = text.slice(-1);
+		var cursorChar = curLine[range.end.column];
+		if (cursorChar == lastChar && /\)|\}|\]|"/.test(lastChar))
+			text = text.slice(0, -1);
+
+		var end = this.editor.session.replace(range, text);
     },
     // *****************
     appendSpecialEntries: function() {
-        var funcName = this.funcName;
+        var fu = this.$q.functionName;
         var ans = [];
+		var pre = '\u2555"', post = '"', descr = '';
+		var createItem = function(x) {
+			x = pre + x + post;
+			ans.push({
+				name: x,
+				comName: x.toLowerCase(),
+				description: descr,
+				depth: -1,
+				isSpecial: true
+			});
+		};
         try {
-            if (funcName === "QueryInterface") {
-                supportedInterfaces(this.object).forEach(function(x) {
-                    ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:"interface", depth:-1,isSpecial:true});
-                });
-            } else if (funcName === "getInterface") {
-                supportedgetInterfaces(this.object).forEach(function(x) {
-                    ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:"interface", depth:-1,isSpecial:true});
-                });
-            } else if (funcName === "getElementById") {
-                ans = getIDsInDoc(this.object);
-            } else if (funcName === "getElementsByClassName") {
-                ans = getClassesInDoc(this.object);
-            } else if (funcName === "getAttribute" || funcName === "setAttribute" || funcName === "hasAttribute") {
+            if ('createInstance,getService,QueryInterface'.indexOf(fu) != -1) {
+				descr = "interface"
+				pre = '\u2555Ci.'
+				post = ')'
+                supportedInterfaces(this.object).forEach(createItem);
+            } else if (fu == "getInterface") {
+				descr = "interface"
+				pre = '\u2555Ci.'
+				post = ')'
+                supportedgetInterfaces(this.object).forEach(createItem);
+            } else if (fu == "getElementById") {
+                descr = 'id'
+				getIDsInDoc(this.object).forEach(createItem)				
+            } else if (fu == "getElementsByClassName") {
+				descr = 'class'
+				getClassesInDoc(this.object).forEach(createItem)
+            } else if (fu == "getAttribute" || fu == "setAttribute" || fu == "hasAttribute") {
                 var att = this.object.attributes;
                 for(var i=0; i < att.length; i++) {
                     var x = att[i];
                     ans.push({name:'\u2555"'+x.nodeName+'")',comName: '"'+x.nodeName.toLowerCase(),description:x.value, depth:-1,isSpecial:true});
                 }
-            } else if (funcName === "addEventListener" || funcName === "removeEventListener") {
-                eventNames.forEach(function(x) {
-                    ans.push({name:'\u2555"'+x+'"',comName: '"'+x.toString().toLowerCase(),description:"event name", depth:-1,isSpecial:true});
-                });
-            } else if ('createElementNS,createAttributeNS,hasAttributeNS'.indexOf(funcName)!=-1) {
-                namespaces.forEach(function(x) {
-                    ans.push({name:'\u2555"'+x+'"',comName: '"'+x.toString().toLowerCase(),description:"ns", depth:-1,isSpecial:true});
-                });
+            } else if (fu == "addEventListener" || fu == "removeEventListener" || fu =='on') {
+				var er
+				if (er = this.object._eventRegistry) try{
+					if(er.forEach)
+						er.forEach(createItem)
+					else
+						Object.keys(er).forEach(createItem)
+				} catch(e){}
+				descr = "browser event name"
+				eventNames.forEach(createItem);
+            } else if ('createElementNS,createAttributeNS,hasAttributeNS'.indexOf(fu)!=-1) {
+				descr = "ns";
+                namespaces.forEach(createItem);
+            } else if (fu == 'require') {
+				descr = "module";
+				if(require && require.modules)
+					require.modules.forEach(createItem);
             }
         } catch(e) {
             Cu.reportError(e);
         }
         this.unfilteredArray = ans.concat(this.unfilteredArray);
     },
-
-    parseJSFragment: function(evalString) {
-        var i0, next, iBuff;
-        var i = evalString.length - 1;
-        var rx = /[a-z$_0-9]/i;
-        var skipWord = function() {
-            i0 = i;
-            while(rx.test(next = evalString.charAt(i))) {
-                i--;
-            }
-        };
-        var skipString = function(comma) {
-            next = evalString.charAt(--i);
-            while(next && (next != comma || evalString.charAt(i-1) === "\\")) {
-                next = evalString.charAt(--i);
-            }
-        };
-        var skipStacks = function() {
-            var stack = [];
-            while(next = evalString.charAt(--i)) {
-                skipWord(); //print(next)
-                switch(next) {
-                    case ".":
-                        skipWord();//print(next)
-                    break;
-                    case "'":
-                    case '"':
-                        skipString(next);
-                    break;
-                    case '}':
-                        stack.push("{");
-                    break;
-                    case ']':
-                        stack.push("[");
-                    break;
-                    case ')':
-                        stack.push("(");
-                    break;
-                        stack.push(next);
-                    break;
-                    case '{':
-                    case '[':
-                    case '(':
-                        //print(next + "bb");
-                        if (stack.pop() !== next)
-                            return;
-                        //print(next + "bb2");
-                    break;
-                    default:
-                        //print(next+22);
-                        if (stack.length === 0)
-                            return;
-                }
-            }
-        ++i;
-        };
-
-        var ans = {evalString:'', nameFragment:'', functionName:''};
-
-        skipWord();
-        iBuff = i;
-        ans.nameFragment = evalString.substr(iBuff + 1);
-
-        if (next === "(") {
-            iBuff = i;
-            i--;
-            skipWord();
-            ans.functionName = evalString.substring(i+1, iBuff);
-        }
-
-        if (next === ".") {
-            iBuff = i;
-            skipStacks();
-            if (next || i < 0)
-                i++;
-            ans.evalString = evalString.substr(i, iBuff-i);
-        }
-
-        return [ans.evalString, ans.nameFragment, ans.functionName];
-    },
-
+	
     compare: function() {
         this.sayInBubble(compareWithPrototype.compare(this.object).join("\n"));
     }
 });
 
-aceManager.CSSAutocompleter =  extend(aceManager.BaseAutocompleter, {
+Firebug.Ace.CSSAutocompleter =  FBL.extend(Firebug.Ace.BaseAutocompleter, {
     invalidCharRe: /[\+;:,= \(\)\[\]\{\}\><]/,
     start: function(editor) {
         this.editor = editor || this.editor;
-        var range = editor.selection.getRange();
-        this.filterRange = range.clone();
+		
+		var cell = Firebug.Ace.win2.editor.session.getMode().getCurrentCell();
+		if(cell.cursor <= cell.headerEnd){
+			if (cell.coffeeText)
+				this.sayInBubble(cell.coffeeText)
+		}
 
-        var p = this.parse(this.editor);
-        var filterText = p[2];
+        var $q = this.$q = backParse.css(this.editor);
+        this.text = $q.nameFragment;
 
-        range.end.column = range.end.column - filterText.length - 1;
-        range.start.column = range.end.column;
-        this.baseRange = range;
 
-        this.filterRange.start.column = this.filterRange.end.column - filterText.length;
+        this.unfilteredArray = this[$q.mode]($q);
 
-        this.text = filterText;
-
-        this.unfilteredArray = this[p[0]](p);
-//dump(this.unfilteredArray,this.text)
         this.filter(this.unfilteredArray, this.text);
         this.showPanel();
     },
@@ -577,7 +563,7 @@ aceManager.CSSAutocompleter =  extend(aceManager.BaseAutocompleter, {
         return;
     },
 
-    insertSuggestedText: function(additionalText) {
+    insertSuggestedText: function(additionalText, replaceWord) {
         var ch;
         var c = this.tree.view.selection.currentIndex;
         if (c < 0)
@@ -586,9 +572,9 @@ aceManager.CSSAutocompleter =  extend(aceManager.BaseAutocompleter, {
         var isSpecial = c.special;
         var text = c.name;
 
-        var range = this.editor.selection.getRange();
+        var range = this.$q.filterRange;
 
-        var cursor = this.editor.selection.getCursor();
+        var cursor = range.end;
         var row = cursor.row;
         var col = cursor.column;
         var curLine = this.editor.session.getLine(row);
@@ -597,14 +583,13 @@ aceManager.CSSAutocompleter =  extend(aceManager.BaseAutocompleter, {
         while((ch=curLine[col++]) && rx.test(ch)); //select word forward
         range.end.column = col-1;
 
-        var s = this.baseRange.end.column + 1;
-        col = s;
         //pseudoclass
         if (text[0]==':') {
-            while (curLine[--col]==':')
+			var s = range.start.column;
+            while (curLine[s-1]==':')
                 s--;
+			range.start.column = s;
         }
-        range.start.column = s;
 
         this.editor.selection.setSelectionRange(range);
         this.editor.onTextInput(text);
@@ -627,7 +612,7 @@ aceManager.CSSAutocompleter =  extend(aceManager.BaseAutocompleter, {
     },
     propValue: function(fragment) {
         var table = [];
-        for each(var i in FBL.getCSSKeywordsByProperty('html', fragment[3])) {
+        for each(var i in FBL.getCSSKeywordsByProperty('html', fragment.propName)) {
             table.push({name: i, comName: i.toLowerCase()});
         }
 
@@ -636,7 +621,7 @@ aceManager.CSSAutocompleter =  extend(aceManager.BaseAutocompleter, {
     selector: function(fragment) {
         var i;
         var table = [];
-        if (fragment[1][0]==':') {
+        if (fragment.termChar[0] == ':') {
             for each(i in mozPseudoClasses) {
                 table.push({name: i, comName: i.toLowerCase()});
             }
@@ -646,11 +631,11 @@ aceManager.CSSAutocompleter =  extend(aceManager.BaseAutocompleter, {
             for each(i in pseudoElements) {
                 table.push({name: i, comName: i.toLowerCase()});
             }
-        } else if (fragment[1]=='.') {
+        } else if (fragment.termChar == '.') {
             for each(i in getClassesInDoc(Firebug.currentContext.window.document)) {
                 table.push({name: i, comName: i.toLowerCase()});
             }
-        } else if (fragment[1]=='#') {
+        } else if (fragment.termChar == '#') {
             for each(i in getIDsInDoc(Firebug.currentContext.window.document)) {
                 table.push({name: i, comName: i.toLowerCase()});
             }
@@ -663,77 +648,240 @@ aceManager.CSSAutocompleter =  extend(aceManager.BaseAutocompleter, {
         return table;
     },
 
-    parse: function(editor) {
-        var cursor = editor.selection.getCursor();
-        var row = cursor.row,
-            col = cursor.column,
-            ch;
-        var lines = editor.session.doc.$lines;
-        var curLine = lines[row];
-
-        function next() {
-            return ch = curLine[--col] || ((curLine = lines[--row]) && (col = curLine.length, '\n'));
-        }
-        function peek() {
-            return curLine[col-1] || (lines[row-1] && '\n');
-        }
-        var rx = /[\w$\-\[\]\(\)]/;
-        function skipWord() {
-            while(next() && rx.test(ch));
-        }
-        function getText() {
-            var c = cursor.row!=row || col<0 ? 0: col;
-            var t = editor.session.getTextRange({
-                start:{column:c,row:cursor.row},
-                end: cursor
-            });
-
-            dump(t.toSource());
-            return t.substr(1).trim();
-        }
-
-        //*************
-        skipWord();
-        curWord = getText();
-        //****************
-        var colonSeen, mode, termChar = ch;
-        if (!ch) {//start of file
-                mode='selector';
-                return [mode,'',curWord]
-        }
-        if (ch==':' && peek()==':') {
-            termChar = '::';
-            mode = 'selector';
-            return [mode,termChar,curWord]
-        }
-        if (ch==' ') {
-            var j = i;
-            while(next() == ' ');
-            if (ch && !rx.test(ch))
-                termChar = ch;
-        }
-        if (ch==':')
-            colonSeen = true;
-
-        do {
-            //dump(prev,i)
-            if (ch == '}') {
-                mode='selector';
-                return [mode, termChar, curWord];
-            } else if (ch == ':') {
-                colonSeen = true;
-                cursor = {row: row, column: col};
-            } else if (ch == ';' || ch == '{') {
-                mode = colonSeen? 'propValue' : 'propName';
-                if (colonSeen) {
-                    return [mode, termChar, curWord, getText().trim()];
-                }
-                return [mode, termChar, curWord];
-            }
-        } while(next());
-        return  ['selector', termChar, curWord];
-    }
+    
 });
+
+var backParse = (function() {
+	var editor;
+	var cursor, range, col, row, ch;
+	var captureCursor, objCursor, lines, curLine;
+	var rx, jsRx = /[a-z$_0-9]/i, cssRx = /[\w$\-\[\]\(\)]/;
+
+	function init($editor) {
+		editor = $editor;
+		cursor = editor.selection.getCursor();
+		range = editor.selection.getRange()
+		row = cursor.row;
+		col = cursor.column;
+		ch = captureCursor = objCursor = null;
+		lines = editor.session.doc.$lines;
+		curLine = lines[row];
+	}
+	function next() {
+		return ch = curLine[--col] || (
+			(curLine = lines[--row] || '', col = curLine.length, row<0?'':'\n'));
+	}
+	function peek() {
+		return curLine[col-1] || (row>0 && '\n');
+	}
+
+	function clip(cursor){
+		cursor.column<0 && (cursor.column=0)
+		cursor.row<0 && (cursor.row=0)
+		return cursor
+	}
+	function getText(cursor) {
+		range.start = clip({column:col, row: row})
+		range.end = clip(cursor||captureCursor)
+		var t = editor.session.getTextRange(range);
+		dump(ch, col, row, t)
+		if (ch == '\n') {
+			range.start.column = 0
+			range.start.row++
+			t = t.substr(1)
+		} else if(ch) {
+			range.start.column++
+			t = t.substr(1)
+		}
+		return t//.trim();
+	}
+	function capture() {
+		return captureCursor = {row:row,column:col+(ch?1:0)}
+	}
+	function getToken(tocFun){
+		capture()
+		tocFun()
+		return getText(null)
+	}
+
+	function eatString(comma) {           
+		while(next() && (ch!= comma || peek()=='\\') &&
+				(ch!= '\n' || peek()=='\\'));
+	};
+	function eatWord() {
+		while(next() && rx.test(ch));
+		return ch
+	}
+	function eatSpace() {
+		while(next() == ' ');
+		return ch
+	}
+	function eatWhile(rx) {
+		while(next() && rx.test(ch));
+		return ch
+	}
+	function eatBrackets() {
+		var stack = [];
+		while(ch) {
+			switch(ch) {
+				case "'": case '"':
+					eatString(ch);
+				break;
+				case '}':
+					stack.push("{");
+				break;
+				case ']':
+					stack.push("[");
+				break;
+				case ')':
+					stack.push("(");
+				break;
+				case '{': case '[': case '(':
+					if (stack.pop() !== ch)
+						return;
+				break;				
+			}
+			next()
+			if (stack.length === 0)
+				return;
+		}
+	}
+
+	return {
+		js: function(editor){
+			init(editor)
+			rx = jsRx;
+			var ans = {evalString:'', nameFragment:'', functionName:'', eqName:''};
+			ans.nameFragment = getToken(eatWord)
+			ans.filterRange = range.clone();
+
+			if(ch=="'"||ch=='"'){
+				eatSpace()
+				if (ch=='('){
+					eatSpace()
+					ans.functionName = getToken(eatWord)
+				}else if(ch=='['){
+					eatSpace()
+					objCursor=capture()
+				}else if(ch=='='){
+					eatSpace()
+					ans.eqName = getToken(eatWord)
+				}
+			}
+			ch==' '&&eatSpace()
+			if (ch=='('){
+				eatSpace()
+				ans.functionName = getToken(eatWord)
+			}
+			if (ch=='.'){
+				eatWhile(/\s/)
+				objCursor=capture()
+			}
+			if (objCursor) {
+				dump(objCursor.row,objCursor.column)
+				ans.dotPosition = objCursor
+				var state='.'
+				outer: while (ch) {
+					switch (ch) {
+						case '.':
+							eatWhile(/\s/)
+							state='.'
+						break;
+						case "\n":
+							capture()
+							eatWhile(/\s/);
+							if(ch != '.'){
+								col = captureCursor.column
+								row = captureCursor.row
+								ch = '\n'
+								break outer;
+							}
+						break;
+						case " ":
+							eatSpace(ch);
+						break;
+						case ']':case ')':
+							if(state=='.')
+								eatBrackets()
+							else
+								break outer;
+						break;
+						default:
+							state=''
+							if (rx.test(ch))
+								eatWord();
+							else
+								break outer;
+						break;
+					}
+				}
+
+				ans.evalString=getText(objCursor).trim()
+				ans.baseRange = range.clone();
+			} else {
+				range.end.row = range.start.row;
+				range.end.column = range.start.column;
+				ans.baseRange = range.clone();
+			}
+
+			return ans
+		},
+		css: function(editor){
+			init(editor);
+			rx = cssRx;
+			var ans = {nameFragment:'', mode: 'selector'};
+			ans.nameFragment = getToken(eatWord)
+			ans.filterRange = range.clone();
+			
+			range.end.row = range.start.row;
+			range.end.column = range.start.column;
+			ans.baseRange = range.clone();
+			ans.termChar = ch;
+			
+			var colonCursor
+			if (!ch) //start of file
+				return ans
+			
+			if (ch == ':' && peek() == ':') {
+				ans.termChar = '::';
+				return ans
+			}
+			if (ch==' ') {
+				eatWhile(/\s/)
+				if (ch && !rx.test(ch))
+					ans.termChar = ch;
+			}
+			if (ch == ':'){
+				eatWhile(/\s/)
+				colonCursor = capture();
+				ans.propName = getToken(eatWord)
+				ans.baseRange = range.clone();
+			}
+
+			do {
+				if (ch == '}') {
+					ans.mode = 'selector';
+					return ans;
+				} else if (ch == ':') {
+					eatWhile(/\s/)
+					colonCursor = capture();
+					ans.propName = getToken(eatWord)
+					ans.baseRange = range.clone();
+				} else if (ch == ';' || ch == '{') {
+					if (colonCursor) {
+						ans.mode = 'propValue';
+					} else {
+						ans.mode = 'propName';
+					}
+					return ans;
+				}
+			} while(next());
+			
+			return  ans;
+		}
+	}
+})()
+
 //css completion helpers
 var getAllCSSPropertyNames=function() {
     var style = document.createElement('c').style;
@@ -893,10 +1041,8 @@ var getIDsInDoc = function(doc) {
     var result = xpe.evaluate('//*[@id]', doc.documentElement, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
     var ans=[];
 
-    for(let i = 0, snapLen = result.snapshotLength; i < snapLen; i++) {
-        let x = result.snapshotItem(i).id;
-        ans[i] = {name:' "' + x + '")', comName: "ci." + x.toString().toLowerCase(), description: "id", depth: -1, isSpecial: true};
-    }
+    for(let i = 0, snapLen = result.snapshotLength; i < snapLen; i++)
+        ans[i] = result.snapshotItem(i).id;
 
     return ans;
 };
@@ -993,42 +1139,56 @@ if (!modernfox) { //for old versions
         return data;
     };
 } else {//4.0b2+
-    var getProps = function(targetObj) {
-		if (!targetObj)return [];
+    getProps = function(targetObj) {
+        if (!targetObj)
+            return [];
 
-		var d, o, x = targetObj
-		var data = [], protoList = [], depth = 0, allProps = [];
+        var d, o, x = targetObj
+        var data = [], protoList = [], depth = 0, allProps = [];
 
-		if(typeof x !== "object" && typeof x !== "function")
-			x = x.constructor;
+        if (typeof x !== "object" && typeof x !== "function")
+            x = x.constructor.prototype;
 
-		if(typeof x === "xml")
-			return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
-		
-		if(typeof x === "object")
-			targetObj = x = XPCNativeWrapper.unwrap(targetObj)
-		
-		if(targetObj != x)
-			data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
+        if (typeof x === "xml")
+            return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
 
-		while(x){
-			var props = Object.getOwnPropertyNames(x);
-			innerloop: for each(var i in props) {
-				//if (allProps.indexOf(i) > -1)
-				//	continue innerloop;
-				try{dump(i);o=targetObj[i]; dump(i,'++');d=jn.inspect(o);}catch(e){d=e.message;o="error";Components.utils.reportError(e)}
-				
-				data.push({name: i, comName: i.toLowerCase(), description: d, depth:depth, object: o});
+        if (typeof targetObj === "object") {
+            x = XPCNativeWrapper.unwrap(targetObj)
+
+			if (targetObj != x) {
+				data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
+				targetObj = x
 			}
-			protoList.push(x);x = x.__proto__;depth++;allProps = allProps.concat(props);
 		}
-		return data;
-		
-		if('QueryInterface' in x)
-			data.push({name:'QueryInterface', comName: 'queryinterface',description:'', depth:-1})
-		if('Components' in x)
-			data.push({name:'Components', comName: 'components',description:'', depth:-1})
-	};
+
+		var maxProtoDepth = 20
+        while(x) {
+            var props = Object.getOwnPropertyNames(x);
+            innerloop: for each(var i in props) {
+                if (allProps.indexOf(i) > -1)
+                    continue innerloop;
+
+                try {
+                    o = targetObj[i];
+                    d = jn.inspect(o);
+                } catch(e) {
+                    o = "error";
+                    d = e.message;
+                }
+                data.push({name: i, comName: i.toLowerCase(), description: d, depth:depth, object: o});
+            }
+            protoList.push(x);
+			// some objects (XML, Proxy) may have infinite list of __proto__
+			if(!maxProtoDepth--)
+				break;
+            x = x.__proto__;
+            depth++;
+            allProps = allProps.concat(props);
+        }
+
+        return data;
+
+    };
 }
 
 var namespaces = [
@@ -1095,10 +1255,9 @@ jn.inspect = function(x, isLong) {
             // fixme: reference stuff must be handled elswhwere
             var funcName = string.match(/ ([^\(]*)/)[1];
 
-
             return string.replace("()", "(~" + x.length + ")")+ '\n' +getMDCInfoFor(funcName);
         }
-        return    string;
+        return string;
     }
     if (Class === "XML")
         return Class + "`\n" + x.toXMLString();
@@ -1110,7 +1269,7 @@ jn.inspect = function(x, isLong) {
         nameList.push("`" + Class + "` ~" + l);
         l = Math.min(isLong?100:10, l);
         for(i = 0; i < l; i++) {
-            nameList.push(x[i].toString());
+            nameList.push(x[i]);
         }
         return nameList.join(',\n   ');
     }
@@ -1197,84 +1356,69 @@ var InspectHandlers = {
     }
 };
 
-var getParent = function(a) {
-    var utils = (window.getInterface ||
-        window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface)(Ci.nsIDOMWindowUtils);
+function handlerMaker(obj) {
+	var objStr = Object.prototype.toString.call(obj)
+	function toS()'[proxy wrapped'+objStr
+	return {
+		getOwnPropertyDescriptor: function(name) {
+			var desc = Object.getOwnPropertyDescriptor(obj, name);
+			// a trapping proxy's properties must always be configurable
+			desc.configurable = true;
+			return desc;
+		},
+		getPropertyDescriptor:  function(name) {
+			var desc = Object.getPropertyDescriptor(obj, name); // assumed
+			// a trapping proxy's properties must always be configurable
+			desc.configurable = true;
+			return desc;
+		},
+		getOwnPropertyNames: function() {
+			if(objStr=='[object Call]')
+				return Object.getOwnPropertyNames(obj);
+			// [object With]
+			var ans = []
+			for(var i in obj)
+				ans.push(i)
+			return ans
+		},
+		defineProperty: function(name, desc) {
+			Object.defineProperty(obj, name, desc);
+		},
+		delete: function(name) { return delete obj[name]; },
+		fix: function() {
+			if (Object.isFrozen(obj)) {
+				return Object.getOwnProperties(obj); // assumed
+			}
+			// As long as obj is not frozen, the proxy won't allow itself to be fixed
+			return undefined; // will cause a TypeError to be thrown
+		},
 
-    function handlerMaker(obj) {
-        return {
-            getOwnPropertyDescriptor: function(name) {
-                var desc = Object.getOwnPropertyDescriptor(obj, name);
-                // a trapping proxy's properties must always be configurable
-                desc.configurable = true;
-                return desc;
-            },
+		has: function(name) { return name in obj; },
+		hasOwn: function(name) { return ({}).hasOwnProperty.call(obj, name); },
+		get: function(receiver, name) {				
+			return name=='toString'?toS:obj[name]; },
+		set: function(receiver, name, val) { obj[name] = val; return true; }, // bad behavior when set fails in non-strict mode
+		enumerate:    function() {
+			var result = [];
+			for (var name in obj) { result.push(name); };
+			return result;
+		},
+		keys: function() { return Object.keys(obj); }
+	};
+}
 
-            getPropertyDescriptor:  function(name) {
-                var desc = Object.getPropertyDescriptor(obj, name); // assumed
-                // a trapping proxy's properties must always be configurable
-                desc.configurable = true;
-                return desc;
-            },
+jn.getParent=function(a) {
+	var utils = (window.getInterface || 
+				 window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface)(Ci.nsIDOMWindowUtils);	
 
-            getOwnPropertyNames: function() {
-                return Object.getOwnPropertyNames(obj);
-            },
-
-            defineProperty: function(name, desc) {
-                Object.defineProperty(obj, name, desc);
-            },
-
-            delete: function(name) {
-                return delete obj[name];
-            },
-
-            fix: function() {
-                if (Object.isFrozen(obj)) {
-                    return Object.getOwnProperties(obj); // assumed
-                }
-                // As long as obj is not frozen, the proxy won't allow itself to be fixed
-                return undefined; // will cause a TypeError to be thrown
-            },
-
-            has: function(name) {
-                return name in obj;
-            },
-
-            hasOwn: function(name) {
-                return ({}).hasOwnProperty.call(obj, name);
-            },
-
-            get: function(receiver, name) {
-                return name === "toString" ? function() {
-                    return "[object functionCall proxy]";
-                } : obj[name];
-            },
-
-            set: function(receiver, name, val) {
-                obj[name] = val;
-                return true;
-            }, // bad behavior when set fails in non-strict mode
-
-            enumerate: function() {
-                var result = [];
-                for (var name in obj) {
-                    result.push(name);
-                }
-                return result;
-            },
-
-            keys: function() {
-                return Object.keys(obj);
-            }
-        };
-    }
-
-    var parent = utils.getParent(a);
-    if (parent.toString)
-        return parent;
-    return Proxy.create(handlerMaker(parent));
-};
+	var parent = utils.getParent(a)
+	if (parent.toString) 
+		try{
+			parent.toString();
+			return parent
+		}catch(e){}// in [with] have toString which throws
+	return Proxy.create(handlerMaker(parent))
+}
 
 jn.getClass = function(x) {
     return Object.prototype.toString.call(x).slice(8,-1);
@@ -1389,17 +1533,3 @@ var getMDCInfoFor = function(funcname) {
         ans += a[i].textContent;
     return ans;
 };
-/*
-
-for(var i=l.length;i--;) {
-l[i].firstChild.replaceWholeText(l[i].firstChild.wholeText.trim())
-}
-
-s=new XMLSerializer()
-
-s.serializeToString(doc)
-
-
-doc.querySelector('[name="scrollMaxX"]')
-*/
-
