@@ -78,7 +78,7 @@ function startAsyncReq(href) {
 	
 }
 
-function setLoacation(spec){
+window.setLoacation = function(spec){
 	if(!spec)
 		return false
 	var fu = Cc["@mozilla.org/docshell/urifixup;1"]
