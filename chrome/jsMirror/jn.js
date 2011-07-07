@@ -108,64 +108,9 @@ var InspectHandlers={
 	 CSSStyleSheet:function(x)'~'+x.cssRules.length+' ->'+x.href
 	,CSSNameSpaceRule:function(x)x.cssText
 	,CSSStyleRule:function(x)x.cssText
+	,Window:function(x)x.document.title
 }
 
-
-
-/*
-jn.inspect=function(x,long){
-	var Class=jn.getClass(x)
-	
-	if(x == null) return String(x);
-	var name, t = typeof x;
-	switch(t){
-		case 'object': break;
-		//case 'string': return x;
-		case 'function':
-			if(long) return x.toString(0)
-			name=x.toString()
-
-			var i=name.indexOf("{")
-			var t=name.substr(i)=='{[native code]}'?'function[n]': 'function'
-
-			name=t+name.substring(name.indexOf(" "),i-1)+'~'+x.length
-
-			return name
-		case 'xml': x = x.toXMLString();
-		default: return  t+' '+x;
-	}
-	try{
-		var l=x.length
-	}catch(e){}//[xpconnect wrapped native prototype].length: throws Illegal operation on WrappedNative prototype object
-
-	if(long&&typeof l==='number' && typeof x.push==='function' &&typeof x.splice==='function') {
-		name = 'array~  '+x.length+'\n   '+x.join(',\n   ');return name
-	}
-	//d.constructor
-	var name = '`'+Class+'` '+x.toString()//\u25b7'\u25ba'
-	//for files
-	try{
-		if(x.spec)
-			return name+" "+x.spec
-		else if(x.path)
-			return name+" "+x.path
-		//for dom nodes
-		if(x.nodeName)
-			name+=x.nodeName
-		if(x.id)
-			name+="#"+x.id
-		if(x.className)
-			name+="."+x.className.toString().replace(" ",".",'g')
-		if(x.value)
-			name+=" ="+x.value.substring(0,30)
-		else if(x.nodeValue)
-			name+=" ="+x.nodeValue.substring(0,30)
-		if(typeof l==='number')
-			name+=' ~'+l
-	}catch(e){}
-
-	return name
-}*/
 /*function outer() {
     var communicationChannel = 24;
     function innerGetter() {
@@ -180,9 +125,8 @@ var io=1
 i=outer()
 ui=jn.getParent(i[0])
 */
-jn.getParent=function(a){
+jn.getParent=function(a) {
 	var utils=(window.getInterface||window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface)(Ci.nsIDOMWindowUtils);
-
 
 	function handlerMaker(obj) {
 	  return {
@@ -234,38 +178,7 @@ jn.getParent=function(a){
 jn.getClass=getClass
 
 jn.exec=function go(s){
-  _win=EJS_currentTargetWin
 
-  EJS_executeJS
-  /*if (_win.closed) {
-    jn.printError("Target window has been closed.");
-    return;
-  }
-
-  try { ("jn" in _win) }
-  catch(er) {
-    jn.printError("The JavaScript Shell cannot access variables in the target window.  The most likely reason is that the target window now has a different page loaded and that page has a different hostname than the original page.");
-    return;
-  }
-
-  if (!("jn" in _win))
-    initTarget(); // silent*/
-
-	var code = codebox.value;
-
-
-
-
-
-
-  // Evaluate Shell.question using _win's eval (this is why eval isn't in the |with|, IIRC).
-  _win.location.href = "javascript:try{\
-  jn.yyyyyyyyyy(eval(' "+ code + String.fromCharCode(10) +" ')); \
-  } catch(er) {jn.yyyyyyyyyyyyyy(er)}; void 0";
-
-  	EJS_appendToConsole(result);
-	codebox.focus();
-   // return result;
 }
 
 function getClass(x) {

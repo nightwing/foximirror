@@ -138,7 +138,7 @@
 			<deck id='slateDeck' flex='1'>
 				<browser type="content" id='dirView' flex='1' src="chrome://shadia/content/chromeMirror/slate.html" context='globalContext' onclick='slateViewer.onClick(event)' disablehistory='true'/>
 				<browser type="content" id='file' flex='1' src="chrome://shadia/content/chromeMirror/slate.html" context='globalContext' disablehistory='true'/>
-				<browser type="content" id='ace' flex='1' src="chrome://shadia/content/fbace/fbeditor.html" context='globalContext'  disablehistory='true'/>
+				<browser type="content" id='ace' flex='1' src="chrome://shadia/content/fbace/edit-protocol-editor.html" context='globalContext'  disablehistory='true'/>
 			</deck>
 			<arrowscrollbox >
 				<textbox type='search' flex="1" id='slate-finder'/>

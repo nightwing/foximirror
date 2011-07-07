@@ -11,16 +11,17 @@
 		persist="screenX screenY width height sizemode"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:html="http://www.w3.org/1999/xhtml"
-		onload="EJS_doOnload()"
-		onunload="EJS_doOnUnload()"
+		onload="initialize()"
+		onunload="cleanup()"
 		windowtype='shadia:jsMirror'>
 
 	<script type="application/javascript" src="../utils/prefUtils.js"/>
 	<script type="application/javascript" src="../utils/fileUtils.js"/>
 	<script type="application/x-javascript" src="menuUtils.js"/>
-	<script type="application/x-javascript" src="autocompleter.js"/>
-
+	<script type="application/x-javascript" src="emulate-fb.js"/>
+	
     <script type="application/x-javascript" src="jsMirror2.js"/>
+	<script type="application/x-javascript" src="autocompleter.js"/>
 
 
 
@@ -65,6 +66,7 @@
 			</hbox>
 			<resizer object='autocomplatePanel' dir='bottom-right'/>
 		</panel>
+
 		<menupopup id='main-context' onpopupshowing='MenuUtils.onContextShowing(event)'/>
     </popupset>
 
