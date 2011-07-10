@@ -12890,6 +12890,20 @@ var VirtualRenderer = function(container, theme) {
         scrollerWidth: 0
     };
 
+	this.layerConfig = {
+		width : 0,
+		padding : 0,
+		firstRow : 0,
+		firstRowScreen: 0,
+		lastRow : 0,
+		lineHeight : 1,
+		characterWidth : 0,
+		minHeight : 0,
+		maxHeight : 0,
+		offset : 0,
+		height : 1
+	};
+
     this.$loop = new RenderLoop(this.$renderChanges.bind(this));
     this.$loop.schedule(this.CHANGE_FULL);
 
@@ -12970,13 +12984,15 @@ var VirtualRenderer = function(container, theme) {
      */
     this.onResize = function(force) {
         var changes = this.CHANGE_SIZE;
+        var size = this.$size;
 
         var height = dom.getInnerHeight(this.container);
-        if (force || this.$size.height != height) {
-            this.$size.height = height;
+        if (force || size.height != height) {
+            size.height = height;
 
             this.scroller.style.height = height + "px";
-            this.scrollBar.setHeight(this.scroller.clientHeight);
+            size.scrollerHeight = this.scroller.clientHeight;
+            this.scrollBar.setHeight(size.scrollerHeight);
 
             if (this.session) {
                 this.scrollToY(this.getScrollTop());
@@ -12985,25 +13001,25 @@ var VirtualRenderer = function(container, theme) {
         }
 
         var width = dom.getInnerWidth(this.container);
-        if (force || this.$size.width != width) {
-            this.$size.width = width;
+        if (force || size.width != width) {
+            size.width = width;
 
             var gutterWidth = this.showGutter ? this.$gutter.offsetWidth : 0;
             this.scroller.style.left = gutterWidth + "px";
-            this.scroller.style.width = Math.max(0, width - gutterWidth - this.scrollBar.getWidth()) + "px";
+            size.scrollerWidth = Math.max(0, width - gutterWidth - this.scrollBar.getWidth())
+            this.scroller.style.width = size.scrollerWidth + "px";
 
-            if (this.session.getUseWrapMode()) {
-                var availableWidth = this.scroller.clientWidth - this.$padding * 2;
-                var limit = Math.floor(availableWidth / this.characterWidth) - 1;
-                if (this.session.adjustWrapLimit(limit) || force) {
-                    changes = changes | this.CHANGE_FULL;
-                }
-            }
+            if (this.session.getUseWrapMode() && this.adjustWrapLimit() || force)
+                changes = changes | this.CHANGE_FULL;
         }
 
-        this.$size.scrollerWidth = this.scroller.clientWidth;
-        this.$size.scrollerHeight = this.scroller.clientHeight;
         this.$loop.schedule(changes);
+    };
+
+    this.adjustWrapLimit = function(){
+        var availableWidth = this.$size.scrollerWidth - this.$padding * 2;
+        var limit = Math.floor(availableWidth / this.characterWidth) - 1;
+        return this.session.adjustWrapLimit(limit);
     };
 
     this.$onGutterClick = function(e) {
@@ -13099,33 +13115,27 @@ var VirtualRenderer = function(container, theme) {
             return;
 
         var bounds = this.content.getBoundingClientRect();
-        var offset = (this.layerConfig && this.layerConfig.offset) || 0;
+        var offset = this.layerConfig.offset;
 
         textarea.style.left = (bounds.left + pos.left + this.$padding) + "px";
         textarea.style.top = (bounds.top + pos.top - this.scrollTop + offset) + "px";
     };
 
     this.getFirstVisibleRow = function() {
-        return (this.layerConfig || {}).firstRow || 0;
+        return this.layerConfig.firstRow;
     };
 
-    this.getFirstFullyVisibleRow = function(){
-        if (!this.layerConfig)
-            return 0;
-
+    this.getFirstFullyVisibleRow = function() {
         return this.layerConfig.firstRow + (this.layerConfig.offset === 0 ? 0 : 1);
     };
 
     this.getLastFullyVisibleRow = function() {
-        if (!this.layerConfig)
-            return 0;
-
         var flint = Math.floor((this.layerConfig.height + this.layerConfig.offset) / this.layerConfig.lineHeight);
         return this.layerConfig.firstRow - 1 + flint;
     };
 
     this.getLastVisibleRow = function() {
-        return (this.layerConfig || {}).lastRow || 0;
+        return this.layerConfig.lastRow;
     };
 
     this.$padding = null;
@@ -13162,8 +13172,7 @@ var VirtualRenderer = function(container, theme) {
             return;
 
         // text, scrolling and resize changes can cause the view port size to change
-        if (!this.layerConfig ||
-            changes & this.CHANGE_FULL ||
+        if (changes & this.CHANGE_FULL ||
             changes & this.CHANGE_SIZE ||
             changes & this.CHANGE_TEXT ||
             changes & this.CHANGE_LINES ||
@@ -13189,7 +13198,7 @@ var VirtualRenderer = function(container, theme) {
                 this.$textLayer.update(this.layerConfig);
             else
                 this.$textLayer.scrollLines(this.layerConfig);
-                
+
             if (this.showGutter)
                 this.$gutterLayer.update(this.layerConfig);
             this.$markerBack.update(this.layerConfig);
@@ -13236,7 +13245,7 @@ var VirtualRenderer = function(container, theme) {
         var minHeight = this.$size.scrollerHeight + this.lineHeight;
 
         var longestLine = this.$getLongestLine();
-        var widthChanged = !this.layerConfig ? true : (this.layerConfig.width != longestLine);
+        var widthChanged = this.layerConfig.width != longestLine;
 
         var horizScroll = this.$horizScrollAlwaysVisible || this.$size.scrollerWidth - longestLine < 0;
         var horizScrollChanged = this.$horizScroll !== horizScroll;
@@ -13536,7 +13545,7 @@ var VirtualRenderer = function(container, theme) {
 
     this.setTheme = function(theme) {
         var _self = this;
-        
+
         this.$themeValue = theme;
         if (!theme || typeof theme == "string") {
             theme = theme || "ace/theme/textmate";
