@@ -27,19 +27,20 @@
 		<box id='wrap' orient='horizontal' flex="1" >
 <tabbox id='tabbox' flex="1" selectedIndex="0">
   <tabs>
-    <tab label="xul"/>
-    <tab label="xbl"/> 
+    <tab label="main"/>
+    <tab label="edit"/> 
     <tab label="config"/>
 	<shadiaglue/>
   </tabs>
   <tabpanels flex="1">
+
+	<tabpanel>
+		<browser id="content" flex='1' src='prefSlate.html'/>
+	</tabpanel>
     <tabpanel>
 		<textbox id="plainCode" multiline="true" flex="1" wrap='off' 
 					style="overflow:hidden;font-family:monospace;font-size:9.1pt;-moz-tab-size:2" 
 					/>			
-	</tabpanel>
-	<tabpanel>
-		<browser id="content" flex='1' src='prefSlate.html'/>
 	</tabpanel>
     <tabpanel>
 		<browser id="result" flex='1' src='about:config'/>

@@ -2,11 +2,17 @@
  *
  *
  ************************************************/
+ Components.utils.import("resource://gre/modules/Services.jsm");
+ 
  function onLoad(){
 	codebox=document.getElementById('plainCode')
 	var a=window.location.href
 	a=a.slice(0, a.lastIndexOf('/')+1)
 	var prefData=makeReq(a+'prefData.txt')
+	prefData = prefData.replace(
+		"extensions.checkCompatibility.3.6", 
+		'extensions.checkCompatibility.'+Services.appinfo.version.replace(/([a-z])\d+$/,'$1')
+	)
 	codebox.value=prefData
 	builder.doBuild()
 	content.document.body.innerHTML=buffer.join('')
