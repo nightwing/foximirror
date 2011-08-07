@@ -156,3 +156,30 @@ tr:hover{
 	border: 1px solid rgb(213, 80, 255);
 	-moz-border-radius: 2px 8px;
 }
+
+/* infotip */
+.infoTip{
+	z-index: 2147483647;
+	position: fixed;
+	padding: 2px 3px;
+	border: 1px solid #7EABCD;
+	background: none repeat scroll 0% 0% LightYellow;
+	font-family: Lucida Grande,Tahoma,sans-serif;
+	color: #000000;
+	display: none;
+	white-space: nowrap;
+	pointer-events: none;
+	border-radius: 3px 3px 3px 3px;
+	box-shadow: 2px 2px 3px gray;
+} 
+
+.infoTipColorBox {
+    background-image: -moz-repeating-linear-gradient(
+        left top -45deg,
+        #E6E6E6,
+        #E6E6E6 5px,
+        #FFFFFF 5px,
+        #FFFFFF 10px
+    );
+}
+

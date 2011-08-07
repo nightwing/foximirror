@@ -1,3 +1,7 @@
+/*window.addEventListener('activate',function(e){actions.refreshSkins()},false)
+window.addEventListener('deactivate',function(e){dump(e,'inactive')},false)
+ett*/
+
 Components.utils.import('resource://shadia/styles.jsm')
 /**/
 var shadowInspector=function(){}

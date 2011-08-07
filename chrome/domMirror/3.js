@@ -35,7 +35,7 @@ function initialize(){
 var mWindow=null, mNode,
 inspect=function(aNode, where){
 	var aWindow=(aNode.ownerDocument||aNode).defaultView
-	
+
 	if(where=='parent'){
 		var aWindow=domUtils.getParentForNode(aWindow.document,false)
 		aWindow=aWindow&&aWindow.ownerDocument.defaultView
@@ -47,7 +47,7 @@ inspect=function(aNode, where){
 	}
 	if(!aWindow)
 		return
-	
+
 	if(aWindow!==mWindow){
 		mWindow=aWindow
 		domViewer.setWindow(aWindow,aNode)
@@ -112,7 +112,7 @@ windowViewer={
 				try{
 					if(innerFrame.frames.length>0)
 						iterateInnerFrames(innerFrame,level+1)
-					else 
+					else
 						inspwin(innerFrame,level+1)
 				}catch(e){Components.utils.reportError(e);
 				dump('--->why error in innerFrame.frames?',innerFrame.location)}//
@@ -166,7 +166,7 @@ windowViewer={
 			if(topWindow.frame!=mWindow){
 				topIndex=i
 			}
-		}	
+		}
 		if(leftPane==domViewer){
 			if(data[topIndex].frame!=mWindow){
 				mWindow=data[topIndex].frame
@@ -208,14 +208,14 @@ windowViewer={
 	updateButton: function(){
 		var t=mWindow.document.title
 		var uri=sayHrefEnd(mWindow.document.documentURI)
-		
+
 		if(!t) t=uri
 		else if(t!=uri) t+=' '+uri
 		this.button.label=t
 	},
 
 	//window service
-	
+
 	currentURI: function(){
 		var i=this.tree.currentIndex
 		if(i>=0)
@@ -287,7 +287,7 @@ domViewer={
 			index=this.mDOMView.getRowIndexFromNode(line[i]);
 			if(index<0){// Can't find the row
 				if(i>=failI) break//stop trying if nothing helped once
-				if(i==lineLength){//document is wrong					
+				if(i==lineLength){//document is wrong
 					this.mDOMView.rootNode=line[i]
 					this.mDOMView.rebuild()
 				}else if(view.isContainerOpen(lastIndex)){//node is wrong
@@ -403,7 +403,7 @@ domSearch={
 				domViewer.setNode(mNode)
 			}
 			return
-		}		
+		}
 /*function iterateWindows(mWindow,level){
 	inspwin(mWindow,level)
 	for(var i=0;i<mWindow.frames.length;i++){
@@ -432,12 +432,12 @@ return
 		var result=this.searchDocument(xpath, mNode), ii=result.snapshotLength
 		this.textbox.matchCount=ii
 		this.activeNodeList= [];
-		
+
 		if(ii==0){// TODO strange bug when setting empty tree
 			domViewer.setNode(mNode)
-			return	
+			return
 		}
-		
+
 		for(var i = 0; i < ii; i++){
 			this.activeNodeList[i] = result.snapshotItem(i);
 		}
@@ -489,7 +489,7 @@ return
 			this.tree.treeBoxObject.scrollToRow(i0-(si-tr))
 			this.tree.view.selection.select(i0)
 		}
-			
+
 	},
 	restoreTreeState:function(){
 		i0=
@@ -525,10 +525,10 @@ return
 		var next=str.charAt(0)
 		if(next=='/')
 			return this.isValidXpath(str)
-		
+
 		str=str.toLowerCase()
 		var i=0,i0=0,next=str.charAt(i++)//i is one char farther than next so that [# .] are skipped
-		
+
 		var rx=/[\w$\-:]/
 		function skipWhitespace(){
 			while((next=str.charAt(i))==' ')i++;
@@ -583,7 +583,7 @@ return
 				}else if(next=='@'){
 					skipWord()
 					var pendingAttr=str.substring(i0,i),attrVal=''
-					skipWhitespace()				
+					skipWhitespace()
 					if(next=='='){next=str.charAt(i++);
 						skipWhitespace()
 						skipWord();
@@ -622,7 +622,7 @@ return
 		function getPathSegment(){
 			var segment=[]
 			if(name){
-				var t=containsXPFrag(name,'name()')				
+				var t=containsXPFrag(name,'name()')
 				if(id===false && !classes.length && !attrs.length)
 					t='('+t+' or '+containsXPFrag(name,'@id')+')'
 				segment.push(t)
@@ -654,7 +654,7 @@ return
 				ansPath.push('//*')
 				next=str.charAt(i++)
 			}
-		}		
+		}
 		if(ansPath.length<2)
 			return null
 		return ansPath.join('')
@@ -909,7 +909,7 @@ chromeRegistryViewer={
 
 
    //**********************
-  //* 
+  //*
  //******/
 var leftPane
 leftPaneSearch={
@@ -971,7 +971,6 @@ var rightpane={
 		var ch=this.decku.children
 		ch[i].collapsed=false
 		ch[this.i].collapsed=true
-		dump(i,this.i)
 		this.i=i
 	}
 
@@ -1101,7 +1100,6 @@ function copyView(tree2,copyTree){
 	};
 	//var checkRebuild=function(i){if(origView.rowCount!=copyTree.view.rowCount) rebuild(i)}
 	var rebuild=function(i){
-		dump(1,'rebuuild------',origView.rowCount,copyTree.view.rowCount,i)
 		var origRow=copyTree.treeBoxObject.getFirstVisibleRow()
 		var selIndex=copyTree.currentIndex
 		tree2.treeBoxObject.scrollToRow(origRow)
@@ -1131,7 +1129,7 @@ function copyView(tree2,copyTree){
 	this.cycleHeader = function(col, elem){};
 
 	copyTree.view=this
-		dump('copyTree.view=this',copyTree.view,this	)
+
 	copyTree.treeBoxObject.scrollToRow(tree2.treeBoxObject.getFirstVisibleRow())
 	copyTree.view.selection.select(tree2.currentIndex)
 	return this
@@ -1352,7 +1350,6 @@ function springyIndex(val,filterText){
  /**************************/
  selectObjectInTreeTimeOuts={}
 function selectObjectInTree(treeID,immediate){
-dump('selectObjectInTree',immediate)
 	if(!immediate){
 		if(selectObjectInTreeTimeOuts[treeID]){
 			clearTimeout(selectObjectInTreeTimeOuts[treeID])
@@ -1372,7 +1369,7 @@ dump('selectObjectInTree',immediate)
    //**************************
   //* browser viewer objects
  //******/
-insertAddrs=function(mNode){dump(mNode.nodeType,'----------************')
+insertAddrs=function(mNode){
 	var body=viewDoc.createElement(body)
 	if(!mNode){
 		body.textContent='error mNode is undefined'
@@ -1381,7 +1378,7 @@ insertAddrs=function(mNode){dump(mNode.nodeType,'----------************')
 	if(mode=='domedit')
 		attributeViewer.onDomviewerSelChanged()
 	switch(mNode.nodeType){
-		case 1:			
+		case 1:
 			if(!mode)
 				body.innerHTML=[
 					sayAttrs(mNode),
@@ -1396,7 +1393,7 @@ insertAddrs=function(mNode){dump(mNode.nodeType,'----------************')
 				body.innerHTML=sayParentCSS(mNode)
 			else if(mode=='attrs')
 				body.innerHTML=sayAttrs(mNode)
-			
+
 			break//ELEMENT_NODE
 		//case 2 ATTRIBUTE_NODE
 		case 3://TEXT_NODE
@@ -1409,7 +1406,6 @@ insertAddrs=function(mNode){dump(mNode.nodeType,'----------************')
 				body.innerHTML=[sayAttrs(mNode),sayParents(mNode),sayCSS(mNode.sheet.cssRules)].join('')
 			}else{
 				body.innerHTML=[sayAttrs(mNode),sayParents(mNode)].join('')
-				dump(/.*href="?([^"]*)/.exec(mNode.data)[1],(/.*href="?([^"]*)/).exec(mNode.data)[1])
 				var d=viewDoc.createElement('pre')
 				d.textContent=makeReq(/.*href="?([^"]*)/.exec(mNode.data)[1])
 				body.appendChild(d)
@@ -1421,7 +1417,7 @@ insertAddrs=function(mNode){dump(mNode.nodeType,'----------************')
 		case 10://DOCUMENT_TYPE_NODE
 			var name=mNode.nodeName
 			if(name=='HTML'&&mNode.publicId){
-				name='<!DOCTYPE HTML PUBLIC "'+mNode.publicId+'">'				
+				name='<!DOCTYPE HTML PUBLIC "'+mNode.publicId+'">'
 			}else
 				name=mNode.nodeName+' doctype '+mNode.publicId
 			body.textContent=name
@@ -1441,7 +1437,7 @@ function sayDocument(doc){
 
 		ans.push('<span class="name">title</span>= <span class="val">'+doc.title+'</span>')
 		var uri=sayHref(doc.documentURI)
-		
+
 		ans.push('<span class="name">uri</span>= <span class="val">'+uri+'</span>')
 
 		return '<div>'+ans.join('</div><div class="prop">')+'</div>'
@@ -1485,19 +1481,19 @@ attributeViewer={
 		slateViewer.mode='domedit'
 		var si=slateViewer.tabs.selectedItem
 		si&&(si._selected==false)
-		
+
 		var h
 		/*if(mNode.innerHTML){
 			h=mNode.innerHTML
 		}else{}*/
 		h=new XMLSerializer().serializeToString(mNode)
-		
+
 		if(mNode.nodeType==1){
-			h=XML(h).toXMLString()		
+			h=XML(h).toXMLString()
 			if(mNode.hasAttribute&&!(mNode.hasAttribute('xmlns')))h=h.replace(/ xmlns="[^"]*"/,'')
 		}
 		h=h+(new Array(10)).join('\n')
-		dump(h)
+
 		this.origHTML=h
 		this.editbox=document.getElementById('editbox')
 		this.editbox.value=h
@@ -1505,28 +1501,26 @@ attributeViewer={
 		this.editbox.setAttribute("oninput","attributeViewer.saveEdit2()")
 		this.status=document.getElementById('editboxsave').style
 		this.status.color=''
-		
+
 		this.node1=mNode
 		this.node2=mNode
 		this.parent=mNode.parentNode
-		
-		
+
+
 		var doc = this.node1.ownerDocument;
 		this.range = doc.createRange();
 		this.range.setStartBefore(this.node1)
-		this.range.setEndAfter(this.node2)		
-	},	
-	onDomviewerSelChanged:function(){dump(mNode,mNode.parentNode)
-
+		this.range.setEndAfter(this.node2)
+	},
+	onDomviewerSelChanged:function(){
 		if(!mNode.parentNode)return
 		//if(mNode.parentNode==this.parent&&this.range.comparePoint(mNode,1)==0)return
 		if(!this.editbox.hasAttribute('focused'))this.startEdit(mNode)
-		
 	},
-	toggleWrap:function(){	
+	toggleWrap:function(){
 		let codebox=this.editbox
-		let wr=(codebox.hasAttribute('wrap')&&(codebox.getAttribute('wrap')=='off'))?'on':'off'	
-		codebox.setAttribute('wrap',wr)	
+		let wr=(codebox.hasAttribute('wrap')&&(codebox.getAttribute('wrap')=='off'))?'on':'off'
+		codebox.setAttribute('wrap',wr)
 		codebox.editor.QueryInterface(Ci.nsIPlaintextEditor).wrapWidth= wr=='off'?-1:1
 	},
 	saveEdit2: function(){
@@ -1541,7 +1535,7 @@ attributeViewer={
 			var last = fragment.lastChild;
 			//element.parentNode.replaceChild(fragment, element);
 			this.range.deleteContents()
-			this.range.insertNode(fragment)  
+			this.range.insertNode(fragment)
 			this.status.color='green'
 		}catch(e){}
 		this.node1=first,this.node2=last
@@ -1551,7 +1545,7 @@ attributeViewer={
 		return [first, last];
 	},
 	saveEdit: function(){
-		rightpane.setIndex(1)	
+		rightpane.setIndex(1)
 		slateViewer.mode=""
 
 
@@ -1581,7 +1575,7 @@ setOuterHTML=function(nodes, html){
         var last = fragment.lastChild;
         //element.parentNode.replaceChild(fragment, element);
 		range.deleteContents()
-		range.insertNode(fragment)        
+		range.insertNode(fragment)
     }catch(e){}
 	return [first, last];
 };
@@ -1621,9 +1615,8 @@ function cssSelector(el){
 function sayParents(mNode){
 	var parent=mNode
 	var ans=[]
-	while(parent){//&&parent.nodeType==1
+	while(parent){
 		ans.unshift(cssSelector(parent))
-		//dump(parent)
 		parent=parent.parentNode
 	}
 	ans.shift()//\u25c4
@@ -1664,10 +1657,10 @@ function sayEvents(mNode){
 			if(s)
 				subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><pre>'+s+'</pre>')
 			else subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><br>')
-		}		
+		}
 		if(subans.length==0)
 			ans.push('<div class="val">-------</div>')
-		else ans.push(subans.join(','))	
+		else ans.push(subans.join(','))
 	}
 	while(parent){//&&parent.nodeType==1
 		ans.push('<div class="name">'+cssSelector(parent)+'</div>')
@@ -1676,7 +1669,7 @@ function sayEvents(mNode){
 	}
 	ans.push('<div class="name">window</div>')
 	sayEventsInner(mNode.ownerDocument.defaultView)
-	
+
 	ans[0]="<div class='end'>"+ans[0]+ans[1]+"</div>";ans[1]=''
 	return '<div id="event-slate">'+
 		"<div class='parents' closer='true'><a11> \u25e2 </a11><a>events</a></div>"+
@@ -1692,7 +1685,7 @@ function sayHrefEnd(href){
 				uri=uri.substr(l)
 		}
 		try{uri=decodeURIComponent(uri)}catch(e){}*/
-	href=sayHref(href)	
+	href=sayHref(href)
 	var l=href.lastIndexOf('/')
 	if(l==-1)l=0
 	return cropString( href.length>50?href:href.substr(l) )
@@ -1709,11 +1702,11 @@ cropString = function(text, limit){
 
     // Use default limit if necessary.
     if (!limit)
-        limit = 55;  
+        limit = 55;
     if (text.length > limit){
 		var halfLimit = (limit / 2)-1;
 		return text.substr(0, halfLimit) + '\u22EF' + text.substr(text.length-halfLimit);
-	}  
+	}
     return text;
 }
 /**-----------//////**************************/
@@ -1767,7 +1760,7 @@ function sayCSS(rules,maxn,isSecondary){var t=Date.now()
 		}else{
 			ans.push('<div slateID="'+i+'"><div class="end"><span class="selector">'+rule.cssText+'</span>'+rule.type+'</div>')
 		}
-	}dump('saycss',t-Date.now(),n-100,"**********-----------------******************",ans.length)
+	}
 	if(n>maxn){
 		ans.push("<div><buttondiv slateid='complete'>and <em>"+(n-maxn)+'</em> more rules</buttondiv>')
 	}
@@ -1813,12 +1806,12 @@ cssSlate={
 		slate.innerHTML=sayCSS(rules)
 		viewDoc.body.replaceChild(slate,viewDoc.body.firstChild)
 	},
-	sayRemainingRules: function(){		
-		var slate=viewDoc.createElement('slate')		
+	sayRemainingRules: function(){
+		var slate=viewDoc.createElement('slate')
 		slate.innerHTML=sayCSS(currentRules,currentRules.length)
 		viewDoc.body.replaceChild(slate,viewDoc.body.firstChild)
 	},
-	
+
 }
 
 
@@ -1889,9 +1882,7 @@ contentStates={active: 0x01,focus: 0x02, hover: 0x04,l:0x08,k:0x10}
 
 setContentState=function(state){
 	var st=domUtils.getContentState(mNode)
-	dump(st.toString(2))
 	st^=contentStates[state]
-	dump(st.toString(2))
 	domUtils.setContentState(mNode.ownerDocument.documentElement,0x07)//
 	domUtils.setContentState(mNode,st)
 	insertAddrs(mNode)
@@ -1900,7 +1891,7 @@ setContentState=function(state){
 slateViewer={
 	initialize: function(){
 		content.wrappedJSObject.gClipboardHelper=gClipboardHelper
-		
+
 		viewDoc=document.getElementById('slate-browser').contentDocument
 		viewDoc.addEventListener("mouseover",this.mouseover,false)
 		viewDoc.addEventListener("click",this.click,false)
@@ -1927,14 +1918,13 @@ slateViewer={
 		insertAddrs(mNode)
 	},
 	slates:[attributeViewer,'xbl'],
-	
+
 	mouseover:function(event){
 		clearTimeout(this.mouseoverTimeout)
-		this.mouseoverTimeout=setTimeout(function(){slateViewer.overNode(event)},100)		
+		this.mouseoverTimeout=setTimeout(function(){slateViewer.overNode(event)},100)
 	},
-	overNode:function(event){		
+	overNode:function(event){
 		var node=event.target
-		//dump('infotip', node.nodeName)=='A1'
 		if(node.nodeName){
 			var i=getSlatePosition(node)
 			if(i)
@@ -1944,10 +1934,14 @@ slateViewer={
 	click:function(event){
 		var node=event.target
 		dump(domNodeSummary(node))
-		if(node.parentNode.hasAttribute('closer')){closeNodeInSlate(node.parentNode)}
-		else if(node.nodeName=='SP'){
-			if(node.textContent=='edit')attributeViewer.startEdit(mNode)
-			else setContentState(node.textContent)
+
+		if(node.parentNode && node.parentNode.hasAttribute('closer')){
+			closeNodeInSlate(node.parentNode)
+		}else if(node.nodeName=='SP'){
+			if(node.textContent=='edit')
+				attributeViewer.startEdit(mNode)
+			else
+				setContentState(node.textContent)
 		}
 	},
 }
@@ -1983,7 +1977,7 @@ function collectAgentSheets1(callback){stTime=Date.now()
 
 	frame.addEventListener("load", frame.loadListener=doOnload,true)
 
-	function getStyleSheetsFromNode(mNode,styleList){//	dump(mNode.nodeName)
+	function getStyleSheetsFromNode(mNode,styleList){
 		var inspectedRules=domUtils.getCSSStyleRules(mNode)
 		if(!inspectedRules)	return
 		for(var i = inspectedRules.Count()-1; i >=0 ; --i){
@@ -1993,9 +1987,8 @@ function collectAgentSheets1(callback){stTime=Date.now()
 			if(sheet.ownerNode)continue
 			if(sheet.href.slice(0,5)=='data:')continue
 			if(styleList.indexOf(sheet)==-1){
-				styleList.push(sheet);//dump('axept')
+				styleList.push(sheet);
 			}
-			//dump(sheet.href)
 		}
 	};
 	function doOnload(){
@@ -2006,21 +1999,20 @@ function collectAgentSheets1(callback){stTime=Date.now()
 		}
 		userAgentStyles.sort(function(a,b){return a.href>b.href})
 		callback()
-				dump('**********************',stTime-Date.now())
-
 	}
 
 
 }
 var userAgentStyles
 
-function collectAgentSheets(callback){stTime=Date.now()
+function collectAgentSheets(callback){
 	var st='<box hidden="true" id="hiddenBox"><'
 	var en='/></box>'
 	var tags=[
 		'scrollbar', 'tree', 'textbox type="autocomplete"', 'toolbarbutton',
 		'toolbar', 'button', 'checkbox', 'menu', 'menulist', 'panel', 'listbox',
 		'richlistbox', 'groupbox','splitter',
+		'searchbar', 'urlbar', 'findbar',
 		'progressmeter', 'menuitem id="copy"', 'window', 'popup', 'script', 'h:textarea', 'h:input'
 		]
 
@@ -2042,9 +2034,9 @@ function collectAgentSheets(callback){stTime=Date.now()
 		frame=document.documentElement.appendChild(firstChild)
 	}
 
-frame=firstChild
+	frame=firstChild
 	doOnload()
-	function getStyleSheetsFromNode(mNode,styleList){	//dump(mNode.nodeName)
+	function getStyleSheetsFromNode(mNode,styleList){
 		var inspectedRules=domUtils.getCSSStyleRules(mNode)
 		if(!inspectedRules)	return
 		for(var i = inspectedRules.Count()-1; i >=0 ; --i){
@@ -2054,9 +2046,8 @@ frame=firstChild
 			if(sheet.ownerNode)continue
 			//if(sheet.href.slice(0,5)=='data:')continue
 			if(styleList.indexOf(sheet)==-1){
-				styleList.push(sheet);//dump('axept')
+				styleList.push(sheet);
 			}
-			//dump(sheet.href)
 		}
 	};
 	function doOnload(){
@@ -2067,17 +2058,14 @@ frame=firstChild
 		}
 		userAgentStyles.sort(function(a,b){return a.href>b.href})
 		callback()
-		dump('**********************',stTime-Date.now())
 	}
-
-
 }
 var userAgentStyles
 
   //**************************************************
  //* css searcher
 //******/
-SEARCH_ON_FOCUS='dump("145-------------------",this.mIgnoreFocus,this.value,domNodeSummary(event.target),event.target.nodeName=="html:input",event.target==this); if(event.target.nodeName=="html:input")this.mIgnoreFocus||'
+SEARCH_ON_FOCUS='if(event.target.nodeName=="html:input")this.mIgnoreFocus||'
 cssSearch={
 	initialize: function(aWindow){
 		this.findbar = document.getElementById('cssSearch');
@@ -2106,7 +2094,7 @@ cssSearch={
 		this.activeXPath=xpath
 		//xpath=this.parseXPATH2(xpath)
 		this.previousSearches.push(xpath)
-		dump(xpath,this.activeXPath)
+
 		var result=this.findRules(xpath,allCSSSheets)
 		this.textbox.matchCount=result.length
 		cssSlate.sayRules(result)
@@ -2132,14 +2120,14 @@ cssSearch={
 				content.focus()
 				event.preventDefault();event.stopPropagation();
 				break
-								
+
 				break
 		}
 	},
 
 	parseCPATH2: function(str){
 		var valueArray = [], selectorArray = []
-		
+
 		var i=0,i0=0,next=str.charAt(i++)//i is one char farther than next so that [# .] are skipped
 		var rx=/[\w$\-\[\]\(\)]/
 		var gtCount=0
@@ -2149,7 +2137,7 @@ cssSearch={
 		while(next){
 			if(next=='.'||next=='#'||rx.test(next)){
 				skipWord()
-				selectorArray.push(str.substring(i0-1,i));				
+				selectorArray.push(str.substring(i0-1,i));
 			}else if(next==':'){
 				if(str.charAt(i++)==':'){
 					skipWord()
@@ -2165,41 +2153,41 @@ cssSearch={
 			}else if(next=='{'){
 				valueArray=str.substr(i).split(/[ :;,]/)
 				break
-			}			
+			}
 			next=str.charAt(i++)
 		}
-		
+
 		//return selectorArray.join(',\n')+gtCount+valueArray.join(',\n')
-		
+
 		return [(selectorArray.length||gtCount) && function(css){
 					for each(var t in selectorArray)
 						if(css.indexOf(t)==-1)
 							return false
-					// for '>'	
+					// for '>'
 					var index=0
 					for(var i=gtCount;i>0;i--)
 						if((index=css.indexOf('>',index)+1)==0)
 							return false
 					return true
 				},
-				valueArray && function(css){	
+				valueArray && function(css){
 					for each(var t in valueArray)
 						if(css.indexOf(t)==-1)
 							return false
 					return true
 				}]
 	},
-	
-	findRules: function(text, stylesheets){time=Date.now()
+
+	findRules: function(text, stylesheets){
 		var ans=[]
 		var [test1,test2]=this.parseCPATH2(text)
-		
+
 		function iterateCSSRules(cssRules){
 			for (var j=0,jj=cssRules.length; j<jj; j++){
 				var rule = cssRules[j];
 				if (rule.type===1){//normal rule
 					var selector = rule.selectorText;
-					if(!test1||test1(selector))						
+					if(!test1||test1(selector))
 						if(!test2||test2(rule.cssText,selector.length))
 							ans.push(rule)
 				}else if(rule.cssRules){//media or -moz-document
@@ -2208,7 +2196,7 @@ cssSearch={
 					if(test1&&test1(selector))
 						ans.push(rule)
 					iterateCSSRules(rule.cssRules)
-				}else if(selector=rule.cssText){// strange ones: import namespace etc. 
+				}else if(selector=rule.cssText){// strange ones: import namespace etc.
 					if(selector&&test1&&test1(selector))ans.push(rule)
 				}
 			}
@@ -2216,21 +2204,20 @@ cssSearch={
 		for (var i=0,ii=stylesheets.length; i<ii; i++){
 			iterateCSSRules(stylesheets[i].cssRules)
 		}
-		dump('css---->time: ',time-Date.now())
 
 		return ans
 	},
 
 	previousSearches:[],
-	
-	findBindingRules: function(){time=Date.now()
+
+	findBindingRules: function(){
 		var ans=[]
 		function iterateCSSRules(cssRules){
 			for (var j = 0; j < cssRules.length; j++){
 				var rule = cssRules[j];
 				if (rule.type===1){//
 					var mb=rule.style.MozBinding
-					if(mb)ans.push([rule.selectorText,mb,hrefromRule(rule)])					
+					if(mb)ans.push([rule.selectorText,mb,hrefromRule(rule)])
 				}else if(rule.cssRules){//
 					iterateCSSRules(rule.cssRules)
 				}
@@ -2239,7 +2226,6 @@ cssSearch={
 		for (var i = 0; i < allCSSSheets.length; i++){
 			iterateCSSRules(allCSSSheets[i].cssRules)
 		}
-		dump('css---->time: ',time-Date.now())
 
 		return ans
 	},
@@ -2270,7 +2256,7 @@ gDirSvc.getFile()
 cssSearch.findBindingRules().length
 ios.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler).hasSubstitution('resource://gre/res/forms.css')
 */
- 
+
   //**********************************************************
  //* context menu
 //****/
@@ -2319,8 +2305,8 @@ function contextMenuPopupShowing(event){
 	var b=document.getElementById('domViewerOperations')
 	if(id=='leftPane'){
 		mURI=leftPane.currentURI()
-		mLine=leftPane.currentLine&&leftPane.currentLine()		
-		if(leftPane==domViewer||leftPane==domSearch){			
+		mLine=leftPane.currentLine&&leftPane.currentLine()
+		if(leftPane==domViewer||leftPane==domSearch){
 			a.hidden=b.hidden=false
 		}else
 			a.hidden=b.hidden=true
@@ -2339,7 +2325,7 @@ function contextMenuPopupShowing(event){
 			i=getRulePosition(currentRules[i.slateId])
 			mURI=i.uri
 			mLine=i.line
-		}				
+		}
 	}
 	// selected url
 	var sel = el.ownerDocument.defaultView.getSelection().toString()
@@ -2347,8 +2333,8 @@ function contextMenuPopupShowing(event){
 		mURI = sel
 		mLine = null
 	}
-		
-	dump(mURI,!mURI)
+
+
 	var a=document.getElementById('urlOperations')
 	a.hidden=!mURI
 	a.setAttribute('tooltiptext',mURI+':'+mLine)
@@ -2361,7 +2347,7 @@ function getRulePosition(rule){
 	try{
 		var ruleLine = domUtils.getRuleLine(rule);
 	}catch(e){}
-	
+
 	return {uri: href, line:ruleLine}
 }
 
@@ -2427,7 +2413,7 @@ shortcutManager={
 		}else if((event.shiftKey&& event.keyCode==KeyEvent.DOM_VK_Q)||
 				 (event.ctrlKey&& event.keyCode==KeyEvent.DOM_VK_W)||
 				 (event.shiftKey&& event.keyCode==KeyEvent.DOM_VK_Enter)){
-			getActiveEl()			
+			getActiveEl()
 			     if(activeElId=='leftPane'||activeElId=="leftPane-search")windowViewer.activate()
 			else if(activeElId=='slate-browser'||activeElId=='slate-finder')leftPane.tree.focus()
 			else if(activeElId=='window-tree'){windowViewer.deactivate();document.getElementById('slate-browser').focus()}
@@ -2435,7 +2421,7 @@ shortcutManager={
 		else if((event.ctrlKey&& event.keyCode==KeyEvent.DOM_VK_Q)||
 				(event.shiftKey&& event.keyCode==KeyEvent.DOM_VK_W)||
 				(event.ctrlKey&& event.keyCode==KeyEvent.DOM_VK_ENTER)){
-			getActiveEl()	
+			getActiveEl()
 			     if(activeElId=='leftPane')   document.getElementById('slate-browser').focus()
 			else if(activeElId=='slate-browser') windowViewer.activate()
 			else if(activeElId=='window-tree'){    windowViewer.deactivate();leftPane.tree.focus()}
@@ -2466,7 +2452,7 @@ browserFind={
 		/*this.editor=textArea.editor*/
 		//var docShell = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
 		//this.selCon= docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsISelectionDisplay).QueryInterface(Ci.nsISelectionController);
-		
+
 		function gi(object,iface){
 			return object.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(iface)
 		}
@@ -2477,28 +2463,28 @@ browserFind={
 			Ci.nsISelectionDisplay
 		].reduce(gi).QueryInterface(Ci.nsISelectionController)
 
-		
-		
+
+
 		this.editor={rootElement:viewDoc.body,selectionController:this.selCon}
 
 		this._searchRange = document.createRange()
 		this._searchRange.selectNodeContents(this.editor.rootElement);
 
-		
+
 		this.selCon=this.editor.selectionController
 		this.seltype=Ci.nsISelectionController.SELECTION_IME_RAWINPUT
 		this.findSelection = this.selCon.getSelection(this.seltype);
-		
+
 		this.selCon.setDisplaySelection(Ci.nsISelectionController.SELECTION_ON);
 		this.selCon.setCaretVisibilityDuringSelection(true);
-		
+
 		this.finder=Components.classes["@mozilla.org/embedcomp/rangefind;1"].createInstance(Components.interfaces.nsIFind)
 		this.finder.caseSensitive = false
-		
-		
+
+
 		this.selCon.getSelection(1).QueryInterface(Ci.nsISelectionPrivate).addSelectionListener(this)
 		this.editor.rootElement.addEventListener('mousedown',this,true)
-		
+
 		this.textbox=document.getElementById("slate-finder")
 		this.textbox.setAttribute('oninput','browserFind.oninput(this.value)')
 		this.textbox.setAttribute('onfocus',SEARCH_ON_FOCUS+'browserFind.oninput(this.value)')
@@ -2507,7 +2493,7 @@ browserFind={
 		this.updateAutoHighlight(true)
 		//this.ff=document.getElementById('slate-browser').fastFind
 		//ff.findAgain('i',false)//find('cu',false)
-		
+
 	},
 	updateAutoHighlight:function(on){
 		if(typeof on=='undefined')
@@ -2541,12 +2527,12 @@ browserFind={
 				break;
 			case KeyEvent.DOM_VK_RETURN:
 				if(event.ctrlKey){
-					
+
 				}
 				content.focus()
 				event.preventDefault();event.stopPropagation();
 				break
-								
+
 				break
 		}
 	},
@@ -2560,11 +2546,11 @@ browserFind={
 		this.selCon.characterMove(1,1)
 		this.textbox.value=this.selCon.getSelection(1)
 	},
-	
-	
+
+
 	handleEvent:function(e){
 		if(this.timeout)
-			clearTimeout(this.timeout)		
+			clearTimeout(this.timeout)
 		if(this.active&&e.originalTarget.prefix!='xul')//hack to exclude scrollbars
 			this.findSelection.removeAllRanges()
 	},
@@ -2574,7 +2560,7 @@ browserFind={
 		if(this.timeout){
 			clearTimeout(this.timeout)
 		}
-		this.timeout=setTimeout(function()browserFind.selectionReallyChanged(),120)		
+		this.timeout=setTimeout(function()browserFind.selectionReallyChanged(),120)
 	},
 	scheduleHighlight:function(text){
 		if(this.timeout){
@@ -2617,7 +2603,7 @@ browserFind={
 			this.active=true
 		}
 		this._searchRange.collapse(1)
-		
+
 		/*//dump(t-Date.now());t=Date.now()
 		this.addRangeszap=this.addRanges
 		this.addRanges=this.addRanges2
@@ -2626,17 +2612,17 @@ browserFind={
 	},
 	addRanges:function(text){
 		var t=Date.now()
-		this._searchRange.selectNodeContents(this.editor.rootElement);  
+		this._searchRange.selectNodeContents(this.editor.rootElement);
 
 		var currRange= this.selCon.getSelection(1).getRangeAt(0).cloneRange()
-		
-		
+
+
 		var currEnd=currRange.cloneRange(); currEnd.collapse(false)
 		var currStart=currRange.cloneRange(); currStart.collapse(true)
 
 		var allDocEnd=this._searchRange.cloneRange(); allDocEnd.collapse(false)
 		var allDocStart=this._searchRange.cloneRange(); allDocStart.collapse(true)
-		
+
 		var retRange
 		this.active=false
 
@@ -2644,7 +2630,7 @@ browserFind={
 		var numBefore=0,numAfter=0
 		while(retRange=this.finder.Find(text, this._searchRange, currEnd, allDocEnd)){
 			this.findSelection.addRange(retRange);
-			currEnd=retRange.cloneRange();currEnd.collapse(false)			
+			currEnd=retRange.cloneRange();currEnd.collapse(false)
 			numBefore++
 		}
 
@@ -2654,10 +2640,10 @@ browserFind={
 			currStart=retRange.cloneRange();currStart.collapse(true)
 			numAfter++
 		}
-		
+
 		numBefore&&(this.active=true)
 		this.timeout=''
-		
+
 		this.textbox.matchCount=numAfter+numBefore+1
 		/*this.addRangeszap=this.addRanges
 		this.addRanges=this.addRanges2
@@ -2671,15 +2657,15 @@ browserFind={
 			this.findSelection.removeAllRanges()
 			return
 		}
-		this._searchRange.selectNodeContents(this.editor.rootElement); 
+		this._searchRange.selectNodeContents(this.editor.rootElement);
 		var allDocEnd=this._searchRange.cloneRange();allDocEnd.collapse(dir)
-		
+
 		if(sel.rangeCount){
 			curEnd=sel.getRangeAt(0);curEnd=curEnd.cloneRange();
 			curEnd.collapse(next?dir:!dir)
 			continueFromTop=true
 		}else{
-			curEnd=this._searchRange			
+			curEnd=this._searchRange
 			curEnd.cloneRange()
 			curEnd.collapse(!dir)
 		}
@@ -2691,7 +2677,7 @@ browserFind={
 			curEnd=sel.getRangeAt(0);curEnd=curEnd.cloneRange()
 			curEnd.collapse(!dir)
 			allDocEnd=this._searchRange.cloneRange(); allDocEnd.collapse(!dir)
-			curEnd=this.finder.Find(text, this._searchRange, allDocEnd, curEnd)		
+			curEnd=this.finder.Find(text, this._searchRange, allDocEnd, curEnd)
 		}
 		sel.removeAllRanges()
 		this.selCon.setDisplaySelection(Ci.nsISelectionController.SELECTION_ATTENTION);
