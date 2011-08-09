@@ -3,6 +3,7 @@ window.addEventListener('deactivate',function(e){dump(e,'inactive')},false)
 ett*/
 
 Components.utils.import('resource://shadia/styles.jsm')
+Components.utils.import('resource://shadia/main.js').addDevelopmentUtils(this)
 /**/
 var shadowInspector=function(){}
 shadowInspector.debug=false

@@ -1,6 +1,5 @@
 //*****************************************//
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-//Cu.import('resource://xqjs/Services.jsm');
 
 
 /********************
@@ -542,6 +541,13 @@ jn.$x = function(xpath){
 	return jn.getElementsByXPath(FBL.unwrapObject(context.baseWindow.document), xpath);
 };
  
+
+jn.getSourceLink = function(fn){	
+	var s=Services.jsd.wrapValue(shadia.showHelp).script
+	if(s){
+		return {href: s.fileName, line:s.baseLineNumber}
+	}
+}
  /***************************************/
 var stackStartLineNumber
 function EJS_executeJS(sel){

@@ -25,7 +25,7 @@ function setItemToPref(){
 	if(!item.executable)
 		clearPref(prefName)
 	else
-		savePref('extensions.shadia.editor',[item.label,item.executable,item.cmdline].join())
+		setPref('extensions.shadia.editor',[item.label,item.executable,item.cmdline].join())
 }
 
 function onLoad()

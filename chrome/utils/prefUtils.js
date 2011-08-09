@@ -6,13 +6,8 @@
  *
  * pref utils
  *****************/
- Ci=Components.interfaces
- Cc=Components.classes
  
- gPrefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
- prefBranch = gPrefBranch = gPrefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2)
- 
-
+var prefBranch = Services.prefs
 
 function setPref(prefName,val,type){try{              
         switch (type||typeof(val)||prefBranch.getPrefType(prefName)){            
@@ -28,8 +23,10 @@ function setPref(prefName,val,type){try{
     }catch(e){}
 }
 function clearPref(prefName){
-	//gPrefBranch.prefHasUserValue(prefName)
-	try{gPrefBranch.clearUserPref(prefName)}catch(e){}
+	try{
+		//gPrefBranch.prefHasUserValue(prefName)
+		gPrefBranch.clearUserPref(prefName)
+	}catch(e){}
 }
 function getPref(prefName,type){
 	try{

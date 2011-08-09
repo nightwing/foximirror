@@ -37,7 +37,7 @@
 
 <toolbar id='actionsp'>
 	<shadiaglue/>	
-	<toolbarbutton oncommand="gChromeReg.checkForNewChrome()" label='checkForNewChrome'></toolbarbutton>
+	<toolbarbutton oncommand="Services.chromeReg.checkForNewChrome()" label='checkForNewChrome'></toolbarbutton>
 	
 	<spacer flex='1'/>
 	

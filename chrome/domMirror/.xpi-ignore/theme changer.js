@@ -186,7 +186,7 @@ doAddChrome=function(file){
 	var newText=getManifestText(file)+'\n\ncontent chromeroot content/'
 	var manifestFile=getDummyManifestFile()
 	writeFile(manifestFile, newText)
-	gChromeReg.checkForNewChrome()
+	Services.chromeReg.checkForNewChrome()
 }
 
 doAddChrome(mAddonData.file)

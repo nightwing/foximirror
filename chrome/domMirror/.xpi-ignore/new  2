@@ -78,7 +78,7 @@ var f = fopen(mani, ">");
 contents
 
 
-    gChromeReg.checkForNewChrome();
+    Services.chromeReg.checkForNewChrome();
 
 
 Components.manager.QueryInterface(Ci.nsIComponentRegistrar).autoRegister(manif.parent)

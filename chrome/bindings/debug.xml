@@ -12,10 +12,8 @@
       1222
     </content>
 	<implementation>
-      <constructor>
-        
+      <constructor>        
       </constructor>
-
       <field name="_lastSelectedRow">
         -1
       </field>
@@ -23,11 +21,12 @@
     <handlers>
       <handler event="click" button="0" clickcount="1">
       <![CDATA[
-       document.location=document.location
+       document.location.reload()
       ]]>
       </handler> 
 	 <handler event="click" button="2" clickcount="1">
       <![CDATA[
+		var lineNumber = null;
       	openDialog("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", document.location, null, null, lineNumber, null);
       ]]>
       </handler> 
@@ -89,33 +88,14 @@ actions={//external
 		var appStartup = Ci.nsIAppStartup;
 		Cc['@mozilla.org/toolkit/app-startup;1'].getService(appStartup).quit(appStartup.eRestart|appStartup.eAttemptQuit);	
 	}
-	,reloadChrome:function()  {gChromeReg.reloadChrome()}
-	,refreshSkins:function()  {gChromeReg.refreshSkins()}
+	,reloadChrome:function()  {Services.chromeReg.reloadChrome()}
+	,refreshSkins:function()  {Services.chromeReg.refreshSkins()}
 	,revealCurDoc:function()  {getLocalFile(location.href).reveal()}
 }
 activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','errorConsole','jsMirror','domi']
 actionNames={reload:'reload',reopen:':)',errorConsole:'errors',restartApp:'restart firefox'}
     
-function toOpenWindowByType(inType, uri, features) {
-    var windowManager = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
-    var topWindow = windowManager.getMostRecentWindow(inType);
-	if(topWindow&&(topWindow!=window)){
-        topWindow.focus();
-    }else if(features){
-        window.open(uri, "_blank", features);
-    }else{
-        window.open(uri, "_blank", "modal=no,chrome,extrachrome,menubar,resizable=yes,scrollbars,status,toolbar");
-    }
-}
-dump= function(){
-    var aMessage = "aMessage: ";
-    for(var i = 0; i < arguments.length; ++i){
-		var a=arguments[i]
-        aMessage += (a&&!a.toString?'[object call]':a) + " , ";
-    }
-    var consoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
-    consoleService.logStringMessage("" + aMessage);
-}
+
 
 
 var el1=this.actionbar,el2=this.actionpopup
@@ -157,7 +137,7 @@ getLocalFile=function getLocalFile(mPath){
 		abspath=ph.getSubstitution(uri.host)
 		uri=ios.newURI(uri.path.substr(1), null, abspath)
 	}
-	while(uri.schemeIs('chrome')) uri=gChromeReg.convertChromeURL(uri)
+	while(uri.schemeIs('chrome')) uri=Services.chromeReg.convertChromeURL(uri)
 	while(uri.schemeIs('jar')) uri=uri.QueryInterface(Ci.nsIJARURI).JARFile
 	if(uri.schemeIs('file'))file=uri.QueryInterface(Ci.nsIFileURL).file
 
@@ -241,7 +221,7 @@ function initializeNppItem(){
 	if(a&&( (a=a.split(',')) [1]) ){		
 		nppItem={label:a[0], executable: a[1], cmdline: a[2]}
 	}else{
-		window.openDialog('chrome://shadia/content/prefMirror/prefSetters/changeeditor.xul')
+		window.openDialog('chrome://shadia/content/utils/prefSetters/changeeditor.xul')
 		return
 	}
 	return nppItem
@@ -293,8 +273,7 @@ npp=function(path,line){// create an nsILocalFile for the executable
 
 //inject shadia
 if(!window.shadia)
-Cc["@mozilla.org/moz/jssubscript-loader;1"].createInstance(Ci.mozIJSSubScriptLoader)
-					.loadSubScript('chrome://shadia/content/shadia.js', window);
+	Services.scriptloader.loadSubScript('chrome://shadia/content/shadia.js', window);
 
 }]]></constructor>
 		
