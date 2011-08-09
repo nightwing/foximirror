@@ -13,26 +13,28 @@ try{
 }
 XPCOMUtils.defineLazyServiceGetter(Services, "jsd", "@mozilla.org/js/jsd/debugger-service;1", "jsdIDebuggerService");
 XPCOMUtils.defineLazyServiceGetter(Services, "chromeReg", "@mozilla.org/chrome/chrome-registry;1", "nsIXULOverlayProvider");
+XPCOMUtils.defineLazyServiceGetter(Services, "domUtils", "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+XPCOMUtils.defineLazyServiceGetter(Services, "sss", "@mozilla.org/content/style-sheet-service;1", "nsIStyleSheetService");
+XPCOMUtils.defineLazyServiceGetter(Services, "atom", "@mozilla.org/atom-service;1", "nsIAtomService");
 
 
 var addDevelopmentUtils = function(window){
 	//window.toOpenWindowByType = toOpenWindowByType;
-	//window.toOpenWindowByURI = toOpenWindowByURI;
-	
+	window.toOpenWindowByURI = toOpenWindowByURI;
+	window.dump = dump
+	if(!('Cc' in window))
+		window.Cc=Components.classes
+	if(!('Ci' in window))
+		window.Ci=Components.interfaces
+	if(!('Cu' in window))
+		window.Cu=Components.utils
 }
-//***********************exported functions
-function toOpenWindowByType(inType, uri, features) {
-    var windowManager = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
-    var topWindow = windowManager.getMostRecentWindow(inType);
-	if(topWindow&&(topWindow!=window)){
-        topWindow.focus();
-    }else if(features){
-        window.open(uri, "_blank", features);
-    }else{
-        window.open(uri, "_blank", "modal=no,chrome,extrachrome,menubar,resizable=yes,scrollbars,status,toolbar");
-    }
-}
-toOpenWindowByURI =function (uri) {
+
+/****************************************************************
+ * exported functions
+ *
+ *****************/
+toOpenWindowByURI =function (uri, features) {
     var winEnum = Services.wm.getEnumerator("");
     while (winEnum.hasMoreElements()) {
         let win = winEnum.getNext();
@@ -44,7 +46,10 @@ toOpenWindowByURI =function (uri) {
             return true;
         }
     }
-    window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+	Services.ww.openWindow(
+		null, uri, "_blank",
+		features||"chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar,centerscreen", null
+	).focus();
 }
 dump = function(){
     var aMessage="aMessage: ";

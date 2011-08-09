@@ -26,7 +26,7 @@ function initialize(){
 function addSpecialDirs(addonList){
 	var info = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);  
     
-	var appdir=gDirSvc.get("XCurProcD", Ci.nsIFile)
+	var appdir=Services.dirsvc.get("XCurProcD", Ci.nsIFile)
 	item={id:      info.ID
 		 ,file:    appdir
 		 ,name:    info.name
@@ -34,7 +34,7 @@ function addSpecialDirs(addonList){
 		 }
 	addonList.unshift(item)
 	
-	var profdir=gDirSvc.get('ProfD', Ci.nsIFile);
+	var profdir=Services.dirsvc.get('ProfD', Ci.nsIFile);
 	item={id:      info.ID
 		 ,file:    profdir
 		 ,name:    'profile '+getExtension(profdir.leafName)||profdir.leafName
@@ -80,7 +80,7 @@ function getAddonsNew(callback,addonListTemp){
 	/*/** code that doesn't* use addonManager
 	var   extensionDirs=[], extd, extLocations=["ProfD","XCurProcD"]
 	for each(var name in extLocations){
-		extd=gDirSvc.get(name, Ci.nsIFile)
+		extd=Services.dirsvc.get(name, Ci.nsIFile)
 		extd.append('extensions')
 		extd.exists()&&extensionDirs.push(extd)
 	}

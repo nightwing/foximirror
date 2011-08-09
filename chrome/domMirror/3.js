@@ -3,12 +3,12 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 //Cu.import('resource://xqjs/Preferences.jsm');
 var domUtils,winService,ww
 initServices=function(){
-	domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-	winService = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+	domUtils = Services.domUtils
+	winService = Services.wm
 	//ww = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-	ios= Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
-	sss= Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService)
-	atomService=Cc["@mozilla.org/atom-service;1"].getService(Ci.nsIAtomService);
+	ios = Services.io
+	sss = Services.sss
+	atomService = Services.atom;
 }
 /***************************************************/
 var initializeables=[]
@@ -2252,7 +2252,7 @@ function empty(lm){
 /*
 cssSearch.findBindingRules().length
 ios.getProtocolHandler("about").QueryInterface(Ci.nsIProtocolHandler).newURI('about:config',null,null)
-gDirSvc.getFile()
+Services.dirsvc.getFile()
 cssSearch.findBindingRules().length
 ios.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler).hasSubstitution('resource://gre/res/forms.css')
 */

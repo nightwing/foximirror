@@ -3,7 +3,7 @@ window.addEventListener('deactivate',function(e){dump(e,'inactive')},false)
 ett*/
 
 Components.utils.import('resource://shadia/styles.jsm')
-Components.utils.import('resource://shadia/main.js').addDevelopmentUtils(this)
+Components.utils.import('resource://shadia/main.js', window).addDevelopmentUtils(window)
 /**/
 var shadowInspector=function(){}
 shadowInspector.debug=false
@@ -46,8 +46,6 @@ shadowInspector.activateInner=function(){
 		if(!window["shadia"])shadia=new shadowInspector()
 	}
 	shadia.start=shadia.toggle=shadia.createInfoPanel=shadia.showPanel=shadia.fillPanel=shadia.toggleClickSelect=function(){}
-	
-
 }
 shadowInspector.injectShadia=function(mWindow){
 	Components.classes["@mozilla.org/moz/jssubscript-loader;1"].createInstance(Components.interfaces.mozIJSSubScriptLoader)
@@ -722,16 +720,23 @@ break
 }
 window.addEventListener('keydown',function(e)stub(e),false)
 
+
+gt = function(doc){
+	var ns, node, max = 10;
+	while(max--){
+		ns = doc.querySelectorAll(':hover')
+		if(!ns.length)
+			break
+		node = ns[ns.length-1]
+		doc = node.contentDocument
+		if(!doc)
+			break
+	}
+	return node
+}
+
 */
 
-dump= function(){
-    var aMessage = "aMessage: ";
-    for(var i = 0; i < arguments.length; ++i){
-        aMessage += arguments[i] + " , ";
-    }
-    var consoleService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
-    consoleService.logStringMessage("" + aMessage);
-}
 
 
 

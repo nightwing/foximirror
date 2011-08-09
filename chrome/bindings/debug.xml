@@ -39,17 +39,10 @@
 <binding id="shadiaGlue">
     <content>
 		<xul:arrowscrollbox id='actionbar'/>	
-		<xul:toolbarbutton type='menu' label='tools'>
-			<xul:menupopup class='plain'>
-				<xul:hbox>
-					<xul:vbox flex='1' id='actionpopup' ></xul:vbox>
-					<xul:groupbox flex='1'>
-						<xul:caption label='description      '/>
-						<html:div/>
-					</xul:groupbox>			
-				</xul:hbox>
+		<xul:menulist  type='menu' label='tools' class='plain' sizetopopup='false'>
+			<xul:menupopup id='actionpopup'>
 			</xul:menupopup>	
-		</xul:toolbarbutton>
+		</xul:menulist>
     </content>
 	
 	<resources>
@@ -61,8 +54,9 @@
   //**********************************************************
  //* actions
 //****/
-actions={//external
-	 reload:function(){document.location=document.location}
+this.actions={//external
+	 errorConsole:function(){toOpenWindowByType("global:console", "chrome://global/content/console.xul")}
+	,reload:function(){document.location=document.location}
 	,reopen:function(){
 		((window.Services&&Services.ww)||Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher))
 		.openWindow(null, window.location.href, "_blank", 
@@ -70,14 +64,9 @@ actions={//external
 			null).focus();		
 		return;
 	}
-	//,startShadia:function(){shadowInspector.start(mWindow)}
 	,jsMirror:function(){toOpenWindowByType('shadia:jsMirror', "chrome://shadia/content/jsMirror/jsMirror.xul")}
-	,errorConsole:function(){toOpenWindowByType("global:console", "chrome://global/content/console.xul")}
-	,domi:function(){shadia.domi(window.mNode||window.mWindow||document)}
 	,inspector:function()   {toOpenWindowByType('shadia:inspector', "chrome://shadia/content/domMirror/domMirror.xul")}
-	//,chromeMirroro:function(){toOpenWindowByType('shadia:chromeMirror', "chrome://shadia/content/i.xul")}
 	,chromeMirror:function(){toOpenWindowByType('shadia:chromeMirror', "chrome://shadia/content/chromeMirror/chromeMirror.xul")}
-	,jsMirror:function()   {toOpenWindowByType('shadia:jsMirror', "chrome://shadia/content/jsMirror/jsMirror.xul")}
 	,cssMirror:function()   {toOpenWindowByType('shadia:cssMirror', "chrome://shadia/content/cssMirror/cssMirror.xul")}
 	,xulMirror:function()   {toOpenWindowByType('shadia:xulMirror', "chrome://shadia/content/xulMirror/xulMirror.xul")}
 	,prefMirror:function()  {toOpenWindowByType('shadia:prefMirror', "chrome://shadia/content/prefMirror/prefMirror.xul")}
@@ -92,18 +81,65 @@ actions={//external
 	,refreshSkins:function()  {Services.chromeReg.refreshSkins()}
 	,revealCurDoc:function()  {getLocalFile(location.href).reveal()}
 }
-activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','errorConsole','jsMirror','domi']
-actionNames={reload:'reload',reopen:':)',errorConsole:'errors',restartApp:'restart firefox'}
-    
+var activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','errorConsole','jsMirror','domi']
+var actionNames={reload:'reload',reopen:':)',errorConsole:'errors',restartApp:'restart firefox'}
+var actionsColors = {restartApp:'orange',reloadChrome:'orange',reload:'orange'}    
+function toOpenWindowByType(inType, uri, features) {
+    var windowManager = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
+    var topWindow = windowManager.getMostRecentWindow(inType);
+	if(topWindow&&(topWindow!=window)){
+        topWindow.focus();
+    }else if(features){
+        window.open(uri, "_blank", features);
+    }else{
+        window.open(uri, "_blank", "modal=no,chrome,extrachrome,menubar,resizable=yes,scrollbars,status,toolbar");
+    }
+}
+
+this.actionpopup.__defineSetter__('selectedItem',function(val){var oldval = this.mSelectedInternal;
+	if (oldval == val)
+	  return val;
+
+	if (val && !this.contains(val))
+	  return val;
 
 
+	this.mSelectedInternal = val;
+	if (val) {
+	  val.setAttribute('selected', 'true');
+	  this.setAttribute('value', 'tools');
+	  this.setAttribute('image', val.getAttribute('image'));
+	  this.setAttribute('label', 'tools');            
+	}
+	else {
+	  this.removeAttribute('value');
+	  this.removeAttribute('image');
+	  this.removeAttribute('label');
+	  this.removeAttribute('description');
+	}
+
+	var event = document.createEvent("Events");
+	event.initEvent("select", true, true);
+	this.dispatchEvent(event);
+
+	var event = document.createEvent("Events");
+	event.initEvent("ValueChange", true, true);
+	this.dispatchEvent(event);
+
+	return val;
+})
+
+//document.getAnonymousElementByAttribute(this.actionpopup.parentNode, 'class', 'menulist-dropmarker').className = "toolbarbutton-menu-dropmarker"
 
 var el1=this.actionbar,el2=this.actionpopup
 for(var i in actions){
 	var newEl=document.createElement('menuitem')
 	newEl.id=i;
 	newEl.setAttribute('label', actionNames[i]||i);	
+	if(i in actionsColors)
+		newEl.style.color = actionsColors[i];
 	el2.appendChild(newEl)
+	
 
 	if(activeactions.indexOf(i)>-1){
 		newEl.style.color='graytext'
@@ -118,9 +154,7 @@ for(var i in actions){
   //**********************************************************
  //* io
 //****/
-if(typeof Cc=='undefined')Cc=Components.classes
-if(typeof Ci=='undefined')Ci=Components.interfaces
-if(typeof Cu=='undefined')Cu=Components.utils
+
 
 gDirSvc    = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIDirectoryService).QueryInterface(Ci.nsIProperties);
 gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
@@ -272,6 +306,7 @@ npp=function(path,line){// create an nsILocalFile for the executable
 }
 
 //inject shadia
+Components.utils.import('resource://shadia/main.js')
 if(!window.shadia)
 	Services.scriptloader.loadSubScript('chrome://shadia/content/shadia.js', window);
 

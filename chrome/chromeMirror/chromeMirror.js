@@ -310,7 +310,7 @@ var st=slateViewer.aceBrowser.contentWindow.wrappedJSObject.doc.toString()
 
 writeToFile(fi, st)
 
-gChromeReg.checkForNewChrome()
+Services.chromeReg.checkForNewChrome()
 
 
 
