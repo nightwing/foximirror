@@ -138,7 +138,7 @@ else//4.0b2+
 
 jn={};
 jn.say=function(a){
-	EJS_appendToConsole(a?a.toString():a)
+	appendToConsole(a?a.toString():a)
 }
 
 jn.inspect=function(x,long){	
@@ -516,21 +516,21 @@ jn.getSourceLink = function(fn){
 }
  /***************************************/
 var stackStartLineNumber
-function EJS_executeJS(sel){
+function executeJS(sel){
 /*jn.exec();return;*/
     var code = sel?codebox.editor.selection.toString():codebox.value;
 
 
     try{
-    	var result = EJS_evalStringOnTarget(code)
+    	var result = evalStringOnTarget(code)
     }catch(e){
-		result=EJS_LastError=e;
+		result=LastError=e;
 		Components.utils.reportError(e)
-        EJS_appendToConsole(ejsInspectError(e));
+        appendToConsole(ejsInspectError(e));
         codebox.focus();
         return result;
     }
-    EJS_appendToConsole(jn.inspect(result,'long'));
+    appendToConsole(jn.inspect(result,'long'));
 
     codebox.focus();
     return result;
@@ -544,10 +544,10 @@ function ejsInspectError(e){
 	return e.lineNumber-stackStartLineNumber+': '+e.message+'->'+e.fn
 }
 
-function EJS_evalStringOnTarget(string){
-	var evalString = string//EJS_replaceShortcuts(string);
+function evalStringOnTarget(string){
+	var evalString = string//replaceShortcuts(string);
 	var win = getTargetWindow()
-	if(EJS_cntContentWinCB.checked==true && EJS_cntContentWinCB.disabled==false){
+	if(cntContentWinCB.checked==true && cntContentWinCB.disabled==false){
 		win = win.content||win
 	}
 	//unwrap
@@ -584,77 +584,77 @@ getOuterWindowID = function(window){
 	return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
 }
 
-var EJS_currentTargetWin = null;
-var EJS_commandHistory = new Array();
-var EJS_currentCommandHistoryPos = 0;
-var EJS_allOpenWins = new Object();
+var currentTargetWin = null;
+var commandHistory = new Array();
+var currentCommandHistoryPos = 0;
+var allOpenWins = new Object();
 
 //Form elements
-var EJS_cntTargetWinML = null;
-var EJS_cntContentWinCB = null;
+var cntTargetWinML = null;
+var cntContentWinCB = null;
 var codebox = null;
-var EJS_cntFunctionNameML = null;
+var cntFunctionNameML = null;
 
 
-function EJS_byId(id){
+function byId(id){
 	return document.getElementById(id);
 }
 
-function EJS_doOnload(){
+function doOnload(){
 
     try{
-	    EJS_initGlobVars();
-		EJS_shortCuts=new EJS_initShortCuts()
+	    initGlobVars();
+		shortCuts=new initShortCuts()
 	    codebox.focus();
     }catch(e){throw e }
 
 }
 
-function EJS_doOnUnload(){
+function doOnUnload(){
 	var maxHistSize = 100
-	var startIndex = Math.max(0, EJS_commandHistory.length-maxHistSize)
-	EJS_commandHistory = EJS_commandHistory.slice(startIndex)
-	ConfigManager.saveHistory(EJS_commandHistory);
+	var startIndex = Math.max(0, commandHistory.length-maxHistSize)
+	commandHistory = commandHistory.slice(startIndex)
+	ConfigManager.saveHistory(commandHistory);
 }
 
 
-function EJS_initGlobVars(){
-	EJS_cntTargetWinML = EJS_byId("targetWin")
-	//EJS_cntTargetWinML.editable=true
-	EJS_cntContentWinCB = EJS_byId("contentWinCB")
-	codebox = EJS_byId("jsCode")
-	EJS_cntFunctionNameML = EJS_byId("functionName")
+function initGlobVars(){
+	cntTargetWinML = byId("targetWin")
+	//cntTargetWinML.editable=true
+	cntContentWinCB = byId("contentWinCB")
+	codebox = byId("jsCode")
+	cntFunctionNameML = byId("functionName")
 
 	if(window.opener){
 		targetWindowId = getOuterWindowID(shadowInspector.getTopWindow(window.opener))
 		var opener=window.opener
 		var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
-		var resources = EJS_cntTargetWinML.menupopup.childNodes//[6].id
+		var resources = cntTargetWinML.menupopup.childNodes//[6].id
 		for(var i=0;i<resources.length;i++)
 			if(mediator.getWindowForResource(resources[i].id)==opener){
-				EJS_cntTargetWinML.selectedIndex = i;
+				cntTargetWinML.selectedIndex = i;
 				var found=true
 				break
 			}
 
 	}
-	found||(EJS_cntTargetWinML.selectedIndex=1);
+	found||(cntTargetWinML.selectedIndex=1);
 
-	EJS_targetWinChanged();
-	EJS_commandHistory = ConfigManager.readHistory();
-	EJS_currentCommandHistoryPos = EJS_commandHistory.length
+	targetWinChanged();
+	commandHistory = ConfigManager.readHistory();
+	currentCommandHistoryPos = commandHistory.length
 }
 
-function EJS_targetWinChanged(){
+function targetWinChanged(){
 	//Set current target
-  	targetWindowId = EJS_getSelectedWinID()
+  	targetWindowId = getSelectedWinID()
 }
 
 
 
-function EJS_getSelectedWinID(){
+function getSelectedWinID(){
 	var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
-  	var resource = EJS_cntTargetWinML.selectedItem.getAttribute('id')
+  	var resource = cntTargetWinML.selectedItem.getAttribute('id')
 	var win = mediator.getWindowForResource(resource);
 	var id = getOuterWindowID(win)
 	dump(resource, id)
@@ -662,7 +662,7 @@ function EJS_getSelectedWinID(){
 }
 
 /***/
-function EJS_commentBlock(){
+function commentBlock(){
 	commentBlock(codebox)
 	codebox.focus();
 }
@@ -689,7 +689,7 @@ function commentBlock(elem){
 	insertText(selectedText, elem)
 	elem.selectionStart-=selectedText.length
 }
-function EJS_commentLine() {
+function commentLine() {
     commentLine(codebox)
     codebox.focus();
 }
@@ -711,7 +711,7 @@ function commentLine(elem) {
 	insertText(alltext, elem)
 	elem.selectionStart = elem.selectionEnd = start
 
-EJS_appendToConsole(alltext+" "+nextLine+" "+elem.selectionEnd)
+appendToConsole(alltext+" "+nextLine+" "+elem.selectionEnd)
 }
 /*pp*/
 function insertTimer(){
@@ -723,12 +723,12 @@ function insertTimer(){
 }
 
 
-function EJS_appendToConsole(string){
+function appendToConsole(string){
    var resultTB = document.getElementById("result");
   insertTextAtEnd("\n"+ string, resultTB)
 }
 
-function EJS_clearResult(){
+function clearResult(){
     document.getElementById("result").value="";
     document.getElementById("jsCode").select();
 }
@@ -749,13 +749,13 @@ function insertTextAtEnd(iText, elem){
 		ed.rootElement.scrollTop=st
 }
 
-function EJS_printProperties(){
-	EJS_appendToConsole("Properties for object:");
-	var target = EJS_executeJS();
-	EJS_printPropertiesForTarget(target)
+function printProperties(){
+	appendToConsole("Properties for object:");
+	var target = executeJS();
+	printPropertiesForTarget(target)
 }
 
-function EJS_printPropertiesForTarget(target){
+function printPropertiesForTarget(target){
 	var result = new Array();
 	if(target.wrappedJSObject!=null){
 		target = target.wrappedJSObject;
@@ -769,19 +769,19 @@ function EJS_printPropertiesForTarget(target){
 			result[index++] = i + ": " + e
 		}
 	}
-	EJS_appendToConsole(index+'\n'+result.join("\n"));
+	appendToConsole(index+'\n'+result.join("\n"));
 }
 
-function EJS_nextCommandFromHistory(){
-	if(EJS_currentCommandHistoryPos>=EJS_commandHistory.length-1)
+function nextCommandFromHistory(){
+	if(currentCommandHistoryPos>=commandHistory.length-1)
 		return;
-	codebox.value = EJS_commandHistory[++EJS_currentCommandHistoryPos];
+	codebox.value = commandHistory[++currentCommandHistoryPos];
 }
 
-function EJS_previousCommandFromHistory(){
-	if(EJS_currentCommandHistoryPos==0)
+function previousCommandFromHistory(){
+	if(currentCommandHistoryPos==0)
 		return;
-	codebox.value = EJS_commandHistory[--EJS_currentCommandHistoryPos];
+	codebox.value = commandHistory[--currentCommandHistoryPos];
 }
 
 
@@ -855,9 +855,9 @@ function startCodeCompletion(mode){
 		var evalObj = getTargetWindow()
 	}else{
 		try{
-			var evalObj = EJS_evalStringOnTarget(objString)
+			var evalObj = evalStringOnTarget(objString)
 		}catch(e){
-			EJS_appendToConsole('autocomlater got an error: '+e.message)
+			appendToConsole('autocomlater got an error: '+e.message)
 			return
 		}
 	}
@@ -1039,19 +1039,19 @@ autocompleter={
 		var ans=[]
 		try{
 			if(funcName=='QueryInterface'||funcName=='getService'){
-				var spo = EJS_evalStringOnTarget(spo)
+				var spo = evalStringOnTarget(spo)
 				supportedInterfaces(spo).forEach(function(x){
 					ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:'interface', depth:-1,special:true})
 				})
 			}else if(funcName=="getInterface"){
-				var spo = EJS_evalStringOnTarget(spo)
+				var spo = evalStringOnTarget(spo)
 				supportedgetInterfaces(spo).forEach(function(x){
 					ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:'interface', depth:-1,special:true})
 				})
 			}else if(funcName=='getElementById'){
 				ans=getIDsInDoc()
 			}else if(funcName=="getAttribute"||funcName=="setAttribute"||funcName=="hasAttribute"){
-				var spo = EJS_evalStringOnTarget(spo)
+				var spo = evalStringOnTarget(spo)
 				var att=spo.attributes
 				for(var i=0;i<att.length;i++){
 					var x=att[i]
@@ -1353,13 +1353,13 @@ cleardump = function(){
     //Components.utils.reportError(e); // report the error and continue execution
 }
 
-function EJS_initShortCuts(){
+function initShortCuts(){
 	codebox.addEventListener("keydown", this, true);
 	codebox.addEventListener("keypress", this.keypress, true);
 	//codebox.addEventListener("keyup", this, true);
 }
 
-EJS_initShortCuts.prototype={
+initShortCuts.prototype={
 	pressed:false,
 	stopEvent:function(e){
 		e.preventDefault();e.stopPropagation();
@@ -1375,17 +1375,17 @@ EJS_initShortCuts.prototype={
 					break
 				case KeyboardEvent.DOM_VK_RETURN:
 					if(e.shiftKey)
-						EJS_printProperties()
+						printProperties()
 					else
-						EJS_executeJS();
+						executeJS();
 					this.stopEvent(e)
 					break
 				case KeyboardEvent.DOM_VK_DOWN:
-					EJS_nextCommandFromHistory();
+					nextCommandFromHistory();
 					this.stopEvent(e)
 					break
 				case KeyboardEvent.DOM_VK_UP:
-					EJS_previousCommandFromHistory();
+					previousCommandFromHistory();
 					this.stopEvent(e)
 					break
 			}
@@ -1442,7 +1442,7 @@ EJS_initShortCuts.prototype={
 
 
 
-function EJS_openCommandWin(){
+function openCommandWin(){
 	document.location=document.location
    toOpenWindowByType('shadia:jsMirror', "chrome://executejs/content/executejs/executeJS.xul")
 }
@@ -1488,7 +1488,7 @@ function consoleSummary(x){
 
 }
 
-function EJS_printPropertiesForTarget(target){
+function printPropertiesForTarget(target){
   var result = new Array();
   if(target.wrappedJSObject!=null){
     target = target.wrappedJSObject;
@@ -1503,7 +1503,7 @@ function EJS_printPropertiesForTarget(target){
       result[index++] = i + ": " +consoleSummary( e)
     }
   }
-  EJS_appendToConsole(index+'\n'+result.join("\n"));
+  appendToConsole(index+'\n'+result.join("\n"));
 }
 
 
@@ -1511,7 +1511,7 @@ function EJS_printPropertiesForTarget(target){
 u=window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(
 Ci.nsIDOMWindowUtils)
 u.sendSelectionSetEvent(codebox,0,false)
-//window.addEventListener('mousedown',function(e){EJS_appendToConsole(e)},false)
+//window.addEventListener('mousedown',function(e){appendToConsole(e)},false)
 u.sendMouseEvent('mousedown',150,150,0,2,0)
 codebox.selectionStart=codebox.selectionStart-20
 codebox.selectionEnd=codebox.selectionEnd+20
@@ -1557,7 +1557,7 @@ codebox.editor.rootElement.childNodes[10].getBoundingClientRect().top]
 //autocompleter.finish()
 
 var ConfigManager = {
-	CONFIG_FILE_NAME: "executejs_history.xml",
+	CONFIG_FILE_NAME: "executhistory.xml",
 	thisFile: 'chrome://shadia/content/jsMirror/jsMirror.xul',
 
 	readHistory: function(){

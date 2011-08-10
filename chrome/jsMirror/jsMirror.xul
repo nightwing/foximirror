@@ -13,8 +13,8 @@
     persist="screenX screenY width height sizemode"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
-    onload="EJS_doOnload()"
-    onunload="EJS_doOnUnload()"
+    onload="doOnload()"
+    onunload="doOnUnload()"
 	windowtype='shadia:jsMirror'
     >
 	
@@ -23,7 +23,7 @@
 	
 
 	<keyset>
-		<key keycode="VK_F5" oncommand="EJS_ReopenWin()"/>
+		<key keycode="VK_F5" oncommand="ReopenWin()"/>
 	</keyset>
 	
     <popupset>
@@ -75,8 +75,8 @@
 
    <vbox flex="1">
 <toolbar id='actionsp'>	
-	<toolbarbutton label="//" oncommand="EJS_commentLine();" tabindex="8"/>
-	<toolbarbutton label="/*" oncommand="EJS_commentBlock();"/>
+	<toolbarbutton label="//" oncommand="commentLine();" tabindex="8"/>
+	<toolbarbutton label="/*" oncommand="commentBlock();"/>
 	<toolbarbutton label="\t" oncommand="codebox.value=codebox.value.replace('\t','  ','g');"/>
 	<spacer flex='1'/>
 	<shadiaglue/>		
@@ -84,7 +84,7 @@
       
 		<toolbar align="center">
 			<label control="targetWin" accesskey="w" value="Target window" />
-			<menulist id="targetWin" oncommand="EJS_targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
+			<menulist id="targetWin" oncommand="targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
 				<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
 					<template>
 						<rule>
@@ -94,7 +94,7 @@
 				</menupopup>
 			</menulist>
 			<checkbox id="contentWinCB" persist="checked" disabled="false" label="Content Window" accesskey="t" 
-				oncommand="EJS_targetWinChanged()" tabindex="2"/>
+				oncommand="targetWinChanged()" tabindex="2"/>
 		</toolbar>
 		<vbox flex="10">
 			<textbox id="jsCode" multiline="true" flex="1"  wrap='off'
@@ -102,11 +102,11 @@
 	  
 			<splitter>
 				<hbox align="left" flex="1">
-					<toolbarbutton label="Clear" accesskey="r" oncommand="EJS_clearResult()" tabindex="8"></toolbarbutton>
-					<toolbarbutton label="Execute" accesskey="e" oncommand="EJS_executeJS()" tabindex="4" ></toolbarbutton>
-					<toolbarbutton label="Properties" accesskey="p" oncommand="EJS_printProperties()"  tabindex="5"></toolbarbutton>
+					<toolbarbutton label="Clear" accesskey="r" oncommand="clearResult()" tabindex="8"></toolbarbutton>
+					<toolbarbutton label="Execute" accesskey="e" oncommand="executeJS()" tabindex="4" ></toolbarbutton>
+					<toolbarbutton label="Properties" accesskey="p" oncommand="printProperties()"  tabindex="5"></toolbarbutton>
 					<spacer flex='1'/>
-					<toolbarbutton label="Execute Selection" accesskey="e" oncommand="EJS_executeJS('selected')" tabindex="4" ></toolbarbutton>
+					<toolbarbutton label="Execute Selection" accesskey="e" oncommand="executeJS('selected')" tabindex="4" ></toolbarbutton>
 
 					<toolbarbutton label="timer" accesskey="p" oncommand="insertTimer()"  tabindex="5"></toolbarbutton>
 				</hbox>
