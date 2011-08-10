@@ -2,6 +2,7 @@
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 
+
 var modernFox=!!Object.getOwnPropertyNames
 /**============-=========-===============**/
 if(!modernFox)//for old versions
@@ -394,7 +395,7 @@ var stackStartLineNumber
 function executeJS(sel, printProps){
 	/*jn.exec();return;*/
     var code = codebox.value;
-	
+
 	if(sel){
 		let s = codebox.selectionStart, e = codebox.selectionEnd
 		if (sel=='line') {
@@ -404,16 +405,16 @@ function executeJS(sel, printProps){
 			let e1 = code.indexOf('\n', e)
 			if(e1 != -1)
 				e = e1
-		}
+	}
 		if(s < e)
 			code = code.substring(s, e)
-	}
+}
 	if(!code){
 		appendToConsole("no code entered:(");
 		codebox.focus();
 		return null
 	}
-	
+
 	printProps&&appendToConsole("Properties for object:");
 
     try{
@@ -450,7 +451,7 @@ function evalStringOnTarget(string){
 		win = XPCNativeWrapper.unwrap(win)
 	}catch(e){
 		if('wrappedJSObject' in win)
-			win = win.wrappedJSObject||win
+		win = win.wrappedJSObject||win
 	}
 		
 	//add jn
@@ -523,19 +524,33 @@ function printPropertiesForTarget(target){
 
 var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
 var targetWindowId 
-getTargetWindow=function(){
+if(utils.getOuterWindowWithId){
+	getTargetWindow=function(){
 	var win = getOuterWindowWithId(targetWindowId)
-	if(!win||win.closed)
-		win=null
-	return win
-}
-getOuterWindowID = function(window){
-	return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
-}
+		if(!win||win.closed)
+			win = null
+		return win
+	}
+	getOuterWindowID = function(window){
+		return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
+	}
 getOuterWindowWithId = function(id){
 	return utils.getOuterWindowWithId(id)
 }
 /***/
+}
+else//old versions
+{
+	getTargetWindow=function(){
+		var win = targetWindowId
+		if(!win||win.closed)
+			win = null
+		return win
+	}
+	getOuterWindowID = function(window){
+		return window
+	}
+}
 
 var commandHistory = new Array();
 var currentCommandHistoryPos = 0;
@@ -551,16 +566,16 @@ function byId(id){
 	return document.getElementById(id);
 }
 
-function doOnload(){    
+function doOnload(){
 	initGlobals();
-	shortCuts=new initShortCuts()
+		shortCuts=new initShortCuts()
 	initTargetWindow()
 	if($shadia.jsMirror && $shadia.jsMirror.value){
 		codebox.value = $shadia.jsMirror.value
 		codebox.select();		
 	}
-	codebox.focus();
-	
+	    codebox.focus();
+
 }
 function doOnUnload(){
 	if(!$shadia.jsMirror)
@@ -1092,12 +1107,12 @@ autocompleter={
 		switch(event.keyCode){
 			case KeyEvent.DOM_VK_HOME:
 				if(this.moveTreeSelectionBig('top')){
-					event.preventDefault();event.stopPropagation();
+				event.preventDefault();event.stopPropagation();
 				}
 				break
 			case KeyEvent.DOM_VK_END:
 				if(this.moveTreeSelectionBig('end')){
-					event.preventDefault();event.stopPropagation();
+				event.preventDefault();event.stopPropagation();
 				}
 				break
 			case KeyEvent.DOM_VK_UP:
@@ -1225,7 +1240,7 @@ autocompleter={
 		if(append){
 			insertTextAtEnd('\n'+text, this.bubble)
 		}else
-			this.bubble.value=text
+		this.bubble.value=text
 	},
 }
 getIDsInDoc=function(){
@@ -1408,8 +1423,8 @@ var ConfigManager = {
 
 	getConfigFile: function(){
 		
-	}
-}
+		}
+			}
 
 
 
