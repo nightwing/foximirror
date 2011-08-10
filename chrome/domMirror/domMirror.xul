@@ -101,7 +101,7 @@
 	<vbox id='left-deck' flex="1" >
 		<hbox id='leftPane-search' >			
 			<textbox type='search' flex="1" />
-<tabs onselect='if(leftPane)window[this.selectedItem.id].activate()'>
+<tabs onselect='if(leftPane)window[this.selectedItem.id].activate()' setfocus='false'>
 		<tab label='dom' id='domViewer'/>
 		<tab label='css' id='stylesheetViewer'/>
 		<tab label='overlays' id='chromeRegistryViewer'/>
@@ -163,7 +163,7 @@
 			</tree>				
 		</vbox>
 		<hbox >
-			<tabs id='subpantabs'/>
+			<tabs id='subpantabs' setfocus='false'/>
 			<textbox type='search' flex="1" id='slate-finder'/>
 			<checkbox label='' style='margin:0;padding:0' oncommand='browserFind.updateAutoHighlight()' tooltiptext='autohighlight'/>
 		</hbox>

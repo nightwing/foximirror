@@ -1,4 +1,4 @@
-let EXPORTED_SYMBOLS = ["Services", "shadia"];
+let EXPORTED_SYMBOLS = ["Services"];
 
 var Ci = Components.interfaces;
 var Cc = Components.classes;
@@ -12,7 +12,12 @@ try{
 	Components.utils.import("resource://shadia/Services.jsm");
 }
 XPCOMUtils.defineLazyServiceGetter(Services, "jsd", "@mozilla.org/js/jsd/debugger-service;1", "jsdIDebuggerService");
-XPCOMUtils.defineLazyServiceGetter(Services, "chromeReg", "@mozilla.org/chrome/chrome-registry;1", "nsIXULOverlayProvider");
+XPCOMUtils.defineLazyGetter(Services, "chromeReg", function () {
+  return Cc["@mozilla.org/chrome/chrome-registry;1"]
+		.getService(Ci.nsIChromeRegistry)
+		.QueryInterface(Ci.nsIXULOverlayProvider)
+		.QueryInterface(Ci.nsIXULChromeRegistry);
+});
 XPCOMUtils.defineLazyServiceGetter(Services, "domUtils", "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 XPCOMUtils.defineLazyServiceGetter(Services, "sss", "@mozilla.org/content/style-sheet-service;1", "nsIStyleSheetService");
 XPCOMUtils.defineLazyServiceGetter(Services, "atom", "@mozilla.org/atom-service;1", "nsIAtomService");

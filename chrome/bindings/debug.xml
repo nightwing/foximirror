@@ -96,39 +96,6 @@ function toOpenWindowByType(inType, uri, features) {
     }
 }
 
-this.actionpopup.__defineSetter__('selectedItem',function(val){var oldval = this.mSelectedInternal;
-	if (oldval == val)
-	  return val;
-
-	if (val && !this.contains(val))
-	  return val;
-
-
-	this.mSelectedInternal = val;
-	if (val) {
-	  val.setAttribute('selected', 'true');
-	  this.setAttribute('value', 'tools');
-	  this.setAttribute('image', val.getAttribute('image'));
-	  this.setAttribute('label', 'tools');            
-	}
-	else {
-	  this.removeAttribute('value');
-	  this.removeAttribute('image');
-	  this.removeAttribute('label');
-	  this.removeAttribute('description');
-	}
-
-	var event = document.createEvent("Events");
-	event.initEvent("select", true, true);
-	this.dispatchEvent(event);
-
-	var event = document.createEvent("Events");
-	event.initEvent("ValueChange", true, true);
-	this.dispatchEvent(event);
-
-	return val;
-})
-
 //document.getAnonymousElementByAttribute(this.actionpopup.parentNode, 'class', 'menulist-dropmarker').className = "toolbarbutton-menu-dropmarker"
 
 var el1=this.actionbar,el2=this.actionpopup
@@ -156,15 +123,12 @@ for(var i in actions){
 //****/
 
 
-gDirSvc    = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIDirectoryService).QueryInterface(Ci.nsIProperties);
-gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
-ios        = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService)
-
 viewFileURI=function viewFileURI(selectedURI,lineNumber){
 	openDialog("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", selectedURI, null, null, lineNumber, null);
 }
 
 getLocalFile=function getLocalFile(mPath){
+	var ios = Services.io
 	var uri = ios.newURI(mPath, null, null),file;
 	if(uri.schemeIs('resource')){//about?
 		var ph=ios.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)

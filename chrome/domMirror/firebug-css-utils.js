@@ -40,8 +40,30 @@ function parseCSSValue(value, offset) {
     return cssValue;
 }
 
-function(Obj, Firebug, Domplate, Locale, Events, Css, Dom) {
+function(Obj,  Domplate,   Css, Dom) {
+Dom={}
+Dom.collapse = function(elt, collapsed){
+    if (!elt)
+        return;
+    elt.setAttribute("collapsed", collapsed ? "true" : "false");
+}
+Dom.getAncestorByClass = function(node, className){
+    for (var parent = node; parent; parent = parent.parentNode)    {
+        if (parent.classList.contains(className))
+            return parent;
+    }
+    return null;
+}
+Dom.getBody = function(doc){
+    if (doc.body)
+        return doc.body;
 
+    var body = doc.getElementsByTagName("body")[0];
+    if (body)
+        return body;
+
+    return doc.documentElement;  // For non-HTML docs
+};
 // ************************************************************************************************
 // Constants
 
@@ -63,8 +85,7 @@ InfoTip = {
                 DIV({"class": "infoTipCaption"})
             ),
 
-        onLoadImage: function(event)
-        {
+        onLoadImage: function(event) {
             var img = event.currentTarget;
             var bgImg = img.nextSibling;
             if (!bgImg)
@@ -76,8 +97,7 @@ InfoTip = {
             var w = img.naturalWidth, h = img.naturalHeight;
             var repeat = img.getAttribute("repeat");
 
-            if (repeat == "repeat-x" || (w == 1 && h > 1))
-            {
+            if (repeat == "repeat-x" || (w == 1 && h > 1)) {
                 Dom.collapse(img, true);
                 Dom.collapse(bgImg, false);
                 bgImg.style.background = "url(" + img.src + ") repeat-x";
@@ -86,9 +106,7 @@ InfoTip = {
                     bgImg.style.height = maxHeight + "px";
                 else
                     bgImg.style.height = h + "px";
-            }
-            else if (repeat == "repeat-y" || (h == 1 && w > 1))
-            {
+            } else if (repeat == "repeat-y" || (h == 1 && w > 1)) {
                 Dom.collapse(img, true);
                 Dom.collapse(bgImg, false);
                 bgImg.style.background = "url(" + img.src + ") repeat-y";
@@ -97,19 +115,14 @@ InfoTip = {
                     bgImg.style.width = maxWidth + "px";
                 else
                     bgImg.style.width = w + "px";
-            }
-            else if (repeat == "repeat" || (w == 1 && h == 1))
-            {
+            } else if (repeat == "repeat" || (w == 1 && h == 1)) {
                 Dom.collapse(img, true);
                 Dom.collapse(bgImg, false);
                 bgImg.style.background = "url(" + img.src + ") repeat";
                 bgImg.style.width = maxWidth + "px";
                 bgImg.style.height = maxHeight + "px";
-            }
-            else
-            {
-                if (w > maxWidth || h > maxHeight)
-                {
+            } else {
+                if (w > maxWidth || h > maxHeight) {
                     if (w > h)
                     {
                         img.style.width = maxWidth + "px";
@@ -123,13 +136,12 @@ InfoTip = {
                 }
             }
 
-            caption.innerHTML = Locale.$STRF("Dimensions", [w, h]);
+            caption.innerHTML = w+'\x'+h;
 
-            Css.removeClass(innerBox, "infoTipLoading");
+            innerBox.classList.remove("infoTipLoading");
         },
 
-        onErrorImage: function(event)
-        {
+        onErrorImage: function(event) {
             var img = event.currentTarget;
             var bgImg = img.nextSibling;
             if (!bgImg)
@@ -139,17 +151,16 @@ InfoTip = {
 
             // Display an error in the caption (instead of dimensions).
             if (img.src.indexOf("moz-filedata") == 0)
-                caption.innerHTML = Locale.$STR("firebug.failedToPreviewObjectURL");
+                caption.innerHTML = "failedToPreviewObjectURL";
             else
-                caption.innerHTML = Locale.$STR("firebug.failedToPreviewImageURL");
+                caption.innerHTML = "failedToPreviewImageURL";
 
             var innerBox = img.parentNode;
-            Css.removeClass(innerBox, "infoTipLoading");
+            innerBox.classList.remove("infoTipLoading");
         }
     }),
 
-    initializeBrowser: function(browser)
-    {
+    initializeBrowser: function(browser) {
         browser.onInfoTipMouseOut = Obj.bind(this.onMouseOut, this, browser);
         browser.onInfoTipMouseMove = Obj.bind(this.onMouseMove, this, browser);
 
@@ -164,10 +175,8 @@ InfoTip = {
         return browser.infoTip = this.tags.infoTipTag.append({}, Dom.getBody(doc));
     },
 
-    uninitializeBrowser: function(browser)
-    {
-        if (browser.infoTip)
-        {
+    uninitializeBrowser: function(browser) {
+        if (browser.infoTip) {
             var doc = browser.contentDocument;
             doc.removeEventListener("mouseover", browser.onInfoTipMouseMove, true);
             doc.removeEventListener("mouseout", browser.onInfoTipMouseOut, true);
@@ -204,9 +213,7 @@ InfoTip = {
             }
 
             infoTip.setAttribute("active", "true");
-        }
-        else
-        {
+        }else {
             this.hideInfoTip(infoTip);
         }
     },
@@ -229,8 +236,7 @@ InfoTip = {
         if (browser.currentPanel){
             var x = event.clientX, y = event.clientY;
             this.showInfoTip(browser.infoTip, browser.currentPanel, event.target, x, y, event.rangeParent, event.rangeOffset);
-        }
-        else
+        }else
             this.hideInfoTip(browser.infoTip);
     },
 

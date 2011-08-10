@@ -1635,7 +1635,7 @@ function sayXBL(mNode){
 		if(xbl.length==0)
 			ans.push('<div class="val">-------</div>')
 		else for(var i=0;i<xbl.length;i++)
-				ans.push('<div class="val link">'+xbl.queryElementAt(i, Ci.nsIURI).spec+'</div>')
+				ans.push('<div class="val link selectAll">'+xbl.queryElementAt(i, Ci.nsIURI).spec+'</div>')
 		parent=parent.parentNode
 	}
 	return '<div id="XBL-slate">'+
@@ -1653,10 +1653,21 @@ function sayEvents(mNode){
 			var events=eventListenerService.getListenerInfoFor(parent,{})
 		}catch(e){var events=[]}
 		for each(var i in events){
-			var s=i.toSource()
+			var s=i.getDebugObject();
+			if(s){
+				s=s.QueryInterface(Ci.jsdIValue)
+				if(s.jsType==3)
+					s = s.getWrappedValue().toString()
+				else if(s&&s.jsType==5)
+					s = s.getProperty('handleEvent').value.getWrappedValue().toString()
+				else
+					s = i.toSource()//i.inSystemEventGroup//||i.toSource()//prevent nightly crash
+			}
+			
 			if(s)
 				subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><pre>'+s+'</pre>')
-			else subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><br>')
+			else 
+				subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><br>')
 		}
 		if(subans.length==0)
 			ans.push('<div class="val">-------</div>')

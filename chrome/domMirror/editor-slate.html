@@ -71,6 +71,8 @@ initAll=function(){
 }
 keyListener={
 	keypress:function(event){
+		if(!lt)
+			return;
 		sel=window.getSelection()
 		var range=sel.getRangeAt(0)
 		c=range.startContainer
@@ -186,7 +188,7 @@ function startEditingElement(el){
 		finishEditing()
 	}
 	lt=el
-	if(lt.nodeName!='SPAN'){
+	if(lt.nodeName!='SPAN'&&!lt.classList.contains('selectAll')){
 		lt=''
 		return
 	}
@@ -202,7 +204,7 @@ function startEditing(e){
 		return
 	}	
 	lt=e.target
-	if(lt.nodeName!='SPAN'){
+	if(lt.nodeName!='SPAN'&&!lt.classList.contains('selectAll')){
 		lt=''
 		return
 	}		
