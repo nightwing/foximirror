@@ -5,7 +5,7 @@
 		<script src="js/stringstream.js" type="text/javascript"></script>
 		<script src="js/tokenize.js" type="text/javascript"></script>
 		<script src="js/tokenizejavascript.js" type="text/javascript"></script>
-		<script src="js/parsejavascript.js" type="text/javascript"></script> 
+		<script src="js/parsejavascript.js" type="text/javascript"></script>
 		<script src="js/parsecss.js" type="text/javascript"></script>-->
 			<script src="../property_database.js" type="text/javascript"></script>
 
@@ -40,15 +40,15 @@
 		  -moz-user-modify: read-write!important;
 		}
 	</style>
-	<script>  
-  
+	<script>
+
 initAll=function(){
 	window.addEventListener('mouseup',function(e){
 		//  document.body.style.MozUserSelect=""
-		startEditing(e)		
+		startEditing(e)
 	},true)
 	window.addEventListener('mousedown',function(e){
-		downPos=[e.screenX,e.screenY]		
+		downPos=[e.screenX,e.screenY]
 		if(e.target==lt){
 			lt.setCapture&&lt.setCapture(true)
 		//	lt.style.MozUserSelect="text"
@@ -57,16 +57,16 @@ initAll=function(){
 		}else{
 			window.focus()
 			finishEditing()
-		}			
+		}
 	},true)
-	
+
 	window.addEventListener('blur',function(e){
 		finishEditing()
 	},true)
-	
+
 	window.addEventListener('mousemove',function(e){
-	
-	},true) 
+
+	},true)
 	window.addEventListener('keypress', function(e){keyListener.keypress(e)},true)
 	//window.addEventListener('keydown', function(e){keyListener.keydown(e)},true)
 }
@@ -77,19 +77,19 @@ keyListener={
 		sel=window.getSelection()
 		var range=sel.getRangeAt(0)
 		c=range.startContainer
-		var a=range.startOffset,b=range.endOffset	
+		var a=range.startOffset,b=range.endOffset
 		if(c!=lt.firstChild){
 			c=lt.firstChild
 			a=0
 			text=lt.textContent
-			b=text.length	
+			b=text.length
 		}else{
 			text=lt.textContent
 		}
-		
-		
+
+
 		switch(event.keyCode){
-			case KeyEvent.DOM_VK_UP:				
+			case KeyEvent.DOM_VK_UP:
 				event.preventDefault();event.stopPropagation();
 				break
 			case KeyEvent.DOM_VK_DOWN:
@@ -102,7 +102,7 @@ keyListener={
 				}else if(a>0){
 					a--;
 					text=text.substring(0,a)+text.substr(b)
-					b=a				
+					b=a
 				}
 				event.preventDefault();event.stopPropagation();
 				break
@@ -112,11 +112,11 @@ keyListener={
 					b=a
 				}else{
 					text=text.substring(0,a)+text.substr(b+1)
-					b=a				
+					b=a
 				}
 				event.preventDefault();event.stopPropagation();
 				break
-			case KeyEvent.DOM_VK_RETURN:		
+			case KeyEvent.DOM_VK_RETURN:
 				editNext()
 				event.preventDefault();event.stopPropagation();
 				return;
@@ -124,31 +124,31 @@ keyListener={
 			case 46:
 				//this.startMain(this.object[this.selected()],"")
 				break;
-			case KeyEvent.DOM_VK_RIGHT:		
+			case KeyEvent.DOM_VK_RIGHT:
 				break
 			case KeyEvent.DOM_VK_LEFT:
 				break
-			default:				
+			default:
 				if(event.charCode==0){
 					return
 				}
 				var newChar=String.fromCharCode(event.charCode)
-				if(!event.ctrlKey&&!event.altKey&&!event.shiftKey){
-					text=text.substring(0,a)+newChar+text.substr(b)	
+				if(!event.ctrlKey&&!event.altKey){
+					text=text.substring(0,a)+newChar+text.substr(b)
 					a++;b=a
 				}else if(event.ctrlKey){
 					if(newChar=='v'){
 						newChar=gClipboardHelper.getData()
-						text=text.substring(0,a)+newChar+text.substr(b)	
+						text=text.substring(0,a)+newChar+text.substr(b)
 						a+=newChar.length;b=a
 					}else if(newChar=='x'){
 						gClipboardHelper.copyString(text.substring(a,b))
-						text=text.substring(0,a)+text.substr(b)	
+						text=text.substring(0,a)+text.substr(b)
 						a;b=a
 					}else if(newChar=='c'){
-						gClipboardHelper.copyString(text.substring(a,b))					
+						gClipboardHelper.copyString(text.substring(a,b))
 					}
-				}					
+				}
 		}
 		c.textContent=text
 		range.setStart(c,a)
@@ -156,19 +156,19 @@ keyListener={
 		sel.removeAllRanges()
 		sel.addRange(range)
 	},
-	
+
 	keydown:function(e){
 		if(e.ctrlKey)
 			switch(e.which){
 				case KeyboardEvent.DOM_VK_C:
-				text=text.substring(0,a)+String.fromCharCode(event.charCode)+text.substr(b)	
+				text=text.substring(0,a)+String.fromCharCode(event.charCode)+text.substr(b)
 
 				break
 				case KeyboardEvent.DOM_VK_V:
-				
+
 				break
 				case KeyboardEvent.DOM_VK_X:
-					text=text.substring(0,a)+String.fromCharCode(event.charCode)+text.substr(b)	
+					text=text.substring(0,a)+String.fromCharCode(event.charCode)+text.substr(b)
 
 				break
 			}
@@ -179,10 +179,10 @@ keyListener={
 			sel.addRange(range)
 	}
 }
-function editNext(){	
+function editNext(){
 	startEditingElement(lt.nextSibling)
 }
-function startEditingElement(el){	
+function startEditingElement(el){
 	if(lt==el){
 		return
 	}else if(lt){
@@ -193,7 +193,7 @@ function startEditingElement(el){
 		lt=''
 		return
 	}
-	
+
 	lt.className=lt.className.replace(' editing','','g')+' editing'
 	//lt.contentEditable=true
 	lt.focus()
@@ -203,19 +203,19 @@ lt=''
 function startEditing(e){
 	if(lt==e.target){
 		return
-	}	
+	}
 	lt=e.target
 	if(lt.nodeName!='SPAN'&&!lt.classList.contains('selectAll')){
 		lt=''
 		return
-	}		
+	}
 	sel=window.getSelection()
 	a=sel.focusNode,b=sel.anchorNode
 	if(a.parentNode!=lt||b.parentNode!=lt){
 		lt=''
 		return
-	}		
-	
+	}
+
 	lt.className=lt.className.replace(' editing','','g')+' editing'
 	sel=window.getSelection()
 	a=sel.focusOffset,b=sel.anchorOffset
@@ -227,7 +227,7 @@ function startEditing(e){
 function finishEditing(e){
 	if(lt&&lt.className){
 		lt.blur()
-		lt.className=lt.className.replace(' editing','','g')		
+		lt.className=lt.className.replace(' editing','','g')
 		//lt.contentEditable=false
 		lt=''
 	}
@@ -237,7 +237,7 @@ function select(a,b){
 		return
 	sel=window.getSelection()
 	sel.removeAllRanges()
-	
+
 	searchRange = document.createRange()
 	searchRange.selectNodeContents(lt.firstChild);
 	sel.addRange(searchRange);
@@ -250,12 +250,12 @@ function autocomlete(){
 	sel=window.getSelection()
 	var range=sel.getRangeAt(0)
 	c=range.startContainer
-	var a=range.startOffset,b=range.endOffset	
+	var a=range.startOffset,b=range.endOffset
 	if(c!=lt.firstChild){
 		c=lt.firstChild
 		a=0
 		text=lt.textContent
-		b=text.length	
+		b=text.length
 	}else{
 		text=lt.textContent
 	}
@@ -269,7 +269,7 @@ function autocomlete(){
 		}
 		type=p.textContent
 	}
-		
+
 }
 
 
@@ -278,7 +278,7 @@ gCSSProperties
 
 	filter=function(){
 		var table = [];
-		var filterText=this.text.toLowerCase()	
+		var filterText=this.text.toLowerCase()
 		if(!filterText){
 			var arr=[]
 			this.propsArray.forEach(function(val) {arr.push(val[1])})

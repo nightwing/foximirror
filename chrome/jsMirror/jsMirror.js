@@ -663,10 +663,10 @@ function getSelectedWinID(){
 
 /***/
 function commentBlock(){
-	commentBlock(codebox)
+	commentBlockTB(codebox)
 	codebox.focus();
 }
-function commentBlock(elem){
+function commentBlockTB(elem){
 	var value=elem.value
 	var selectedText= value.substring(elem.selectionStart,elem.selectionEnd);
 	if(selectedText==""){
@@ -690,11 +690,11 @@ function commentBlock(elem){
 	elem.selectionStart-=selectedText.length
 }
 function commentLine() {
-    commentLine(codebox)
+    commentLineTB(codebox)
     codebox.focus();
 }
 /*pp*/
-function commentLine(elem) {
+function commentLineTB(elem) {
 	var start=elem.selectionStart
 	var end=elem.selectionEnd
     var prevLine = elem.value.lastIndexOf("\n", start)+1

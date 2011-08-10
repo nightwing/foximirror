@@ -1977,7 +1977,7 @@ slateViewer={
 		var cl = getAncestorByAttribute(node, 'closer')
 		var ac = getAncestorByAttribute(node, 'aID')
 		
-		cl[1]&&closeNodeInSlate(cl[1], cl[0])
+		!ac[1]&&cl[1]&&closeNodeInSlate(cl[1], cl[0])
 		ac[1]&&ac[0]&&window[ac[0]](ac[1])
 		
 		if(node.nodeName=='SP'){

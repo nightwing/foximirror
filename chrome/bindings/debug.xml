@@ -40,7 +40,7 @@
     <content>
 		<xul:arrowscrollbox aID='actionbar'/>	
 		<xul:menulist  type='menu' label='tools' class='plain' sizetopopup='false' align='center'>
-			<xul:menupopup aID='actionpopup' />	
+			<xul:menupopup aID='actionpopup' onpopupshowing='dump(event,1)'/>	
 		</xul:menulist>
     </content>
 	
@@ -117,94 +117,6 @@ for(var i in actions){
 }
 
 					
-  //**********************************************************
- //* io
-//****/
-
-
-viewFileURI=function viewFileURI(selectedURI,lineNumber){
-	openDialog("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", selectedURI, null, null, lineNumber, null);
-}
-
-
-var nppItem
-function getNppPath(){try{
-	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-	var path="C:\\Program Files\\Notepad++\\notepad++.exe"
-	file.initWithPath(path);
-	if(file.exists())
-		return path
-	var path="C:\\Program Files (x86)\\Notepad++\\notepad++.exe"
-	file.initWithPath(path);
-	if(file.exists())
-		return path
-	}catch(e){}
-}
-function initializeNppItem(){
-	var npp=getNppPath()
-	if(npp){
-		nppItem={label:'notepad++', executable: npp, cmdline: '-n%line %file'}
-		return
-	}
-	var gPrefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
-	var prefBranch = gPrefBranch = gPrefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2)
-	try{
-		var a=prefBranch.getCharPref('extensions.shadia.editor')
-	}catch(e){}
-	
-	
-	if(a&&( (a=a.split(',')) [1]) ){		
-		nppItem={label:a[0], executable: a[1], cmdline: a[2]}
-	}else{
-		window.openDialog('chrome://shadia/content/utils/prefSetters/changeeditor.xul')
-		return
-	}
-	return nppItem
-}
-
-npp=function(path,line){// create an nsILocalFile for the executable
-	if(!nppItem||!nppItem.executable)
-		initializeNppItem()
-	if(!nppItem||!nppItem.executable)
-		return
-	var args = ["-n"+line, path];
-	
-	var args = [];
-	var targetAdded = false;
-	var cmdline = nppItem.cmdline
-	if (cmdline){
-		cmdline = cmdline.replace(' ', '\x00', 'g')
-		
-		line = parseInt(line);
-		if(typeof line == 'number' && !isNaN(line)){
-			cmdline = cmdline.replace('%line', line, 'g');
-		}else{//don't send argument with bogus line number
-			var i = cmdline.indexOf("%line");
-			var i2 = cmdline.indexOf("\x00", i);
-			if(i2 == -1)
-				i2 = cmdline.length;
-			var i1 = cmdline.lastIndexOf("\x00", i);
-			if(i1 == -1)
-				i1 = 0;
-			cmdline = cmdline.substring(0, i1) + cmdline.substr(i2);
-		}
-		
-		if (cmdline.indexOf("%file")>-1 ){
-			cmdline = cmdline.replace('%file', path, 'g');
-			targetAdded = true;
-		}
-		cmdline.split(/\x00+/).forEach(function(x){ if(x) args.push(x) })		
-	}		
-	if (!targetAdded)
-		args.push(path);
-	
-	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);	
-	file.initWithPath(nppItem.executable);	
-	// create an nsIProcess
-	var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-	process.init(file);	
-	process.run(false, args, args.length);
-}
 
 //inject shadia
 Components.utils.import('resource://shadia/main.js')
@@ -225,7 +137,7 @@ if(!window.shadia)
 		<handler event="command">
 			actions[event.originalTarget.getAttribute('aID')]()
 		</handler>
-		<handler event="keypress">
+		<handler event="onpopupshowing">
 			dump(event)
 		</handler>
 	</handlers>

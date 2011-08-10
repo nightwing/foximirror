@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, "atom", "@mozilla.org/atom-service;
 
 var addDevelopmentUtils = function(window){
 	//window.toOpenWindowByType = toOpenWindowByType;
-	window.toOpenWindowByURI = toOpenWindowByURI;
+	//window.toOpenWindowByURI = toOpenWindowByURI;
 	window.dump = dump
 	if(!('Cc' in window))
 		window.Cc=Components.classes
@@ -35,6 +35,12 @@ var addDevelopmentUtils = function(window){
 		window.Ci=Components.interfaces
 	if(!('Cu' in window))
 		window.Cu=Components.utils
+	var href = window.location.href
+	if(href.substring(0,15)=='chrome://shadia'||href=='chrome://global/content/console.xul'){
+		for each(var i in ["getLocalFile","makeReq","viewFileURI","npp"]){
+			window[i]=this[i]
+		}
+	}
 }
 
 /** **************************************************************
@@ -52,10 +58,13 @@ toOpenWindowByURI =function (uri, features) {
             return true;
         }
     }
-	Services.ww.openWindow(
+	openWindow(uri, features).focus();
+}
+openWindow =function (uri, features){
+	return Services.ww.openWindow(
 		null, uri, "_blank",
 		features||"chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar,centerscreen", null
-	).focus();
+	)
 }
 dump = function(){
     var aMessage="aMessage: ";
@@ -147,3 +156,97 @@ function getPref(prefName,type){
         }
     }catch(e){}
 }
+  //**********************************************************
+ //* npp
+//****/
+viewFileURI=function viewFileURI(selectedURI,lineNumber){
+	openWindow("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", selectedURI, null, null, lineNumber, null);
+}
+var nppItem
+function getNppPath(){try{
+	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+	var path="C:\\Program Files\\Notepad++\\notepad++.exe"
+	file.initWithPath(path);
+	if(file.exists())
+		return path
+	var path="C:\\Program Files (x86)\\Notepad++\\notepad++.exe"
+	file.initWithPath(path);
+	if(file.exists())
+		return path
+	}catch(e){}
+}
+function initializeNppItem(){
+	var npp=getNppPath()
+	if(npp){
+		nppItem={label:'notepad++', executable: npp, cmdline: '-n%line %file'}
+		return
+	}
+	var gPrefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+	var prefBranch = gPrefBranch = gPrefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2)
+	try{
+		var a=prefBranch.getCharPref('extensions.shadia.editor')
+	}catch(e){}
+	
+	
+	if(a&&( (a=a.split(',')) [1]) ){		
+		nppItem={label:a[0], executable: a[1], cmdline: a[2]}
+	}else{
+		openWindow('chrome://shadia/content/utils/prefSetters/changeeditor.xul')
+		return
+	}
+	return nppItem
+}
+
+npp=function(path,line){// create an nsILocalFile for the executable
+	if(!nppItem||!nppItem.executable)
+		initializeNppItem()
+	if(!nppItem||!nppItem.executable)
+		return
+	var args = ["-n"+line, path];
+	
+	var args = [];
+	var targetAdded = false;
+	var cmdline = nppItem.cmdline
+	if (cmdline){
+		cmdline = cmdline.replace(' ', '\x00', 'g')
+		
+		line = parseInt(line);
+		if(typeof line == 'number' && !isNaN(line)){
+			cmdline = cmdline.replace('%line', line, 'g');
+		}else{//don't send argument with bogus line number
+			var i = cmdline.indexOf("%line");
+			var i2 = cmdline.indexOf("\x00", i);
+			if(i2 == -1)
+				i2 = cmdline.length;
+			var i1 = cmdline.lastIndexOf("\x00", i);
+			if(i1 == -1)
+				i1 = 0;
+			cmdline = cmdline.substring(0, i1) + cmdline.substr(i2);
+		}
+		
+		if (cmdline.indexOf("%file")>-1 ){
+			cmdline = cmdline.replace('%file', path, 'g');
+			targetAdded = true;
+		}
+		cmdline.split(/\x00+/).forEach(function(x){ if(x) args.push(x) })		
+	}		
+	if (!targetAdded)
+		args.push(path);
+	
+	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);	
+	file.initWithPath(nppItem.executable);	
+	// create an nsIProcess
+	var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+	process.init(file);	
+	process.run(false, args, args.length);
+}
+
+
+
+reloadModule = function(href){
+	var bp = Cu.import(href)
+	// query needed to confuse startupcache in ff 8.0+ 
+	Services.scriptloader.loadSubScript(href+'?'+Date.now(), bp);
+	return bp
+}
+
