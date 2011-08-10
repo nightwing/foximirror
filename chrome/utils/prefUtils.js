@@ -7,9 +7,10 @@
  * pref utils
  *****************/
  
-var prefBranch = Services.prefs
 
-function setPref(prefName,val,type){try{              
+function setPref(prefName,val,type){
+	var prefBranch = Services.prefs
+	try{              
         switch (type||typeof(val)||prefBranch.getPrefType(prefName)){            
 			case 'string':  case prefBranch.PREF_STRING:
 				return prefBranch.setCharPref(prefName,val);            
@@ -25,10 +26,11 @@ function setPref(prefName,val,type){try{
 function clearPref(prefName){
 	try{
 		//gPrefBranch.prefHasUserValue(prefName)
-		gPrefBranch.clearUserPref(prefName)
+		Services.prefs.clearUserPref(prefName)
 	}catch(e){}
 }
 function getPref(prefName,type){
+	var prefBranch = Services.prefs
 	try{
         switch (type||prefBranch.getPrefType(prefName)){            
 			case 'string':  case prefBranch.PREF_STRING:

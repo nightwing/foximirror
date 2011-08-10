@@ -38,15 +38,14 @@
   
 <binding id="shadiaGlue">
     <content>
-		<xul:arrowscrollbox id='actionbar'/>	
-		<xul:menulist  type='menu' label='tools' class='plain' sizetopopup='false'>
-			<xul:menupopup id='actionpopup'>
-			</xul:menupopup>	
+		<xul:arrowscrollbox aID='actionbar'/>	
+		<xul:menulist  type='menu' label='tools' class='plain' sizetopopup='false' align='center'>
+			<xul:menupopup aID='actionpopup' />	
 		</xul:menulist>
     </content>
 	
 	<resources>
-      <stylesheet src="debug.css"/>
+		<stylesheet src="debug.css"/>
     </resources>
 	
 	<implementation>
@@ -70,7 +69,7 @@ this.actions={//external
 	,cssMirror:function()   {toOpenWindowByType('shadia:cssMirror', "chrome://shadia/content/cssMirror/cssMirror.xul")}
 	,xulMirror:function()   {toOpenWindowByType('shadia:xulMirror', "chrome://shadia/content/xulMirror/xulMirror.xul")}
 	,prefMirror:function()  {toOpenWindowByType('shadia:prefMirror', "chrome://shadia/content/prefMirror/prefMirror.xul")}
-	,magnifier:function()   {getLocalFile('chrome://shadia/content/magnifier.ahk').launch()}
+	,magnifier:function()   {$shadia.getLocalFile('chrome://shadia/content/magnifier.ahk').launch()}
 	,restartApp:function()  {
 		if(typeof Application=='object') Application.restart()
 		else
@@ -79,11 +78,11 @@ this.actions={//external
 	}
 	,reloadChrome:function()  {Services.chromeReg.reloadChrome()}
 	,refreshSkins:function()  {Services.chromeReg.refreshSkins()}
-	,revealCurDoc:function()  {getLocalFile(location.href).reveal()}
+	,revealCurDoc:function()  {$shadia.getLocalFile(location.href).reveal()}
 }
 var activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','errorConsole','jsMirror','domi']
 var actionNames={reload:'reload',reopen:':)',errorConsole:'errors',restartApp:'restart firefox'}
-var actionsColors = {restartApp:'orange',reloadChrome:'orange',reload:'orange'}    
+var actionsColors = {restartApp:'orange',reloadChrome:'orange',reload:'orange',magnifier:'blue'}    
 function toOpenWindowByType(inType, uri, features) {
     var windowManager = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
     var topWindow = windowManager.getMostRecentWindow(inType);
@@ -101,7 +100,7 @@ function toOpenWindowByType(inType, uri, features) {
 var el1=this.actionbar,el2=this.actionpopup
 for(var i in actions){
 	var newEl=document.createElement('menuitem')
-	newEl.id=i;
+	newEl.setAttribute('aID',i);
 	newEl.setAttribute('label', actionNames[i]||i);	
 	if(i in actionsColors)
 		newEl.style.color = actionsColors[i];
@@ -111,7 +110,7 @@ for(var i in actions){
 	if(activeactions.indexOf(i)>-1){
 		newEl.style.color='graytext'
 		var newEl=document.createElement('toolbarbutton')
-		newEl.id=i;
+		newEl.setAttribute('aID',i);
 		newEl.setAttribute('label', actionNames[i]||i);
 		el1.appendChild(newEl)
 	}
@@ -127,69 +126,7 @@ viewFileURI=function viewFileURI(selectedURI,lineNumber){
 	openDialog("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", selectedURI, null, null, lineNumber, null);
 }
 
-getLocalFile=function getLocalFile(mPath){
-	var ios = Services.io
-	var uri = ios.newURI(mPath, null, null),file;
-	if(uri.schemeIs('resource')){//about?
-		var ph=ios.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)
-		abspath=ph.getSubstitution(uri.host)
-		uri=ios.newURI(uri.path.substr(1), null, abspath)
-	}
-	while(uri.schemeIs('chrome')) uri=Services.chromeReg.convertChromeURL(uri)
-	while(uri.schemeIs('jar')) uri=uri.QueryInterface(Ci.nsIJARURI).JARFile
-	if(uri.schemeIs('file'))file=uri.QueryInterface(Ci.nsIFileURL).file
 
-	return file&&file.QueryInterface(Ci.nsILocalFile)
-}
-/**-----------//////**************************/
-makeReq=function makeReq(href){
-//dump('makeReq',href)
-	var req = new XMLHttpRequest;
-	req.overrideMimeType('text/plain')
-	req.open("GET", href, false);
-	try{
-		req.send(null);
-	}catch(e){}
-	return req.responseText;
-
-}
-makeReqAsync=function makeReqAsync(href,callback){
-    req = new XMLHttpRequest();
-    req.open('GET', href, true);
-	req.overrideMimeType('text/plain')
-
-    req.onreadystatechange = function() {
-        if (req.readyState == 0){
-            callback(req.responseText);
-        }
-    };
-    req.send(null);
-}
-	
-   //**********************************************************
-  //* 
- //****/
-// prefs for debugging.  true should mean enabled.
-var debuggingPrefs = ["nglayout.debug.disable_xul_cache", "javascript.options.showInConsole", "browser.dom.window.dump.enabled"];
-  
-
-function doSetDebuggingPrefs(v){
-    try{
-		var mPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-		for(var i=0; i<debuggingPrefs.length; i++)
-			mPrefs.setBoolPref(debuggingPrefs[i], v);    
-    }catch(e){}
-}
-/*    var mPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-    try {
-      for(var i=0; i<debuggingPrefs.length; i++)
-	rv = rv || mPrefs.getBoolPref(debuggingPrefs[i]);
-    }
-    catch(e){}
-  
-    doSetDebuggingPrefs(rv);
-    document.getElementById("extensiondev_toggleprefs").setAttribute("checked", rv);
-*/
 var nppItem
 function getNppPath(){try{
 	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
@@ -277,17 +214,19 @@ if(!window.shadia)
 }]]></constructor>
 		
 <field name="actionbar">
-	document.getAnonymousElementByAttribute(this, "id", "actionbar");
+	document.getAnonymousElementByAttribute(this, "aID", "actionbar");
 </field>
 <field name="actionpopup">
-	document.getAnonymousElementByAttribute(this, "id", "actionpopup");
+	document.getAnonymousElementByAttribute(this, "aID", "actionpopup");
 </field>
     
     </implementation>
 	<handlers>
 		<handler event="command">
-		dump(event.originalTarget.id)
-			actions[event.originalTarget.id]()
+			actions[event.originalTarget.getAttribute('aID')]()
+		</handler>
+		<handler event="keypress">
+			dump(event)
 		</handler>
 	</handlers>
 </binding>

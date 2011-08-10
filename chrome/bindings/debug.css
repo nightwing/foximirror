@@ -2,7 +2,7 @@ menu[_moz-menuactive="true"], menuitem[_moz-menuactive="true"]{
 	background-color: -moz-menuhover!important;
 	color: -moz-menuhovertext!important;
 }
-#actionbar>toolbarbutton .toolbarbutton-text{
+toolbarbutton>.toolbarbutton-text{
 	display: -moz-box!important;
 }
 menulist{

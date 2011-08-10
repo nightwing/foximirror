@@ -1,4 +1,6 @@
-let EXPORTED_SYMBOLS = ["Services"];
+let EXPORTED_SYMBOLS = ["Services", "$shadia"];
+
+var $shadia = this
 
 var Ci = Components.interfaces;
 var Cc = Components.classes;
@@ -35,10 +37,9 @@ var addDevelopmentUtils = function(window){
 		window.Cu=Components.utils
 }
 
-/****************************************************************
- * exported functions
- *
- *****************/
+/** **************************************************************
+ *    exported functions 
+ ** ********************** **/
 toOpenWindowByURI =function (uri, features) {
     var winEnum = Services.wm.getEnumerator("");
     while (winEnum.hasMoreElements()) {
@@ -87,4 +88,62 @@ getLocalFile=function getLocalFile(mPath){
 		file=uri.QueryInterface(Ci.nsIFileURL).file;
 
 	return file&&file.QueryInterface(Ci.nsILocalFile)
+}
+
+makeReq=function makeReq(href){
+	var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();//new XMLHttpRequest;
+	req.overrideMimeType('text/plain')
+	req.open("GET", href, false);
+	try{
+		req.send(null);
+	}catch(e){}
+	return req.responseText;
+}
+makeReqAsync=function makeReqAsync(href,callback){
+    req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();//new XMLHttpRequest();
+    req.open('GET', href, true);
+	req.overrideMimeType('text/plain')
+
+    req.onload = function() {
+        req.onload=null
+        callback(req.responseText);        
+    };
+    req.send(null);
+}
+/** **************************************************************
+ *    exported functions 
+ ** ********************** **/
+function setPref(prefName,val,type){
+	var prefBranch = Services.prefs
+	try{              
+        switch (type||typeof(val)||prefBranch.getPrefType(prefName)){            
+			case 'string':  case prefBranch.PREF_STRING:
+				return prefBranch.setCharPref(prefName,val);            
+			case 'number':  case 'int':  case 'float': case prefBranch.PREF_INT:
+				return prefBranch.setIntPref (prefName,val);            
+			case 'boolean': case 'bool': case prefBranch.PREF_BOOL:
+				return prefBranch.setBoolPref(prefName,val);
+			default:
+				return 'failed';
+        }
+    }catch(e){}
+}
+function clearPref(prefName){
+	try{
+		//gPrefBranch.prefHasUserValue(prefName)
+		Services.prefs.clearUserPref(prefName)
+	}catch(e){}
+}
+function getPref(prefName,type){
+	var prefBranch = Services.prefs
+	try{
+        switch (type||prefBranch.getPrefType(prefName)){            
+			case 'string':  case prefBranch.PREF_STRING:
+				return prefBranch.getCharPref(prefName);            
+			case 'int':     case prefBranch.PREF_INT:
+				return prefBranch.getIntPref(prefName);            
+			case 'bool':    case prefBranch.PREF_BOOL:
+				return prefBranch.getBoolPref(prefName);
+        }
+    }catch(e){}
 }

@@ -1,14 +1,16 @@
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-//Cu.import('resource://xqjs/Services.jsm');
-//Cu.import('resource://xqjs/Preferences.jsm');
+
+Cu.import('resource://shadia/main.js');
 var domUtils,winService,ww
 initServices=function(){
 	domUtils = Services.domUtils
 	winService = Services.wm
-	//ww = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
 	ios = Services.io
 	sss = Services.sss
 	atomService = Services.atom;
+	getLocalFile = $shadia.getLocalFile
+	makeReq = $shadia.makeReq
+	makeReqAsync = $shadia.makeReqAsync
 }
 /***************************************************/
 var initializeables=[]
@@ -1388,7 +1390,7 @@ insertAddrs=function(mNode){
 					computedStyleViwer.compCSS(mNode)
 				   ].join('<div class="sectEnd"></div>');
 			else if(mode=='xbl')
-				body.innerHTML=sayXBL(mNode)
+				body.innerHTML=slateViewer.sayXBL(mNode)
 			else if(mode=='css')
 				body.innerHTML=sayParentCSS(mNode)
 			else if(mode=='attrs')
@@ -1433,15 +1435,15 @@ insertAddrs=function(mNode){
 }
 /**-----------//////**************************/
 function sayDocument(doc){
-		var ans=['<span class="selector">'+mNode.nodeName+'</span>'],uri
+	var ans=['<span class="selector">'+mNode.nodeName+'</span>'],uri
 
-		ans.push('<span class="name">title</span>= <span class="val">'+doc.title+'</span>')
-		var uri=sayHref(doc.documentURI)
+	ans.push('<span class="name">title</span>= <span class="val">'+doc.title+'</span>')
+	var uri=sayHref(doc.documentURI)
 
-		ans.push('<span class="name">uri</span>= <span class="val">'+uri+'</span>')
+	ans.push('<span class="name">uri</span>= <span class="val">'+uri+'</span>')
 
-		return '<div>'+ans.join('</div><div class="prop">')+'</div>'
-	return
+	return '<div>'+ans.join('</div><div class="prop">')+'</div>'
+	
 }
 function sayAttrs(mNode){
 	var ans=['<sp1><sp>edit</sp></sp1> <span class="selector">'+mNode.nodeName+'</span>']
@@ -1591,9 +1593,6 @@ setInnerHTML=function(element, html){
         return [first, last];
     }catch(e){return [element,element]}
 };
-/*h=new XMLSerializer().serializeToString(document)
-
-XML(h).toXMLString()*/
 
 /*******************/
 /**-----------//////**************************/
@@ -1638,15 +1637,16 @@ function sayXBL(mNode){
 				ans.push('<div class="val link selectAll">'+xbl.queryElementAt(i, Ci.nsIURI).spec+'</div>')
 		parent=parent.parentNode
 	}
-	return '<div id="XBL-slate">'+
-		"<div class='parents' closer='true'><a11> \u25e2 </a11><a>bindings</a></div>"+
-		'<div class="prop">'+ans.join('')+'</div></div>'+sayEvents(mNode)
+	return ans
 }
 
 function sayEvents(mNode){
-	eventListenerService=Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService);
-	var parent=mNode
 	var ans=[]
+	if(!Services.jsd.isOn){
+		ans.push(actionButton("enable jsd to see event handlers", 'enableJSD'))
+	}	
+	var eventListenerService=Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService);
+	var parent=mNode
 	function sayEventsInner(parent){
 		var subans=[]
 		try{
@@ -1665,7 +1665,7 @@ function sayEvents(mNode){
 			}
 			
 			if(s)
-				subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><pre>'+s+'</pre>')
+				subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><pre class="func">'+s+'</pre>')
 			else 
 				subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><br>')
 		}
@@ -1682,9 +1682,7 @@ function sayEvents(mNode){
 	sayEventsInner(mNode.ownerDocument.defaultView)
 
 	ans[0]="<div class='end'>"+ans[0]+ans[1]+"</div>";ans[1]=''
-	return '<div id="event-slate">'+
-		"<div class='parents' closer='true'><a11> \u25e2 </a11><a>events</a></div>"+
-		'<div class="prop">'+ans.join('')+'</div></div>'
+	return ans
 }
 
 function sayHrefEnd(href){
@@ -1749,8 +1747,10 @@ function sayCSS(rules,maxn,isSecondary){var t=Date.now()
 	var ans=[], usedrules=[]
 	var rule, n=rules.length
 	if(!maxn)
-		maxn=n>100?100:n
-	else if(maxn>n)maxn=n
+		maxn=n>100 ? 100:n
+	else if(maxn>n)
+		maxn=n
+
 	for(var i=0; i<maxn; i++){
 		var rule= rules[i]
 		if(rule.type==1){
@@ -1773,7 +1773,7 @@ function sayCSS(rules,maxn,isSecondary){var t=Date.now()
 		}
 	}
 	if(n>maxn){
-		ans.push("<div><buttondiv slateid='complete'>and <em>"+(n-maxn)+'</em> more rules</buttondiv>')
+		ans.push(actionButton("and <em>"+(n-maxn)+"</em> more rules)", 'sayRemainingCSS'))
 	}
 	return '<div id="CSS-slate">'+ans.join('</div>')+'</div></div>'
 }
@@ -1807,6 +1807,22 @@ function rgbToHex(value){//hex values are better for eyes than rgb ones
     });
 }
 
+/*******/
+function actionButton(label, action){
+	return "<div><buttondiv aID='"+action+"'>"+label+"</buttondiv>"
+}
+function sayRemainingCSS(element){
+	var slate = getAncestorId(element)
+	if(!slate[1])
+		return
+	slate[1].innerHTML = sayCSS(currentRules, Infinity)
+}
+function enableJSD(element){
+	Services.jsd.asyncOn(null)
+	element.parentNode.removeChild(element)
+}
+/*******/
+
 cssSlate={
 	slate:{},
 	sayRules: function(rules){
@@ -1825,7 +1841,6 @@ cssSlate={
 
 }
 
-
 function sayParentCSS(mNode){
 	var parent=mNode
 	var ans=[]
@@ -1842,7 +1857,21 @@ function sayParentCSS(mNode){
 	currentRules=cr
 	return ans.join('')
 }
-closeNodeInSlate=function(node){
+
+closeNodeInSlate=function(node, id){
+	if(id != 'true'){	
+		var p = node.parentNode
+		var st = slateViewer[id+'-closed']
+		if(st){
+			p.removeAttribute('closed')
+			node.firstChild.textContent=' \u25e2 '
+		}else{
+			p.setAttribute('closed', true)
+			node.firstChild.textContent=' \u25e5 '
+		}
+		slateViewer[id+'-closed']=!st
+		return
+	}
 	if(node.hasAttribute('closed')){
 		node.removeAttribute('closed')
 		node.firstChild.textContent=' \u25e2 '
@@ -1945,16 +1974,34 @@ slateViewer={
 	click:function(event){
 		var node=event.target
 		dump(domNodeSummary(node))
-
-		if(node.parentNode && node.parentNode.hasAttribute('closer')){
-			closeNodeInSlate(node.parentNode)
-		}else if(node.nodeName=='SP'){
+		var cl = getAncestorByAttribute(node, 'closer')
+		var ac = getAncestorByAttribute(node, 'aID')
+		
+		cl[1]&&closeNodeInSlate(cl[1], cl[0])
+		ac[1]&&ac[0]&&window[ac[0]](ac[1])
+		
+		if(node.nodeName=='SP'){
 			if(node.textContent=='edit')
 				attributeViewer.startEdit(mNode)
 			else
 				setContentState(node.textContent)
 		}
 	},
+	
+	sayXBL:function(mNode){
+
+		return '<div id="XBL-slate" closed="'+ this["XBL-slate"+"-closed"]+'">'+
+		"<div class='parents' closer='XBL-slate'><a11> "
+			+(this["XBL-slate"+"-closed"]?'\u25e5':'\u25e2')+
+		" </a11><a>bindings</a></div>"+
+		'<div class="prop closable">'+sayXBL(mNode).join('')+'</div></div>'+
+		
+		'<div id="event-slate" closed="'+ this["event-slate"+"-closed"] +'">'+
+		"<div class='parents' closer='event-slate'><a11> "
+			+(this["event-slate"+"-closed"]?'\u25e5':'\u25e2' )+
+		" </a11><a>events</a></div>"+
+		'<div class="prop closable" >'+sayEvents(mNode).join('')+'</div></div>'
+	}
 }
 	initializeables.push(slateViewer)
 
@@ -2260,13 +2307,6 @@ function empty(lm){
   return lm;
 }
 
-/*
-cssSearch.findBindingRules().length
-ios.getProtocolHandler("about").QueryInterface(Ci.nsIProtocolHandler).newURI('about:config',null,null)
-Services.dirsvc.getFile()
-cssSearch.findBindingRules().length
-ios.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler).hasSubstitution('resource://gre/res/forms.css')
-*/
 
   //**********************************************************
  //* context menu
@@ -2375,11 +2415,10 @@ function getAncestorByAttribute(el, attrName){
 	var elId
 	while(el.hasAttribute){
 		if(el.hasAttribute(attrName))
-			return [el.getAttribute(attrName),el]
+			return [el.getAttribute(attrName), el]
 		el=el.parentNode
 	}
 	return [null,null]
-
 }
 function getSlatePosition(el){
 	var elId
@@ -2440,21 +2479,9 @@ shortcutManager={
 		//event.preventDefault();event.stopPropagation();
 	}
 }
-
 	initializeables.push(shortcutManager)
 
-/**
-i=content.wrappedJSObject.lt.parentNode.parentNode.getAttribute('slateid')
 
-parseInt(i)
-currentRules[i].style.setProperty('display','block','')
-currentRules[i].style.setProperty('width','50px','')
-currentRules[i].cssText
-
-lt=content.wrappedJSObject.lt
-lt.previousElementSibling.textContent
-
-**/
   /**--------------------//            ----*/
  /** /------finder-----//////**************************/
 /**--------------------//            --- */
@@ -2712,35 +2739,5 @@ browserFind={
 	},
 }
 	initializeables.push(browserFind)
-/*
-var docShell = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsIDocShell);
-selCon= docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsISelectionDisplay)
-                                   .QueryInterface(Ci.nsISelectionController);
-
-viewDoc.body.contentEditable=true
-docShell.editor.selectionController
 
 
-ff=document.getElementById('slate-browser').fastFind
-//ff.findAgain('i',false)//find('cu',false)
-ff.find('i',false)
-ff.caseSensitive=false
-ff.findAgain('i',0)
-*/
-
-
-
-
-
-/***
-
-u=viewDoc.defaultView.getSelection().focusNode.parentNode.parentNode.parentNode.attributes[0].value
-r=currentRules[u].parentStyleSheet
-sayCSS
-
-viewDoc.body.innerHTML=sayCSS(r.cssRules)
-
-*/

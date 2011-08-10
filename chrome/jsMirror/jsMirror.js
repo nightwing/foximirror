@@ -414,40 +414,6 @@ jn.bait= modernFox?(function(a){
 })():dump;
 
 
-jn.exec=function go(s){
-  _win=EJS_currentTargetWin
-
-  EJS_executeJS
-  /*if (_win.closed) {
-    jn.printError("Target window has been closed.");
-    return;
-  }
-
-  try { ("jn" in _win) }
-  catch(er) {
-    jn.printError("The JavaScript Shell cannot access variables in the target window.  The most likely reason is that the target window now has a different page loaded and that page has a different hostname than the original page.");
-    return;
-  }
-
-  if (!("jn" in _win))
-    initTarget(); // silent*/
-
-	var code = codebox.value;
-
-
-
-
-
-
-  // Evaluate Shell.question using _win's eval (this is why eval isn't in the |with|, IIRC).
-  _win.location.href = "javascript:try{\
-  jn.yyyyyyyyyy(eval(' "+ code + String.fromCharCode(10) +" ')); \
-  } catch(er) {jn.yyyyyyyyyyyyyy(er)}; void 0";
-
-  	EJS_appendToConsole(result);
-	codebox.focus();
-   // return result;
-}
 
 function getClass(x) {
 	if(x == null) return String(x);
@@ -580,23 +546,25 @@ function ejsInspectError(e){
 
 function EJS_evalStringOnTarget(string){
 	var evalString = string//EJS_replaceShortcuts(string);
-	var contentWin = null
+	var win = getTargetWindow()
 	if(EJS_cntContentWinCB.checked==true && EJS_cntContentWinCB.disabled==false){
-		/* var win = EJS_currentTargetWin.content.wrappedJSObject
-		stackStartLineNumber=0
-		win.jn=jn
-		jn.yyyyyyy=function(a){this.result=a}
-		win.location.href = "javascript:try{\
-jn.yyyyyyyy(eval('"+ evalString +" ')); \
-} catch(er) {jn.yyyyyyyyyyyyyyy(er)}; void 0";
-		return jn.result */
-	}else{
-		EJS_currentTargetWin.jn=jn
-		stackStartLineNumber=Components.stack.lineNumber
-		var ans=EJS_currentTargetWin.eval(evalString)
-		if(EJS_currentTargetWin!=window)EJS_currentTargetWin.jn=''
-		return ans
+		win = win.content||win
 	}
+	//unwrap
+	if(XPCNativeWrapper.unwrap)
+		win = XPCNativeWrapper.unwrap(win)
+	else if('wrappedJSObject' in win)
+		win = win.wrappedJSObject||win
+	//add jn
+	win.jn=jn
+	//evaluate
+	stackStartLineNumber=Components.stack.lineNumber
+	var ans=win.eval(evalString)
+	//remove jn
+	if(win.location.href!=window.location.href)
+		win.jn=''
+		
+	return ans	
 }
 
 /**
@@ -604,10 +572,17 @@ jn.yyyyyyyy(eval('"+ evalString +" ')); \
  ********************************************************/
 
 
-
-
-
-
+var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
+var targetWindowId 
+getTargetWindow=function(){
+	var win = utils.getOuterWindowWithId(targetWindowId)
+	if(!win||win.closed)
+		win=null
+	return win
+}
+getOuterWindowID = function(window){
+	return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
+}
 
 var EJS_currentTargetWin = null;
 var EJS_commandHistory = new Array();
@@ -651,7 +626,7 @@ function EJS_initGlobVars(){
 	EJS_cntFunctionNameML = EJS_byId("functionName")
 
 	if(window.opener){
-		EJS_currentTargetWin=shadowInspector.getTopWindow(window.opener)
+		targetWindowId = getOuterWindowID(shadowInspector.getTopWindow(window.opener))
 		var opener=window.opener
 		var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
 		var resources = EJS_cntTargetWinML.menupopup.childNodes//[6].id
@@ -672,15 +647,18 @@ function EJS_initGlobVars(){
 
 function EJS_targetWinChanged(){
 	//Set current target
-  	EJS_currentTargetWin = EJS_getSelectedWin()
+  	targetWindowId = EJS_getSelectedWinID()
 }
 
 
 
-function EJS_getSelectedWin(){
+function EJS_getSelectedWinID(){
 	var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
   	var resource = EJS_cntTargetWinML.selectedItem.getAttribute('id')
-  	return mediator.getWindowForResource(resource);
+	var win = mediator.getWindowForResource(resource);
+	var id = getOuterWindowID(win)
+	dump(resource, id)
+  	return id
 }
 
 /***/
@@ -736,15 +714,13 @@ function commentLine(elem) {
 EJS_appendToConsole(alltext+" "+nextLine+" "+elem.selectionEnd)
 }
 /*pp*/
-//codebox.style.fontSize = "12px"
 function insertTimer(){
-var st=codebox.selectionStart, en=codebox.selectionEnd
-codebox.selectionEnd=st
-var text='timerStart=Date.now()\nfor(var timerI=0;timerI<100;timerI++){\n\n\n}timerStart-Date.now()'
-insertText(text,codebox)
+	var st=codebox.selectionStart, en=codebox.selectionEnd
+	codebox.selectionEnd=st
+	var text='timerStart=Date.now()\nfor(var timerI=0;timerI<100;timerI++){\n\n\n}timerStart-Date.now()'
+	insertText(text,codebox)
 
 }
-
 
 
 function EJS_appendToConsole(string){
@@ -876,7 +852,7 @@ function startCodeCompletion(mode){
 	var [objString,filterText]=parseJSFragment(evalString)
 	var error = false
 	if(objString==""){
-		var evalObj = EJS_currentTargetWin
+		var evalObj = getTargetWindow()
 	}else{
 		try{
 			var evalObj = EJS_evalStringOnTarget(objString)
@@ -978,7 +954,7 @@ function parseJSFragment(evalString){
 		var irestore=i
 		i--;skipWord()
 		var funcName=evalString.substring(i+1,it)
-		if(funcName&&"QueryInterface,getAttribute,setAttribute,hasAttribute,getInterface".indexOf(funcName)!=-1){
+		if(funcName&&"QueryInterface,getAttribute,setAttribute,hasAttribute,getInterface,getService".indexOf(funcName)!=-1){
 			var jsf=parseJSFragment(evalString.substring(0,i+1))[0]
 			autocompleter.specFunc=[jsf,funcName]
 		}else if(funcName=="getElementById"){
@@ -1062,7 +1038,7 @@ autocompleter={
 		var [spo,funcName]=this.specFunc
 		var ans=[]
 		try{
-			if(funcName=='QueryInterface'){
+			if(funcName=='QueryInterface'||funcName=='getService'){
 				var spo = EJS_evalStringOnTarget(spo)
 				supportedInterfaces(spo).forEach(function(x){
 					ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:'interface', depth:-1,special:true})
@@ -1310,7 +1286,7 @@ autocompleter={
 	},
 }
 getIDsInDoc=function(){
-	var doc=EJS_currentTargetWin.document
+	var doc=getTargetWindow().document
 	var xpe = new XPathEvaluator();
 	var nsResolver = xpe.createNSResolver(doc.documentElement);
 	result = xpe.evaluate('//*[@id]', doc.documentElement, nsResolver,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);

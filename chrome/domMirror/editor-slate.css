@@ -101,6 +101,7 @@ a11:hover:active{
 buttondiv{
 	display:block;
 	text-align:center;
+	cursor: pointer!important;
 }
 buttondiv:hover{
 	color:darkred
@@ -183,3 +184,11 @@ tr:hover{
     );
 }
 
+div[closed='true']>.closable{
+	display:none
+}
+
+
+.func{
+	margin:0
+}

@@ -82,7 +82,7 @@
 	<shadiaglue/>		
 </toolbar>
       
-		<menubar align="center">
+		<toolbar align="center">
 			<label control="targetWin" accesskey="w" value="Target window" />
 			<menulist id="targetWin" oncommand="EJS_targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
 				<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
@@ -95,7 +95,7 @@
 			</menulist>
 			<checkbox id="contentWinCB" persist="checked" disabled="false" label="Content Window" accesskey="t" 
 				oncommand="EJS_targetWinChanged()" tabindex="2"/>
-		</menubar>
+		</toolbar>
 		<vbox flex="10">
 			<textbox id="jsCode" multiline="true" flex="1"  wrap='off'
 				style="overflow:hidden;font-family:monospace;font-size:9.5pt;-moz-tab-size:2" persist='height' />
