@@ -4,6 +4,7 @@ var $shadia = this
 
 var Ci = Components.interfaces;
 var Cc = Components.classes;
+var Cu = Components.utils;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -162,20 +163,36 @@ function getPref(prefName,type){
 viewFileURI=function viewFileURI(selectedURI,lineNumber){
 	openWindow("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", selectedURI, null, null, lineNumber, null);
 }
-var nppItem
-function getNppPath(){try{
-	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-	var path="C:\\Program Files\\Notepad++\\notepad++.exe"
-	file.initWithPath(path);
-	if(file.exists())
-		return path
-	var path="C:\\Program Files (x86)\\Notepad++\\notepad++.exe"
-	file.initWithPath(path);
-	if(file.exists())
-		return path
-	}catch(e){}
+var npp = {
+	guessEditorPath: function (){try{
+		var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+		var path="C:\\Program Files\\Notepad++\\notepad++.exe"
+		file.initWithPath(path);
+		if(file.exists())
+			return path
+		var path="C:\\Program Files (x86)\\Notepad++\\notepad++.exe"
+		file.initWithPath(path);
+		if(file.exists())
+			return path
+		}catch(e){}
+	},
+	guessEditor: function(){try{
+		var path = this.guessEditorPath()
+		if(path)
+			return;
+
+		
+		}catch(e){}
+	},
+
 }
+
 function initializeNppItem(){
+	try{
+		var a=$shadia.getPref('extensions.shadia.editor')
+	}catch(e){
+	
+	}
 	var npp=getNppPath()
 	if(npp){
 		nppItem={label:'notepad++', executable: npp, cmdline: '-n%line %file'}
@@ -183,9 +200,7 @@ function initializeNppItem(){
 	}
 	var gPrefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
 	var prefBranch = gPrefBranch = gPrefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2)
-	try{
-		var a=prefBranch.getCharPref('extensions.shadia.editor')
-	}catch(e){}
+	
 	
 	
 	if(a&&( (a=a.split(',')) [1]) ){		
