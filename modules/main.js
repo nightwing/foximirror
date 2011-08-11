@@ -161,103 +161,153 @@ function getPref(prefName,type){
  //* npp
 //****/
 viewFileURI=function viewFileURI(selectedURI,lineNumber){
-	openWindow("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", selectedURI, null, null, lineNumber, null);
+	Services.wm.getMostRecentWindow(null).openDialog("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", selectedURI, null, null, lineNumber, null);
 }
-var npp = {
-	guessEditorPath: function (){try{
-		var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-		var path="C:\\Program Files\\Notepad++\\notepad++.exe"
-		file.initWithPath(path);
-		if(file.exists())
-			return path
-		var path="C:\\Program Files (x86)\\Notepad++\\notepad++.exe"
-		file.initWithPath(path);
-		if(file.exists())
-			return path
+var externalEditors = {
+	guessEditorPath: function (){
+		//todo: look into registry
+		if(this.$guessedPath)
+			return this.$guessedPath;
+		try{
+			var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+			var path="C:\\Program Files\\Notepad++\\notepad++.exe"
+			file.initWithPath(path);
+			if(file.exists())
+				return this.$guessedPath=path
+			var path="C:\\Program Files (x86)\\Notepad++\\notepad++.exe"
+			file.initWithPath(path);
+			if(file.exists())
+				return this.$guessedPath=path
 		}catch(e){}
 	},
 	guessEditor: function(){try{
 		var path = this.guessEditorPath()
-		if(path)
+		if(!path)
 			return;
-
-		
+		return {
+			label:'notepad++',
+			executable: path,
+			cmdline: '-n%line %file'
+		}
 		}catch(e){}
 	},
-
-}
-
-function initializeNppItem(){
-	try{
+	getItem: function(){
 		var a=$shadia.getPref('extensions.shadia.editor')
-	}catch(e){
-	
-	}
-	var npp=getNppPath()
-	if(npp){
-		nppItem={label:'notepad++', executable: npp, cmdline: '-n%line %file'}
-		return
-	}
-	var gPrefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
-	var prefBranch = gPrefBranch = gPrefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2)
-	
-	
-	
-	if(a&&( (a=a.split(',')) [1]) ){		
-		nppItem={label:a[0], executable: a[1], cmdline: a[2]}
-	}else{
-		openWindow('chrome://shadia/content/utils/prefSetters/changeeditor.xul')
-		return
-	}
-	return nppItem
-}
-
-npp=function(path,line){// create an nsILocalFile for the executable
-	if(!nppItem||!nppItem.executable)
-		initializeNppItem()
-	if(!nppItem||!nppItem.executable)
-		return
-	var args = ["-n"+line, path];
-	
-	var args = [];
-	var targetAdded = false;
-	var cmdline = nppItem.cmdline
-	if (cmdline){
-		cmdline = cmdline.replace(' ', '\x00', 'g')
+		if(a && (a=a.split(','))[1])
+			return {label:a[0], executable: a[1], cmdline: a[2]}
 		
-		line = parseInt(line);
-		if(typeof line == 'number' && !isNaN(line)){
-			cmdline = cmdline.replace('%line', line, 'g');
-		}else{//don't send argument with bogus line number
-			var i = cmdline.indexOf("%line");
-			var i2 = cmdline.indexOf("\x00", i);
-			if(i2 == -1)
-				i2 = cmdline.length;
-			var i1 = cmdline.lastIndexOf("\x00", i);
-			if(i1 == -1)
-				i1 = 0;
-			cmdline = cmdline.substring(0, i1) + cmdline.substr(i2);
+		if(a = this.guessEditor())
+			return a
+		
+		
+	},
+	edit: function(path, line, column, id){
+		var editor = this.getItem()
+		
+		if(!editor || !editor.executable){
+			openWindow('chrome://shadia/content/utils/prefSetters/changeeditor.xul')
+			return
 		}
 		
-		if (cmdline.indexOf("%file")>-1 ){
-			cmdline = cmdline.replace('%file', path, 'g');
-			targetAdded = true;
+		// resolve internal uris		
+		var uri = Services.io.newURI(path, null, null);
+		if(uri.schemeIs('resource')){//about?
+			var ph = Services.io.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)
+			abspath = ph.getSubstitution(uri.host)
+			uri = Services.io.newURI(uri.path.substr(1), null, abspath)
 		}
-		cmdline.split(/\x00+/).forEach(function(x){ if(x) args.push(x) })		
-	}		
-	if (!targetAdded)
-		args.push(path);
+		while(uri.schemeIs('chrome'))
+			uri=Services.chromeReg.convertChromeURL(uri);
+		
+		if(uri.schemeIs('file'))
+			var file=uri.QueryInterface(Ci.nsIFileURL).file;
+
+		// check for archives
+		if(uri.schemeIs('jar')){			
+			var proceed = this.archivePrompt(uri, line, column)
+			if(!proceed)
+				return;
+			file = extractRelative(uri)
+		}
+		
+		if(!file)
+			return		
+		
+		file.QueryInterface(Ci.nsILocalFile)
+		
+		if(file.isDirectory())
+			return file.launch()
+		
+		// launch editor
+		var filePath = file.path		
+		var args = this.$initArgs(filePath, line, column, editor.cmdline)
+		var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);	
+		file.initWithPath(nppItem.executable);	
+		// create an nsIProcess
+		var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+		process.init(file);	
+		process.run(false, args, args.length);
+	},
+	archivePrompt: function(uri, line, column){		
+		var arr=['extract file and edit', 'show archive', 'open with view-source:', 'open with edit:']
+		var sel={}
+		Services.prompt.select(null, 'file is in archive', 'what do you want to do',
+			arr.length, arr,
+			sel
+		)
+		if(sel.value==0){
+			return true
+		}else if(sel.value==1){
+			getLocalFile(uri.spec).reveal()
+		}else if(sel.value==2){
+			viewFileURI(uri.spec, line)
+		}else if(sel.value==3){
+			openWindow('edit:#'+uri.spec + '##'+line+':'+column)
+		}
+	},	
+	$initArgs: function(path,line, column, cmdline){
+		var args = [];
+		var targetAdded = false;
+		if (cmdline){
+			cmdline = cmdline.replace(' ', '\x00', 'g')
+			
+			line = parseInt(line);
+			if(typeof line == 'number' && !isNaN(line)){
+				cmdline = cmdline.replace('%line', line, 'g');
+			}else{//don't send argument with bogus line number
+				var i = cmdline.indexOf("%line");
+				var i2 = cmdline.indexOf("\x00", i);
+				if(i2 == -1)
+					i2 = cmdline.length;
+				var i1 = cmdline.lastIndexOf("\x00", i);
+				if(i1 == -1)
+					i1 = 0;
+				cmdline = cmdline.substring(0, i1) + cmdline.substr(i2);
+			}
+			
+			if (cmdline.indexOf("%file")>-1 ){
+				cmdline = cmdline.replace('%file', path, 'g');
+				targetAdded = true;
+			}
+			cmdline.split(/\x00+/).forEach(function(x){ if(x) args.push(x) })
+		}
+		if (!targetAdded)
+			args.push(path);
 	
-	var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);	
-	file.initWithPath(nppItem.executable);	
-	// create an nsIProcess
-	var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-	process.init(file);	
-	process.run(false, args, args.length);
+	} 
+
+}
+extractRelative = function(uri){
+	dump(uri.spec)
+}
+
+//compatibilty shim
+npp=function(path,line){
+	externalEditors.edit(path,line)	
 }
 
 
-
+//******************************************************************************************************//
 reloadModule = function(href){
 	var bp = Cu.import(href)
 	// query needed to confuse startupcache in ff 8.0+ 

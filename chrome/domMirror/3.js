@@ -2388,7 +2388,7 @@ function contextMenuPopupShowing(event){
 
 	var a=document.getElementById('urlOperations')
 	a.hidden=!mURI
-	a.setAttribute('tooltiptext',mURI+':'+mLine)
+	a.setAttribute('tooltiptext',mURI+'#:'+mLine)
 }
 function getRulePosition(rule){
 	var ps=rule.parentStyleSheet
