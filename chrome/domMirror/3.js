@@ -1639,7 +1639,7 @@ function sayXBL(mNode){
 	}
 	return ans
 }
-
+var saidFuncs
 function sayEvents(mNode){
 	var ans=[]
 	if(!Services.jsd.isOn){
@@ -1647,6 +1647,7 @@ function sayEvents(mNode){
 	}	
 	var eventListenerService=Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService);
 	var parent=mNode
+	saidFuncs = []
 	function sayEventsInner(parent){
 		var subans=[]
 		try{
@@ -1657,21 +1658,27 @@ function sayEvents(mNode){
 			if(s){
 				s=s.QueryInterface(Ci.jsdIValue)
 				if(s.jsType==3)
-					s = s.getWrappedValue().toString()
+					s = s.getWrappedValue()
 				else if(s&&s.jsType==5)
-					s = s.getProperty('handleEvent').value.getWrappedValue().toString()
-				else
-					s = i.toSource()//i.inSystemEventGroup//||i.toSource()//prevent nightly crash
+					s = s.getProperty('handleEvent').value.getWrappedValue()
+				//else i.toSource()//prevent nightly crash
 			}
 			
 			if(s)
-				subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><pre class="func">'+s+'</pre>')
+				subans.push(
+					'<d class=selector >', i.type,
+					'</d>\t<d class=dr >', i.capturing?'capturing':'',
+					'</d><pre class="func" slateID="', saidFuncs.push(s)-1,
+					'">',s.toString(),'</pre>'
+				)
 			else 
-				subans.push('<d class=selector >'+i.type+'</d>\t<d class=dr >'+(i.capturing?'capturing':'')+'</d><br>')
+				subans.push(
+					'<d class=selector >', i.type, '</d>\t<d class=dr >', i.capturing?'capturing':'', '</d><br>'
+				)
 		}
 		if(subans.length==0)
 			ans.push('<div class="val">-------</div>')
-		else ans.push(subans.join(','))
+		else ans.push(subans.join(''))
 	}
 	while(parent){//&&parent.nodeType==1
 		ans.push('<div class="name">'+cssSelector(parent)+'</div>')
@@ -1820,6 +1827,10 @@ function sayRemainingCSS(element){
 function enableJSD(element){
 	Services.jsd.asyncOn(null)
 	element.parentNode.removeChild(element)
+}
+function wrapFuncs(){
+	var st = content.document.styleSheets[0].cssRules[37].style
+	st.whiteSpace = st.whiteSpace=='nowrap'?'':'nowrap'
 }
 /*******/
 
@@ -1999,7 +2010,7 @@ slateViewer={
 		'<div id="event-slate" closed="'+ this["event-slate"+"-closed"] +'">'+
 		"<div class='parents' closer='event-slate'><a11> "
 			+(this["event-slate"+"-closed"]?'\u25e5':'\u25e2' )+
-		" </a11><a>events</a></div>"+
+		" </a11><a>events</a> <a1><em aID='wrapFuncs'>wrap</em><a1></div>"+
 		'<div class="prop closable" >'+sayEvents(mNode).join('')+'</div></div>'
 	}
 }
@@ -2342,7 +2353,7 @@ urlOperations=function(command){
 		case 'launch':	getLocalFile(path).launch();break
 		case 'reveal':  getLocalFile(path).reveal();break
 		case 'copy':    gClipboardHelper.copyString(path);break
-		case 'edit':    var file=getLocalFile(mURI);if(file&&!file.isDirectory())npp(file.path,mLine);break
+		case 'edit':    npp(path, mLine);break
 	}
 }
 
@@ -2377,14 +2388,29 @@ function contextMenuPopupShowing(event){
 			mURI=i.uri
 			mLine=i.line
 		}
+	}else if(id=='event-slate'){
+		var i=getSlatePosition(dr)
+		if(i){
+			try{
+				let script =  Services.jsd.wrapValue(saidFuncs[i.slateId]).script
+				mURI=script.fileName
+				mLine=script.baseLineNumber	
+			}catch(e){}			
+		}
 	}
 	// selected url
-	var sel = el.ownerDocument.defaultView.getSelection().toString()
+	var sel = dr.ownerDocument.defaultView.getSelection().toString()
 	if(sel && sel.search(':')!=-1){
 		mURI = sel
+		var m = mURI.match(/\("?([^"\)]+)?"?\)/)
+		if(m)
+			mURI = m[1]
 		mLine = null
 	}
-
+	
+	//copy selection
+	var a=document.getElementById('copy')
+	a.hidden=!sel
 
 	var a=document.getElementById('urlOperations')
 	a.hidden=!mURI

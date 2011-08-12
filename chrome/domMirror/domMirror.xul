@@ -61,10 +61,8 @@
 
 <panelset>	
 	<menupopup id="globalContext" onpopupshowing='contextMenuPopupShowing(event)' oncommand="this.hidePopup()">
-		<hbox class="split-menuitem">
-			<toolbarbutton id="copy" label='copy' oncommand=" var controller=document.commandDispatcher.getControllerForCommand('cmd_copy');
-													if(controller)controller.doCommand('cmd_copy')//goDoCommand('cmd_copy')"/>
-		</hbox>
+		<menuitem id="copy" label='copy selection' oncommand=" var controller=document.commandDispatcher.getControllerForCommand('cmd_copy');
+													if(controller)controller.doCommand('cmd_copy')"/>
 		<menuseparator/>
 		<hbox id='nodeOperations' class="split-menuitem">
 			<toolbarbutton id="p" label='delete' oncommand="mNode.parentNode.removeChild(mNode)"/>
@@ -78,7 +76,7 @@
 			</caption>
 			<hbox>
 				<toolbarbutton label='view source' id='view'   class="split-menuitem-item"/>
-				<toolbarbutton label='copy'        id='copy'   class="split-menuitem-menu"/>
+				<toolbarbutton label='copy'        id='copy url'   class="split-menuitem-menu"/>
 			</hbox>
 			<hbox>
 				<toolbarbutton label='reveal' id='reveal' class="split-menuitem-menu" flex='1'/>

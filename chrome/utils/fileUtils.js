@@ -99,50 +99,47 @@ function readDataFromJar(jarFilePath,entryPath){
 
 
 function extractFiles(aZipFile, aDir) {
-  function getTargetFile(aDir, entry) {
-    let target = aDir.clone();
-    entry.split("/").forEach(function(aPart) {
-      target.append(aPart);
-    });
-    return target;
-  }
+	function getTargetFile(aDir, entry) {
+		let target = aDir.clone();
+		entry.split("/").forEach(function(aPart) {
+			target.append(aPart);
+		});
+		return target;
+	}
 
-  let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                  createInstance(Ci.nsIZipReader);
-  zipReader.open(aZipFile);
+	let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+	zipReader.open(aZipFile);
 
-  try {
-    // create directories first
-    let entries = zipReader.findEntries("*/");
-    while (entries.hasMore()) {
-      var entryName = entries.getNext();
-      let target = getTargetFile(aDir, entryName);
-      if (!target.exists()) {
-        try {
-          target.create(Ci.nsILocalFile.DIRECTORY_TYPE,
+	try {
+		// create directories first
+		let entries = zipReader.findEntries("*/");
+		while (entries.hasMore()) {
+			var entryName = entries.getNext();
+			let target = getTargetFile(aDir, entryName);
+			if (!target.exists()) {
+				try {
+					target.create(Ci.nsILocalFile.DIRECTORY_TYPE,
                         FileUtils.PERMS_DIRECTORY);
-        }
-        catch (e) {
-          ERROR("extractFiles: failed to create target directory for " +
-                "extraction file = " + target.path, e);
-        }
-      }
-    }
+				} catch (e) {
+					Cu.reportError("extractFiles: failed to create target directory for " +
+						"extraction file = " + target.path, e);
+				}
+			}
+		}
 
-    entries = zipReader.findEntries(null);
-    while (entries.hasMore()) {
-      let entryName = entries.getNext();
-      let target = getTargetFile(aDir, entryName);
-      if (target.exists())
-        continue;
+		entries = zipReader.findEntries(null);
+		while (entries.hasMore()) {
+			let entryName = entries.getNext();
+			let target = getTargetFile(aDir, entryName);
+			if (target.exists())
+				continue;
 
-      zipReader.extract(entryName, target);
-      target.permissions |= FileUtils.PERMS_FILE;
-    }
-  }
-  finally {
-    zipReader.close();
-  }
+			zipReader.extract(entryName, target);
+			target.permissions |= FileUtils.PERMS_FILE;
+		}
+	} finally {
+		zipReader.close();
+	}
 }
 
 /*

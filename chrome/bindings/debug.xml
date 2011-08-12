@@ -82,7 +82,7 @@ this.actions={//external
 }
 var activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','errorConsole','jsMirror','domi']
 var actionNames={reload:'reload',reopen:':)',errorConsole:'errors',restartApp:'restart firefox'}
-var actionsColors = {restartApp:'orange',reloadChrome:'orange',reload:'orange',magnifier:'blue'}    
+var actionsColors = {restartApp:'red',reloadChrome:'orange',reload:'orange',magnifier:'blue'}    
 function toOpenWindowByType(inType, uri, features) {
     var windowManager = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
     var topWindow = windowManager.getMostRecentWindow(inType);
@@ -108,7 +108,8 @@ for(var i in actions){
 	
 
 	if(activeactions.indexOf(i)>-1){
-		newEl.style.color='graytext'
+		//newEl.style.color='graytext'
+		newEl.style.color='green'
 		var newEl=document.createElement('toolbarbutton')
 		newEl.setAttribute('aID',i);
 		newEl.setAttribute('label', actionNames[i]||i);

@@ -492,12 +492,7 @@ function compareFile(a, b){
 }
 
 npp1=function(){
-	var file=getCurrentFile()
-	if(file)var path=file.path
-	else return
-	if(path.slice(-3)!='jar')
-		npp(path,getCurrentline())
-	else file.reveal()
+	$shadia.externalEditors.edit(getCurrentURI(), getCurrentline())
 }
   /***************************************/
  /**-----------tree views--------------**/

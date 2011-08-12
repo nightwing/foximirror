@@ -43,7 +43,7 @@
 	
 	<toolbarbutton id="install" oncommand="installUnpacked()" label='installUnpacked'></toolbarbutton>
 	<toolbarbutton id="make-xpi" oncommand="makeXPI()" label='make.xpi' />
-	<toolbarbutton id="restart" oncommand="actions.restartApp()" label='restart' hidden='true'/>
+	<toolbarbutton id="restart" oncommand="document.getElementsByTagName('shadiaglue')[0].actions.restartApp()" label='restart' hidden='true'/>
 	<!-- <toolbarbutton id="makeAllCompatible" oncommand="compatibleForever.removeAllMinMax()" label='makeAllCompatible' /> -->
 </toolbar>
 
