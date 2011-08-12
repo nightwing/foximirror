@@ -1,8 +1,3 @@
-/*window.addEventListener('activate',function(e){actions.refreshSkins()},false)
-window.addEventListener('deactivate',function(e){dump(e,'inactive')},false)
-ett*/
-
-Components.utils.import('resource://shadia/styles.jsm')
 Components.utils.import('resource://shadia/main.js', window).addDevelopmentUtils(window)
 /**/
 var shadowInspector=function(){}
@@ -159,8 +154,8 @@ shadowInspector.prototype={
 		this.light="lime"
 
 		window.addEventListener('mousemove',  this.l1 =function(e){shadia.mouseMoveListener(e)}, true);		
-		window.addEventListener('mouseout',   this.l12=function(e){shadia.mouseOutListener(e)}, true);
-		window.addEventListener('mouseover',  this.l13=function(e){shadia.mouseOverListener(e)}, true);
+		window.addEventListener('deactivate', this.l12=function(e){shadia.deactivateListener(e)}, true);
+		window.addEventListener('activate',   this.l13=function(e){shadia.activateListener(e)}, true);
 		
 		window.addEventListener('keydown',    this.l2 =function(e){shadia.keydownListener(e)}, true);
 		window.addEventListener('keypress',   this.l21=function(e){shadia.keydownListener(e)}, true);
@@ -178,8 +173,8 @@ shadowInspector.prototype={
 		this.on=false;
 		
 		window.removeEventListener('mousemove',  this.l1,  true); this.l1=null;
-		window.removeEventListener('mouseout',   this.l12, true); this.l12=null;
-		window.removeEventListener('mouseover',  this.l13, true); this.l13=null;
+		window.removeEventListener('deactivate', this.l12, true); this.l12=null;
+		window.removeEventListener('activate',   this.l13, true); this.l13=null;
 
 		window.removeEventListener('keydown',    this.l2,  true); this.l2=null;
 		window.removeEventListener('keypress',   this.l21, true); this.l21=null;
@@ -228,9 +223,9 @@ shadowInspector.prototype={
 	$:[],	
 	suspendMouse:function(){
 		if(this.l1){
-			window.removeEventListener('mousemove', this.l1, true);
-			window.removeEventListener('mouseout',  this.l12, true);
-			window.removeEventListener('mouseover', this.l13, true);
+			window.removeEventListener('mousemove',  this.l1, true);
+			window.removeEventListener('deactivate', this.l12, true);
+			window.removeEventListener('activate',   this.l13, true);
 			this.infoPanel.setAttribute('onmousemove','')
 
 			this.l1=null;
@@ -241,27 +236,21 @@ shadowInspector.prototype={
 		}else{
 			var slf=this;
 			window.addEventListener('mousemove',  this.l1=function(e){shadia.mouseMoveListener(e)}, true);
-			window.addEventListener('mouseout',   this.l12=function(e){shadia.mouseOutListener(e)}, true);
-			window.addEventListener('mouseover',  this.l13=function(e){shadia.mouseOverListener(e)}, true);
+			window.addEventListener('deactivate', this.l12=function(e){shadia.deactivateListener(e)}, true);
+			window.addEventListener('activate',   this.l13=function(e){shadia.activateListener(e)}, true);
 
 			this.infoPanel.setAttribute('onmousemove','this.hidePopup()')
 		}
 	},
 	//windowActive
-	mouseOutListener: function(event){
-		if(!event.relatedTarget/* &&Services.ww.activeWindow!=window */)
-			this.infoPanelBo.hidePopup()		
+	deactivateListener: function(event){
+		this.infoPanelBo.hidePopup()
+		this.windowActive=false
+		this.light='off'
 	},
-	mouseOverListener: function(event){
-		var istop=this.fm.activeWindow==window
-		if(istop==this.windowActive)return
-		if(istop){
-			this.windowActive=true
-			this.light=this.lcs?'click':'lime'
-		}else{
-			this.windowActive=false
-			this.light='off'
-		}
+	activateListener: function(event){
+		this.windowActive=true
+		this.light=this.lcs?'click':'lime'
 	},
 	updateLight: function(event){
 		var istop=this.fm.activeWindow==window

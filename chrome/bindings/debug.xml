@@ -40,7 +40,7 @@
     <content>
 		<xul:arrowscrollbox aID='actionbar'/>	
 		<xul:menulist  type='menu' label='tools' class='plain' sizetopopup='false' align='center'>
-			<xul:menupopup aID='actionpopup' onpopupshowing='dump(event,1)'/>	
+			<xul:menupopup aID='actionpopup' onpopupshowing='_popupshown(this)'/>	
 		</xul:menulist>
     </content>
 	
@@ -50,6 +50,9 @@
 	
 	<implementation>
 		<constructor><![CDATA[{
+_popupshown=function(popup){
+	popup.lastChild.checked=devPrefState()
+}
   //**********************************************************
  //* actions
 //****/
@@ -116,8 +119,24 @@ for(var i in actions){
 		el1.appendChild(newEl)
 	}
 }
-
-					
+//last child is checkbox
+i='devPrefs'
+var newEl=document.createElement('menuseparator')
+el2.appendChild(newEl)
+var newEl=document.createElement('checkbox')
+newEl.setAttribute('aID',i);
+newEl.setAttribute('label', i);	
+//newEl.setAttribute('type', 'checkbox')
+el2.appendChild(newEl)
+actions[i]=function(){
+	var p =!devPrefState()
+	$shadia.setPref("nglayout.debug.disable_xul_cache",    p, 'bool')
+	$shadia.setPref("nglayout.debug.disable_xul_fastload", p, 'bool')
+}
+this.devPrefState = function devPrefState(){
+	return $shadia.getPref("nglayout.debug.disable_xul_cache",    'bool')
+	    && $shadia.getPref("nglayout.debug.disable_xul_fastload", 'bool')
+}			
 
 //inject shadia
 Components.utils.import('resource://shadia/main.js')
@@ -138,23 +157,9 @@ if(!window.shadia)
 		<handler event="command">
 			actions[event.originalTarget.getAttribute('aID')]()
 		</handler>
-		<handler event="onpopupshowing">
-			dump(event)
-		</handler>
 	</handlers>
 </binding>
 
-
-
-
-<binding id="pm" >
-    <content extends="chrome://global/content/bindings/textbox.xml#textbox">      
-	  <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck" align="center">
-        <html:input class="textbox-input" flex="1" anonid="input"/>
-        <ui>78</ui>
-      </xul:hbox>
-    </content>
-</binding>
 
 
 

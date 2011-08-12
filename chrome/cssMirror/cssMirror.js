@@ -1,9 +1,15 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-ios= Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
-sss= Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService)
-consoleService = Cc['@mozilla.org/consoleservice;1'].getService(Ci.nsIConsoleService);
+Components.utils.import('resource://shadia/main.js', window).addDevelopmentUtils(window)
+getCssMirrorDir=$shadia.getCssMirrorDir
+getCssMirrorJarPath=$shadia.getCssMirrorJarPath
+
+ios = Services.io
+sss = Services.sss
+consoleService = Services.console
+
+
 
 /***/
 
@@ -971,36 +977,6 @@ getDirEntries=function(uri){
  /************************************/
 
 //**************//
-function getCssMirrorDir(){
-	var cssMirrorDir=Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
-	cssMirrorDir.append('cssMirrorStyles.zip')
-	if(!cssMirrorDir.exists()){
-		cssMirrorDir.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
-		var zipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
-		var zipW = new zipWriter();
-		zipW.open(getCssMirrorDir(), PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
-		let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
-		var data='readMe',entryPath='readMe'
-		istream.setData(data, data.length);
-		if (zipW.hasEntry(entryPath))
-			zipW.removeEntry(entryPath,false)
-		zipW.addEntryStream(entryPath,null,Ci.nsIZipWriter.COMPRESSION_NONE,istream,false)
-
-		zipW.close();
-	}
-
-	return cssMirrorDir
-}
-
-function getCssMirrorJarPath(){
-	var cssMirrorDir=Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
-	cssMirrorDir.append('cssMirrorStyles.zip')
-
-	var fileHandler = ios.getProtocolHandler("file").QueryInterface(Ci.nsIFileProtocolHandler);
-	var uri=fileHandler.getURLSpecFromFile(getCssMirrorDir());
-
-	return 'jar:'+uri+'!/'
-}
 
 function writeData(data,entryPath){
 	var  jarFile=getCssMirrorDir()
