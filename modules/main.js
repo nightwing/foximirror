@@ -330,7 +330,7 @@ extractRelative = function(uri, doExtract){
 		var dir = jar.parent
 		dir.append(name)
 		if(dir.exists()&&!dir.isDirectory)
-			dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, null)
+			dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY)
 
 		var target = getTargetFile(dir, entryName)
 		if(!doExtract)
@@ -342,10 +342,11 @@ extractRelative = function(uri, doExtract){
 		try {
 			let parent = target.parent
 			if (!parent.exists())
-				target.parent.create(Ci.nsILocalFile.DIRECTORY_TYPE, null)//FileUtils.PERMS_DIRECTORY);
+				target.parent.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 			//if (target.exists())
 			//	continue;
-			zipReader.extract(entryName, target); //target.permissions |= FileUtils.PERMS_FILE;
+			zipReader.extract(entryName, target); 
+			target.permissions |= PERMS_FILE;
 		} finally {
 			zipReader.close();
 		}
@@ -385,6 +386,8 @@ var PR_APPEND      = 0x10;
 var PR_TRUNCATE    = 0x20;
 var PR_SYNC        = 0x40;
 var PR_EXCL        = 0x80;
+var PERMS_DIRECTORY = 0755;
+var PERMS_FILE      = 0644;
 
 
 function getCssMirrorJarPath(){
