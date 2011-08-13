@@ -87,7 +87,8 @@
 				<tab label='chrome' id='chrome'/>
 			</tabs>	
 				</vbox>
-			<textbox type='' flex="1" id='urlbar'/>
+			<textbox type='' flex="1" id='urlbar' />
+			<toolbarbutton oncommand='navigate(this.previousSibling.value)' label="go"/>
 		</hbox>	
 <hbox flex="1">
 	<vbox flex="0" id='treessd' persist='width' width='150'>
@@ -143,8 +144,8 @@
 			<arrowscrollbox >
 				<textbox type='search' flex="1" id='slate-finder'/>
 				<checkbox label='' style='margin:0;padding:0' oncommand='browserFind.updateAutoHighlight()' tooltiptext='autohighlight'/>
-				<tabs onmousedown='gMode=event.target.id;dirViewer.onSelect()'>
-					<tab label='code' id='code'/>
+				<tabs setfocus='false' onmousedown='gMode=event.target.id; dirViewer.onSelect()'>
+					<tab label='code'   id='code'/>
 					<tab label='view'   id='view'/>
 				</tabs>
 				<toolbarbutton label='launch' oncommand='getCurrentFile().launch()'/>

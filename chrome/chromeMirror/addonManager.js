@@ -322,9 +322,6 @@ compatibleForever={
 
 
 /*
-
-
-
 XPIProviderBP=Components.utils.import("resource://gre/modules/XPIProvider.jsm")//
 bart=XPIProviderBP.XPIDatabase.getAddons()[0]
 
@@ -336,8 +333,6 @@ XPIProviderBP.XPIDatabase._getTargetApplications(bart)[0]
 XPIProviderBP.XPIDatabase.updateTargetApplications(bart,targets)
 
 XPIProviderBP.XPIDatabase._getTargetApplications(bart)[0].maxVersion
-
-
 */
 
 /****/
@@ -369,9 +364,6 @@ function makeAllAddonsCompatible(){
 
 
 /*
-
-
-
 reopenJarCache(mAddonData.file)
 
 addonJar=mAddonData.file
@@ -404,6 +396,4 @@ reopenJarCache(mAddonData.file)
 
 data
 zipW.close()
-
-
 */

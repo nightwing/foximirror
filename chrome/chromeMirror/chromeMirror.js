@@ -68,7 +68,7 @@ dirViewer={
 	initialize:function(){
 		this.tree=document.getElementById('dirViewer')
 		gURLBar=this.urlbar=document.getElementById('urlbar')
-		gURLBar.setAttribute('onkeypress','dirViewer.setDir(this.value)')
+		//gURLBar.setAttribute('onkeypress','dirViewer.setDir(this.value)')
 		this.view=new simpleView()
 		var b=document.getElementById('dirViewerButtons')
 		this.backButton=b.children[1]
@@ -93,15 +93,23 @@ dirViewer={
 	setDir:function(dir){
 		this.data&&this.historyA.push([this.currentDir,this.data,this.tree.currentIndex,this.tree.treeBoxObject.getFirstVisibleRow()])
 		this.historyA.length&&(this.backButton.disabled=false)
-		if(this.historyA.length>100)this.historyA.shift()
-				histLog()
+		
+		if(this.historyA.length>100)
+			this.historyA.shift()
+			histLog()
 
 		
 		if(typeof dir=='string')
 			this.currentDir=dirObjFromSpec(dir)
-		else this.currentDir=dir
-		this.data=getDirEntries(this.currentDir)
-		this.activate()
+		else 
+			this.currentDir=dir
+		
+		if(this.currentDir.dirType == 2){
+			this.up()
+		}else{
+			this.data = getDirEntries(this.currentDir)
+			this.activate()
+		}
 		if(this.currentDir instanceof Ci.nsIFile)
 			this.urlbar.value=this.currentDir.path
 		else
@@ -151,7 +159,7 @@ dirViewer={
 			
 			l=spec.lastIndexOf('/',l-2)+1
 			spec=spec.substring(st,l)
-			//dump('--------------->',spec)
+
 			this.setDir(dirObjFromSpec(spec))
 		}
 		this.select(curName)
@@ -186,6 +194,7 @@ getCurrentline=function(){
 	return slateViewer.getLine()
 }
 
+gMode='viewSource'
 slateViewer={
 	initialize:function(){
 		gURLBar=this.urlbar=document.getElementById('urlbar')
@@ -277,7 +286,7 @@ slateViewer={
 			this.data=[data]
 			if(gMode=='viewSource'){
 				uri='view-source:'+data.spec
-				this.urlbar.value=indexOfURL(data.spec)//decodeURIComponent(uri)
+				this.urlbar.value=decodeURIComponent(indexOfURL(data.spec)[0])
 				this.setAce(data)
 				return
 			}else if(gMode=='viewFile'){
@@ -288,8 +297,8 @@ slateViewer={
 				ans='<iframe src="'+uri+'"/>'
 			}
 		}//content.location='view-source:'+this.data[i].spec
-		this.urlbar.value=decodeURIComponent(uri)
-		this.urlbar.value=decodeURIComponent(indexOfURL(data.spec))
+		
+		this.urlbar.value=decodeURIComponent(indexOfURL(data.spec)[0])
 		this.setDir(ans)
 	},
 	

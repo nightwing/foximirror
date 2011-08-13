@@ -408,6 +408,11 @@ function executeJS(sel, printProps){
 		if(s < e)
 			code = code.substring(s, e)
 	}
+	if(!code){
+		appendToConsole("no code entered:(");
+		codebox.focus();
+		return null
+	}
 	
 	printProps&&appendToConsole("Properties for object:");
 
@@ -532,7 +537,6 @@ getOuterWindowWithId = function(id){
 }
 /***/
 
-var currentTargetWin = null;
 var commandHistory = new Array();
 var currentCommandHistoryPos = 0;
 var allOpenWins = new Object();
@@ -548,11 +552,22 @@ function byId(id){
 }
 
 function doOnload(){    
-	initGlobalVars();
+	initGlobals();
 	shortCuts=new initShortCuts()
+	initTargetWindow()
+	if($shadia.jsMirror && $shadia.jsMirror.value){
+		codebox.value = $shadia.jsMirror.value
+		codebox.select();		
+	}
 	codebox.focus();
+	
 }
 function doOnUnload(){
+	if(!$shadia.jsMirror)
+		$shadia.jsMirror = {}
+	$shadia.jsMirror.value = codebox.value
+	$shadia.jsMirror.targetWindowId = targetWindowId
+	
 	var maxHistSize = 100
 	var startIndex = Math.max(0, commandHistory.length-maxHistSize)
 	commandHistory = commandHistory.slice(startIndex)
@@ -560,7 +575,7 @@ function doOnUnload(){
 }
 
 
-function initGlobVars(){
+function initGlobals(){
 	cntTargetWinML = byId("targetWin")
 	//cntTargetWinML.editable=true
 	cntContentWinCB = byId("contentWinCB")
@@ -568,6 +583,11 @@ function initGlobVars(){
 	resultbox = byId("result")
 	cntFunctionNameML = byId("functionName")
 
+	commandHistory = ConfigManager.readHistory();
+	currentCommandHistoryPos = commandHistory.length
+}
+
+initTargetWindow = function(){
 	if(window.opener){
 		targetWindowId = getOuterWindowID(shadowInspector.getTopWindow(window.opener))
 		var opener=window.opener
@@ -579,13 +599,10 @@ function initGlobVars(){
 				var found=true
 				break
 			}
-
 	}
 	found||(cntTargetWinML.selectedIndex=1);
 
 	targetWinChanged();
-	commandHistory = ConfigManager.readHistory();
-	currentCommandHistoryPos = commandHistory.length
 }
 
 function targetWinChanged(){
