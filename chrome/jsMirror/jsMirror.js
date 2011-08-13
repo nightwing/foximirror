@@ -2,55 +2,6 @@
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 
-/********************
-
-as=function(x){
-var t=1
-var l=2
-var f=function(s){return eval(s)}
-
-return f
-}
-
-ty=as(455)
-ar=window.getInterface(Ci.nsIDOMWindowUtils).getParent(ty)
-typeof ar
-for (var i in ar){
-  jn.say(i+':  '+ar[i])
-}
-
-
-ar.toString=function(){return 'call'}
-ar.toString()
-
-
-top.gIdentityHandler
-
-
-shadia.createInfoPanel()
-shadia.showPanel()
-shadia.fillPanel(gURLBar)
-shadia.infoPanel.firstChild.innerHTML=jn.setget(window,'top')
-
-shadia.infoPanel.style.backgroundColor='LightYellow'
-
-tooltip{-moz-appearance:none!important;background-color: LightYellow!important;}
-//shadia.inspect(shadia.infoPanel)
-
-shadia.getDataUrl=function () {
-
-    var code = "D550FF";
-    var code = "tooltip{-moz-appearance:none!important;background-color: LightYellow!important;};*[shadia-lighted=\"0\"]{outline:1px solid rgb( 83,80,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}*[shadia-lighted=\"1\"]{outline:1px solid rgb(173,80,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}*[shadia-lighted=\"2\"]{outline:1px solid rgb(213,80,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}*[shadia-lighted=\"off\"]{outline:1px solid rgb(80,213,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}*[shadia-lighted=\"lime\"]{outline:2px solid lime!important;outline-offset:-2px!important;-moz-outline-radius:2px!important;}*[shadia-lighted=\"click\"]{outline:2px solid #d528ff!important;outline-offset:-2px!important;-moz-outline-radius: 2px!important;}";
-    var ios = Components.classes['@mozilla.org/network/io-service;1'].getService(Components.interfaces.nsIIOService);
-    return ios.newURI("data:text/css," + encodeURIComponent(code), null, null);
-}
-shadia.register
-
-
-()
-
-************/
-
 var modernFox=!!Object.getOwnPropertyNames
 /**============-=========-===============**/
 if(!modernFox)//for old versions
@@ -236,83 +187,12 @@ jn.inspect=function(x,long){
 
 	return nameList.join('')
 }
-
 var InspectHandlers={
 	 CSSStyleSheet:function(x)'~'+x.cssRules.length+' ->'+x.href
 	,CSSNameSpaceRule:function(x)x.cssText
 	,CSSStyleRule:function(x)x.cssText
 }
 
-
-
-/*
-jn.inspect=function(x,long){
-	var Class=jn.getClass(x)
-	
-	if(x == null) return String(x);
-	var name, t = typeof x;
-	switch(t){
-		case 'object': break;
-		//case 'string': return x;
-		case 'function':
-			if(long) return x.toString(0)
-			name=x.toString()
-
-			var i=name.indexOf("{")
-			var t=name.substr(i)=='{[native code]}'?'function[n]': 'function'
-
-			name=t+name.substring(name.indexOf(" "),i-1)+'~'+x.length
-
-			return name
-		case 'xml': x = x.toXMLString();
-		default: return  t+' '+x;
-	}
-	try{
-		var l=x.length
-	}catch(e){}//[xpconnect wrapped native prototype].length: throws Illegal operation on WrappedNative prototype object
-
-	if(long&&typeof l==='number' && typeof x.push==='function' &&typeof x.splice==='function') {
-		name = 'array~  '+x.length+'\n   '+x.join(',\n   ');return name
-	}
-	//d.constructor
-	var name = '`'+Class+'` '+x.toString()//\u25b7'\u25ba'
-	//for files
-	try{
-		if(x.spec)
-			return name+" "+x.spec
-		else if(x.path)
-			return name+" "+x.path
-		//for dom nodes
-		if(x.nodeName)
-			name+=x.nodeName
-		if(x.id)
-			name+="#"+x.id
-		if(x.className)
-			name+="."+x.className.toString().replace(" ",".",'g')
-		if(x.value)
-			name+=" ="+x.value.substring(0,30)
-		else if(x.nodeValue)
-			name+=" ="+x.nodeValue.substring(0,30)
-		if(typeof l==='number')
-			name+=' ~'+l
-	}catch(e){}
-
-	return name
-}*/
-/*function outer() {
-    var communicationChannel = 24;
-    function innerGetter() {
-        return communicationChannel;
-    }
-    function innerSetter(x) {
-        communicationChannel = 42;
-    }
-var io=1
-    return [innerGetter, innerSetter];
-}
-i=outer()
-ui=jn.getParent(i[0])
-*/
 jn.getParent=function(a){
 	var utils=(window.getInterface||window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface)(Ci.nsIDOMWindowUtils);
 
@@ -372,8 +252,6 @@ jn.getParent=function(a){
 	if(parent.toString) try{parent.toString();return parent}catch(e){}// in [with] have toString which throws
 	return Proxy.create(handlerMaker(parent))
 }
-jn.getClass=getClass
-
 jn.bait= modernFox?(function(a){
 	var desc = {configurable:true,enumerable:true,value:null,writable:true}
 	var toString = function()"[object jane's bait proxy]"
@@ -476,50 +354,62 @@ function compare(a,b){
 return ans
 }
 
+jn.getClass=getClass
 jn.supportedInterfaces=supportedInterfaces
 jn.setget=setget
 jn.qi=qi
 jn.compare=compare
 jn.wr=wr
-
-/******************/
-jn.unwrap = function(o){
-	return o.wrappedJSObject||o
-};
-
-jn.cloneArray = function(o){
-	var ans=[]
-	for(var i=0,ii=o.length;i<ii;i++)
-		ans.push(o[i])
-	return ans
-};
-
-jn.$ = function(id){
-	return jn.unwrap(document).getElementById(id);
-};
-
-jn.$$ = function(selector){
-	var result = jn.unwrap(document).querySelectorAll(selector);
-	return jn.cloneArray(result);
-};
-
-jn.$x = function(xpath){
-	return jn.getElementsByXPath(FBL.unwrapObject(context.baseWindow.document), xpath);
-};
- 
-
 jn.getSourceLink = function(fn){	
 	var s=Services.jsd.wrapValue(shadia.showHelp).script
 	if(s){
 		return {href: s.fileName, line:s.baseLineNumber}
 	}
 }
- /***************************************/
+/******************/
+jn.unwrap = function(o){
+	return o.wrappedJSObject||o
+};
+jn.cloneArray = function(o){
+	var ans=[]
+	for(var i=0,ii=o.length;i<ii;i++)
+		ans.push(o[i])
+	return ans
+};
+jn.$ = function(id){
+	return jn.unwrap(document).getElementById(id);
+};
+jn.$$ = function(selector){
+	var result = jn.unwrap(document).querySelectorAll(selector);
+	return jn.cloneArray(result);
+};
+jn.$x = function(xpath){
+	return jn.getElementsByXPath(FBL.unwrapObject(context.baseWindow.document), xpath);
+};
+ 
+/********************************************************
+ * start of tral
+ **/
 var stackStartLineNumber
-function executeJS(sel){
-/*jn.exec();return;*/
-    var code = sel?codebox.editor.selection.toString():codebox.value;
-
+function executeJS(sel, printProps){
+	/*jn.exec();return;*/
+    var code = codebox.value;
+	
+	if(sel){
+		let s = codebox.selectionStart, e = codebox.selectionEnd
+		if (sel=='line') {
+			s = code.lastIndexOf('\n', s)
+			if(s == -1)
+				s = 0
+			let e1 = code.indexOf('\n', e)
+			if(e1 != -1)
+				e = e1
+		}
+		if(s < e)
+			code = code.substring(s, e)
+	}
+	
+	printProps&&appendToConsole("Properties for object:");
 
     try{
     	var result = evalStringOnTarget(code)
@@ -533,6 +423,7 @@ function executeJS(sel){
     appendToConsole(jn.inspect(result,'long'));
 
     codebox.focus();
+	printProps&&printPropertiesForTarget(target)
     return result;
 }
 function ejsInspectError(e){
@@ -543,7 +434,6 @@ function ejsInspectError(e){
 	}
 	return e.lineNumber-stackStartLineNumber+': '+e.message+'->'+e.fn
 }
-
 function evalStringOnTarget(string){
 	var evalString = string//replaceShortcuts(string);
 	var win = getTargetWindow()
@@ -551,10 +441,13 @@ function evalStringOnTarget(string){
 		win = win.content||win
 	}
 	//unwrap
-	if(XPCNativeWrapper.unwrap)
+	try{
 		win = XPCNativeWrapper.unwrap(win)
-	else if('wrappedJSObject' in win)
-		win = win.wrappedJSObject||win
+	}catch(e){
+		if('wrappedJSObject' in win)
+			win = win.wrappedJSObject||win
+	}
+		
 	//add jn
 	win.jn=jn
 	//evaluate
@@ -567,6 +460,57 @@ function evalStringOnTarget(string){
 	return ans	
 }
 
+function consoleSummary(x){
+  if(x == null) return String(x);
+  var name,t = typeof x;
+  switch(t){
+    case 'object': break;
+    case 'string': return x;
+    case 'function':
+      name=x.toString()
+      var i=name.indexOf("{")
+      return name.substring(0,i)+x.length;
+    case 'xml': x = x.toXMLString();
+    default: return x +'  '+ t;
+  }
+//  var O2S = Object.prototype.toString;
+
+  var name =x.toString() //O2S.call(x);
+  //for dom nodes
+  var l=x.length
+  if(typeof l==='number')
+     name+='\u2022'+l
+  if(x.nodeName)
+    name+=x.nodeName
+  if(x.id)
+    name+="#"+x.id
+  if(x.className)
+    name+="."+x.className.toString().replace(" ",".",'g')
+  if(x.value)
+    name+="="+x.value
+        if(x.nodeValue)
+    name+="@"+x.nodeValue
+
+
+  return name
+
+}
+function printPropertiesForTarget(target){
+  var result = new Array();
+  if(target.wrappedJSObject!=null){
+    target = target.wrappedJSObject;
+  }
+  var index = 0;
+
+  for(var i in target){
+    try{
+        result[index++] = i + ": " +consoleSummary( target[i]);
+    }catch(e){
+		result[index++] = i + ": " +consoleSummary( e)
+    }
+  }
+  appendToConsole(index+'\n'+result.join("\n"));
+}
 /**
  * end of tral
  ********************************************************/
@@ -575,7 +519,7 @@ function evalStringOnTarget(string){
 var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
 var targetWindowId 
 getTargetWindow=function(){
-	var win = utils.getOuterWindowWithId(targetWindowId)
+	var win = getOuterWindowWithId(targetWindowId)
 	if(!win||win.closed)
 		win=null
 	return win
@@ -583,16 +527,19 @@ getTargetWindow=function(){
 getOuterWindowID = function(window){
 	return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
 }
+getOuterWindowWithId = function(id){
+	return utils.getOuterWindowWithId(id)
+}
+/***/
 
 var currentTargetWin = null;
 var commandHistory = new Array();
 var currentCommandHistoryPos = 0;
 var allOpenWins = new Object();
-
-//Form elements
 var cntTargetWinML = null;
 var cntContentWinCB = null;
 var codebox = null;
+var resultbox = null;
 var cntFunctionNameML = null;
 
 
@@ -600,16 +547,11 @@ function byId(id){
 	return document.getElementById(id);
 }
 
-function doOnload(){
-
-    try{
-	    initGlobVars();
-		shortCuts=new initShortCuts()
-	    codebox.focus();
-    }catch(e){throw e }
-
+function doOnload(){    
+	initGlobalVars();
+	shortCuts=new initShortCuts()
+	codebox.focus();
 }
-
 function doOnUnload(){
 	var maxHistSize = 100
 	var startIndex = Math.max(0, commandHistory.length-maxHistSize)
@@ -623,6 +565,7 @@ function initGlobVars(){
 	//cntTargetWinML.editable=true
 	cntContentWinCB = byId("contentWinCB")
 	codebox = byId("jsCode")
+	resultbox = byId("result")
 	cntFunctionNameML = byId("functionName")
 
 	if(window.opener){
@@ -649,8 +592,6 @@ function targetWinChanged(){
 	//Set current target
   	targetWindowId = getSelectedWinID()
 }
-
-
 
 function getSelectedWinID(){
 	var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
@@ -693,7 +634,6 @@ function commentLine() {
     commentLineTB(codebox)
     codebox.focus();
 }
-/*pp*/
 function commentLineTB(elem) {
 	var start=elem.selectionStart
 	var end=elem.selectionEnd
@@ -713,7 +653,7 @@ function commentLineTB(elem) {
 
 appendToConsole(alltext+" "+nextLine+" "+elem.selectionEnd)
 }
-/*pp*/
+
 function insertTimer(){
 	var st=codebox.selectionStart, en=codebox.selectionEnd
 	codebox.selectionEnd=st
@@ -724,15 +664,14 @@ function insertTimer(){
 
 
 function appendToConsole(string){
-   var resultTB = document.getElementById("result");
-  insertTextAtEnd("\n"+ string, resultTB)
+	insertTextAtEnd("\n"+ string, resultbox)
 }
-
 function clearResult(){
-    document.getElementById("result").value="";
-    document.getElementById("jsCode").select();
+	resultbox.value="";
+    codebox.focus();
 }
 
+/********* textbox utils *******/
 function insertText(iText, elem){
 	elem.editor.QueryInterface(Ci.nsIPlaintextEditor).insertText(iText);
 }
@@ -748,36 +687,20 @@ function insertTextAtEnd(iText, elem){
 		//sc.scrollSelectionIntoView(1, 0, false)
 		ed.rootElement.scrollTop=st
 }
-
-function printProperties(){
-	appendToConsole("Properties for object:");
-	var target = executeJS();
-	printPropertiesForTarget(target)
+function toggleWrap(codebox){	
+	let wr=(codebox.hasAttribute('wrap')&&(codebox.getAttribute('wrap')=='off'))?'on':'off'	
+	codebox.setAttribute('wrap',wr)	
+	codebox.editor.QueryInterface(Ci.nsIPlaintextEditor).wrapWidth= wr=='off'?-1:1
 }
 
-function printPropertiesForTarget(target){
-	var result = new Array();
-	if(target.wrappedJSObject!=null){
-		target = target.wrappedJSObject;
-	}
-	var index = 0;
-	for(var i in target){
-		//try catch as error could occur, but why???
-		try{
-    		result[index++] = i + ": " + target[i];
-		}catch(e){
-			result[index++] = i + ": " + e
-		}
-	}
-	appendToConsole(index+'\n'+result.join("\n"));
-}
+
+
 
 function nextCommandFromHistory(){
 	if(currentCommandHistoryPos>=commandHistory.length-1)
 		return;
 	codebox.value = commandHistory[++currentCommandHistoryPos];
 }
-
 function previousCommandFromHistory(){
 	if(currentCommandHistoryPos==0)
 		return;
@@ -1040,6 +963,9 @@ autocompleter={
 		try{
 			if(funcName=='QueryInterface'||funcName=='getService'){
 				var spo = evalStringOnTarget(spo)
+				if(funcName=='getService')try{
+					spo = spo.getService()
+				}catch(e){}
 				supportedInterfaces(spo).forEach(function(x){
 					ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:'interface', depth:-1,special:true})
 				})
@@ -1126,9 +1052,9 @@ autocompleter={
 			return 0;
 		})
 		this.sortedArray=table
-	}
+	},
 
-	,handleEvent: function(event){
+	handleEvent: function(event){
 		if(String.fromCharCode(event.charCode)=='t'&&event.ctrlKey){
 			this.toggleMode()
 			event.preventDefault();event.stopPropagation();
@@ -1148,12 +1074,14 @@ autocompleter={
 		}
 		switch(event.keyCode){
 			case KeyEvent.DOM_VK_HOME:
-				this.moveTreeSelectionBig('top');
-				event.preventDefault();event.stopPropagation();
+				if(this.moveTreeSelectionBig('top')){
+					event.preventDefault();event.stopPropagation();
+				}
 				break
 			case KeyEvent.DOM_VK_END:
-				this.moveTreeSelectionBig('end');
-				event.preventDefault();event.stopPropagation();
+				if(this.moveTreeSelectionBig('end')){
+					event.preventDefault();event.stopPropagation();
+				}
 				break
 			case KeyEvent.DOM_VK_UP:
 				this.moveTreeSelection(-1);
@@ -1195,23 +1123,23 @@ autocompleter={
 				//break
 		}
 	},
-/* listbox{
--moz-user-focus:none;
-}
 
-*/
 	moveTreeSelectionBig: function(to){
 		var tree=this.tree,view=tree.view
 		switch(to){
 			case 'end':var c=view.rowCount-1;break
 			case 'top':var c=0;break
 			case 'pup':var c=view.rowCount-1;break
-			default: return
+			default: return false
 		}
+
+		if(c == tree.currentIndex)
+			return false
 		view.selection.timedSelect(c, tree._selectDelay);
 		tree.treeBoxObject.ensureRowIsVisible(c)//(c>0?c:0)
-	}
-	,moveTreeSelection: function(direction){
+		return true
+	},
+	moveTreeSelection: function(direction){
 		var tree=this.tree,view=tree.view,c=view.selection.currentIndex
 		c+=direction
 		if(c>=view.rowCount)	c=-1
@@ -1264,25 +1192,23 @@ autocompleter={
 				item.textContent=''
 				return
 			}			
-			var o=this.sortedArray[o]
-			if(!o)return//why is o undefined?
+			var o = this.selectedObject = this.sortedArray[o]
+			if(!o)
+				return//why is o undefined?
 			var text=setget(this.object,o.name)
-			if(!text)text=o.object
-			this.sayInBubble(text+'\n'+o.description+'\n'+o.depth)
+			if(!text)
+				text=o.object
+			text += '\n'+o.description
+			if(o.depth!=0)
+				text += '\ninherited from level: '+o.depth
+			this.sayInBubble(text)
 		}catch(e){}
 	},
-	sayInBubble: function(text){
-		/*if(this.bubble.state=='open'){
-			this.bubble.moveTo(0,0)
+	sayInBubble: function(text, append){
+		if(append){
+			insertTextAtEnd('\n'+text, this.bubble)
 		}else
-			this.bubble.showPopup(null,0,0, "popup")
-		var item = this.bubble.firstChild;
-		if(!item){
-			item=document.createElementNS("http://www.w3.org/1999/xhtml","div");
-			this.bubble.appendChild(item);
-		}
-		item.textContent=text*/
-		this.bubble.value=text
+			this.bubble.value=text
 	},
 }
 getIDsInDoc=function(){
@@ -1340,18 +1266,26 @@ jsExplore.gs=function(){
 jsExplore.all=function(){
 	autocompleter.toggleMode()
 }
+jsExplore.reveal=function(){
+	if(!Services.jsd.isOn){
+		Services.jsd.asyncOn(jsExplore.reveal)
+		return
+	}
+	let script = Services.jsd.wrapValue(autocompleter.selectedObject.object).script
+	if(script)
+		$shadia.externalEditors.edit(script.fileName, script.baseLineNumber)
+}
+jsExplore.eval=function(){
+	var f = autocompleter.selectedObject.object
+	if(typeof f == 'function')
+		autocompleter.sayInBubble(jn.inspect(f()), true)
+}
 /*****************
  *  end of code completion utils
  ****************************************************************/
 
 
 
-cleardump = function(){
-    var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
-    consoleService.reset()
-	consoleService.logStringMessage(""); //new Date() + ":  "
-    //Components.utils.reportError(e); // report the error and continue execution
-}
 
 function initShortCuts(){
 	codebox.addEventListener("keydown", this, true);
@@ -1442,351 +1376,34 @@ initShortCuts.prototype={
 
 
 
-function openCommandWin(){
-	document.location=document.location
-   toOpenWindowByType('shadia:jsMirror', "chrome://executejs/content/executejs/executeJS.xul")
-}
-
-
-
-
-
-
-function consoleSummary(x){
-  if(x == null) return String(x);
-  var name,t = typeof x;
-  switch(t){
-    case 'object': break;
-    case 'string': return x;
-    case 'function':
-      name=x.toString()
-      var i=name.indexOf("{")
-      return name.substring(0,i)+x.length;
-    case 'xml': x = x.toXMLString();
-    default: return x +'  '+ t;
-  }
-//  var O2S = Object.prototype.toString;
-
-  var name =x.toString() //O2S.call(x);
-  //for dom nodes
-  var l=x.length
-  if(typeof l==='number')
-     name+='\u2022'+l
-  if(x.nodeName)
-    name+=x.nodeName
-  if(x.id)
-    name+="#"+x.id
-  if(x.className)
-    name+="."+x.className.toString().replace(" ",".",'g')
-  if(x.value)
-    name+="="+x.value
-        if(x.nodeValue)
-    name+="@"+x.nodeValue
-
-
-  return name
-
-}
-
-function printPropertiesForTarget(target){
-  var result = new Array();
-  if(target.wrappedJSObject!=null){
-    target = target.wrappedJSObject;
-  }
-  var index = 0;
-
-  for(var i in target){
-    //try catch as error could occur, but why???
-    try{
-        result[index++] = i + ": " +consoleSummary( target[i]);
-    }catch(e){
-      result[index++] = i + ": " +consoleSummary( e)
-    }
-  }
-  appendToConsole(index+'\n'+result.join("\n"));
-}
-
-
-/**
-u=window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(
-Ci.nsIDOMWindowUtils)
-u.sendSelectionSetEvent(codebox,0,false)
-//window.addEventListener('mousedown',function(e){appendToConsole(e)},false)
-u.sendMouseEvent('mousedown',150,150,0,2,0)
-codebox.selectionStart=codebox.selectionStart-20
-codebox.selectionEnd=codebox.selectionEnd+20
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-[window.mozInnerScreenY-
-codebox.boxObject.screenY,codebox.boxObject.y]
-
-line=codebox.editor.selection.focusNode.nextSibling
-
-r=line.getBoundingClientRect()
-pY=2*line.offsetHeight+line.offsetTop
-
-pX=line.offsetLeft
-
-pX=window.mozInnerScreenY+pX
-pY=window.mozInnerScreenY+pY
-autocompleter.finish()
-
-autocompleter.start(autocompleter.object,'',pX,pY)
-
-
-
-/**
-
-[codebox.editor.rootElement.scrollTop,
-codebox.editor.rootElement.childNodes[10].getBoundingClientRect().top]
-
-//codebox.boxObject.*/
-
-//autocompleter.finish()
 
 var ConfigManager = {
 	CONFIG_FILE_NAME: "executhistory.xml",
 	thisFile: 'chrome://shadia/content/jsMirror/jsMirror.xul',
 
 	readHistory: function(){
-		var configFile = this.getConfigFile();
-		var xmlData = FileIO.read(configFile);
-		var data = new XML(xmlData);
-		var commandHistory = new Array();
-		var histEntries = data.entry
-		for(var i=0; i<histEntries.length(); i++){
-			commandHistory[i] = histEntries[i].toString()
-		}
-		return commandHistory;
+		return []
 	},
 
 	saveHistory: function(historyArray){
-		var root = <JsCodeHistory></JsCodeHistory>;
-		for(var i=0; i<historyArray.length; i++){
-			var command = historyArray[i];
-			var entry = <entry>{command}</entry>
-			root.appendChild(entry);
-		}
-		var configFile = this.getConfigFile();
-		FileIO.write(configFile, root.toXMLString());
-
+		return
 	},
 
 	getConfigFile: function(){
-		var fileurl = chromeToPath(this.thisFile);
-		var configFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-		configFile.initWithPath(fileurl);
-		configFile=configFile.parent.parent.parent.parent
-		configFile.append(this.CONFIG_FILE_NAME)
-		configFile = FileIO.open(configFile.path);
-		if(!configFile){
-			throw new Error("Config File could not be created")
-		}
-		if(!configFile.exists()){
-			var success = FileIO.create(configFile);
-			if(!success){
-				throw new Error("Config File could not be created")
-			}
-		}
-		return configFile;
+		
 	}
 }
 
 
-function chromeToPath (aPath) {
-   if (!aPath || !(/^chrome:/.test(aPath)))
-      return; //not a chrome url
-   var rv;
 
-      var ios = Components.classes['@mozilla.org/network/io-service;1'].getService(Components.interfaces["nsIIOService"]);
-        var uri = ios.newURI(aPath, "UTF-8", null);
-        var cr = Components.classes['@mozilla.org/chrome/chrome-registry;1'].getService(Components.interfaces["nsIChromeRegistry"]);
-        rv = cr.convertChromeURL(uri).spec;
-
-        if (/^file:/.test(rv))
-          rv = this.urlToPath(rv);
-        else
-          rv = this.urlToPath("file://"+rv);
-
-      return rv;
-}
-
-function urlToPath (aPath) {
-    if (!aPath || !/^file:/.test(aPath))
-      return;
-    var rv;
-	var ph = Components.classes["@mozilla.org/network/protocol;1?name=file"].createInstance(Components.interfaces.nsIFileProtocolHandler);
-    rv = ph.getFileFromURLSpec(aPath).path;
-    return rv;
-}
-/*
-stylePath='chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem'
-var fileurl = chromeToPath(stylePath);
-fileurl=fileurl.substring(2,fileurl.indexOf('!'))
-var file1 = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-file1.initWithPath(fileurl);
-file1.reveal()
-*/
-
-/** ---------------------------------------**\
- | Basic Directory IO object based on JSLib |
+/**----------------------------------------**\
+ | Basic comment block based on             |
  | source code found at jslib.mozdev.org    |
 \**----------------------------------------**/
-var FileIO ={
-	localfileCID:  '@mozilla.org/file/local;1',
-	localfileIID:  Components.interfaces.nsILocalFile,
 
-	finstreamCID:  '@mozilla.org/network/file-input-stream;1',
-	finstreamIID:  Components.interfaces.nsIFileInputStream,
-
-	foutstreamCID: '@mozilla.org/network/file-output-stream;1',
-	foutstreamIID: Components.interfaces.nsIFileOutputStream,
-
-	sinstreamCID:  '@mozilla.org/scriptableinputstream;1',
-	sinstreamIID:  Components.interfaces.nsIScriptableInputStream,
-
-	suniconvCID:   '@mozilla.org/intl/scriptableunicodeconverter',
-	suniconvIID:    Components.interfaces.nsIScriptableUnicodeConverter,
-
-	open: function(path){
-		try{
-			var file = Components.classes[this.localfileCID].createInstance(this.localfileIID);
-			file.initWithPath(path);
-			return file;
-		}
-		catch(e){
-			return false;
-		}
-	},
-	read: function(file, charset){
-		try{
-			var data = new String();
-			var fiStream = Components.classes[this.finstreamCID].createInstance(this.finstreamIID);
-			var siStream = Components.classes[this.sinstreamCID].createInstance(this.sinstreamIID);
-			fiStream.init(file, 1, 0, false);
-			siStream.init(fiStream);
-			data += siStream.read(-1);
-			siStream.close();
-			fiStream.close();
-			if (charset){
-				data = this.toUnicode(charset, data);
-			}
-			return data;
-		}
-		catch(e){
-			return false;
-		}
-	},
-
-	write: function(file, data, mode, charset){
-		try{
-			var foStream = Components.classes[this.foutstreamCID].createInstance(this.foutstreamIID);
-			if (charset){
-				data = this.fromUnicode(charset, data);
-			}
-			var flags = 0x02 | 0x08 | 0x20; // wronly | create | truncate
-			if (mode == 'a'){
-				flags = 0x02 | 0x10; // wronly | append
-			}
-			foStream.init(file, flags, 0664, 0);
-			foStream.write(data, data.length);
-			// foStream.flush();
-			foStream.close();
-			return true;
-		}
-		catch(e){
-			return false;
-		}
-	},
-
-	create: function(file){
-		try{
-			file.create(0x00, 0664);
-			return true;
-		}catch(e){
-			return false;
-		}
-	},
-
-	unlink: function(file){
-		try{
-			file.remove(false);
-			return true;
-		}catch(e){
-			return false;
-		}
-	},
-
-	path: function(file){
-		try{
-			return 'file:///' + file.path.replace(/\\/g, '\/').replace(/^\s*\/?/, '').replace(/\ /g, '%20');
-		}
-		catch(e){
-			return false;
-		}
-	},
-
-	toUnicode: function(charset, data){
-		try{
-			var uniConv = Components.classes[this.suniconvCID]
-								.createInstance(this.suniconvIID);
-			uniConv.charset = charset;
-			data = uniConv.ConvertToUnicode(data);
-		}
-		catch(e){
-			// foobar!
-		}
-		return data;
-	},
-
-	fromUnicode: function(charset, data){
-		try{
-			var uniConv = Components.classes[this.suniconvCID]
-								.createInstance(this.suniconvIID);
-			uniConv.charset = charset;
-			data = uniConv.ConvertFromUnicode(data);
-			// data += uniConv.Finish();
-		}
-		catch(e){
-			// foobar!
-		}
-		return data;
-	},
-
-	getWriteStream: function(file){
-		var stream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-		stream.init(file, 0x02 | 0x08 | 0x20, 420, -1);
-		return stream;
-	}
-
+cleardump = function(){
+    var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+    consoleService.reset()
+	consoleService.logStringMessage(""); //new Date() + ":  "
+    //Components.utils.reportError(e); // report the error and continue execution
 }
-
-//
-
-
-
-
-/*
-
-
-HTMLParagraphElement.prototype
-
-getClass(Element.prototype)
-
-getClass(gURLBar.constructor.prototype)
-
-*/
-
-

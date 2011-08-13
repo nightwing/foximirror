@@ -120,7 +120,7 @@ for(var i in actions){
 	}
 }
 //last child is checkbox
-i='devPrefs'
+i='noCashe'
 var newEl=document.createElement('menuseparator')
 el2.appendChild(newEl)
 var newEl=document.createElement('checkbox')

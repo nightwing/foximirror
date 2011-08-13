@@ -30,17 +30,7 @@
         <menupopup id="pupCommandAbbr" position="after_end" ignorekeys="false"/>
         <menupopup id="pupCodeCompletion" position="after_end" ignorekeys="false"/>
 		
-		<panel id="autocomplate" noautofocus="true" noautohide="true">
-			<vbox>
-			<tree id="window-tree" class="plain" seltype="single" treelines="false" flex="1" tabindex='-1'
-					hidecolumnpicker='true' style='-moz-user-focus:none'>
-				<treecols>
-					<treecol id="colNodeName" hideheader="true" primary="true" flex="1" />
-				</treecols>
-				<treechildren id="inspector-tree-body"/>
-			</tree>  
-			</vbox>
-		</panel>
+
 		<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
 		<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
 			<hbox>
@@ -50,25 +40,29 @@
 				<toolbarbutton label='si'  accesskey='s' onclick='jsExplore.si()'/>
 				<toolbarbutton label='gs'  accesskey='g' onclick='jsExplore.gs()'/>
 				<spacer flex='1'/>
+				<toolbarbutton label='ev'  accesskey='e' onclick='jsExplore.eval()'/>
+				<toolbarbutton label='&#8251;'  accesskey='' onclick='jsExplore.reveal()'/>
 				<label/>
 			</hbox>
-			<hbox>
-				<tree id="window-tree" class="plain1" seltype="single" treelines="false" flex="1" tabindex='-1'
-						hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
-					<treechildren id="inspector-tree-body"/>
+			<stack id='autocomplatePanelStack' flex='1'>
+				<hbox>
+					<tree id="window-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
+							hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
+						<treechildren id="inspector-tree-body"/>
 
-					<treecols>
-						<treecol id="name" hideheader="true" primary="true" flex="2" />
-						<splitter class="tree-splitter"/>
-						<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
-						<splitter class="tree-splitter"/>
-						<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
-					</treecols>
-				</tree> 
-				<splitter/>
-				<textbox multiline='true' id='autocomplate-bubble' flex='1' wrap='off' width='200' />
-			</hbox>
-			<resizer object='autocomplatePanel' dir='bottom-right'/>
+						<treecols>
+							<treecol id="name" hideheader="true" primary="true" flex="1" />
+							<splitter class="tree-splitter"/>
+							<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
+							<splitter class="tree-splitter"/>
+							<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
+						</treecols>
+					</tree> 
+					<splitter/>
+					<textbox multiline='true' id='autocomplate-bubble' flex='1' wrap='off' width='200' />
+				</hbox>
+				<resizer element='autocomplatePanelStack' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
+			</stack>
 		</panel>
     </popupset>
 
@@ -98,20 +92,22 @@
 		</toolbar>
 		<vbox flex="10">
 			<textbox id="jsCode" multiline="true" flex="1"  wrap='off'
-				style="overflow:hidden;font-family:monospace;font-size:9.5pt;-moz-tab-size:2" persist='height' />
+				style="overflow:hidden;font-family:monospace;font-size:9.5pt;-moz-tab-size:4" persist='height' />
 	  
 			<splitter>
-				<hbox align="left" flex="1">
-					<toolbarbutton label="Clear" accesskey="r" oncommand="clearResult()" tabindex="8"></toolbarbutton>
-					<toolbarbutton label="Execute" accesskey="e" oncommand="executeJS()" tabindex="4" ></toolbarbutton>
-					<toolbarbutton label="Properties" accesskey="p" oncommand="printProperties()"  tabindex="5"></toolbarbutton>
+				<hbox flex="1">
+					<toolbarbutton label="Clear"      oncommand="clearResult()" />
+					<hbox style='border:solid gray 1px'/>
+					<toolbarbutton label="Execute"    onclick="executeJS('',     event.button==2)" style='color:darkblue' />
+					<toolbarbutton label="`selection" onclick="executeJS('sel',  event.button==2)" style='color:green'/>
+					<toolbarbutton label="`line"      onclick="executeJS('line', event.button==2)"  />
 					<spacer flex='1'/>
-					<toolbarbutton label="Execute Selection" accesskey="e" oncommand="executeJS('selected')" tabindex="4" ></toolbarbutton>
-
-					<toolbarbutton label="timer" accesskey="p" oncommand="insertTimer()"  tabindex="5"></toolbarbutton>
+					<toolbarbutton label="wrap"      onclick="toggleWrap(event.button==2?resultbox:codebox)"/>
+					<toolbarbutton label="timer"     oncommand="insertTimer()"  />
 				</hbox>
-			</splitter >
-			<textbox id="result" multiline="true" flex="1" tabindex="7" wrap='on'  persist='height'></textbox>
+			</splitter>
+			<textbox id="result" multiline="true" flex="1" wrap='on'  persist='height'
+					style="-moz-tab-size:4"	/>
 		</vbox>
     </vbox>
 

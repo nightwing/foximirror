@@ -1,14 +1,11 @@
 <?xml version="1.0"?>
 
-
-<overlay id="shadia-overlay" 
-         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay id="shadia-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
  <script type="application/x-javascript" src="shadia.js"/>
 
- <statusbar id="status-bar">
-	<statusbarpanel id="shadiaButton" onclick="shadowInspector.browserPopup(event,null)" 
-		context="_child">
+<statusbar id="status-bar">
+	<statusbarpanel id="shadiaButton" onclick="shadowInspector.browserPopup(event,null)" context="_child">
         <image src="chrome://shadia/content/turnon.gif"/>
 			<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
 				<menuitem label="start inspector"/>
@@ -21,24 +18,28 @@
 				</template>	
 			</menupopup>
 	</statusbarpanel>
-	<toolbarbutton class='bookmark-item' oncommand="document.location.reload()" type='menu-button'>
+</statusbar>
+ 
+ 
+<toolbarpalette id="BrowserToolbarPalette">
+	<toolbarbutton class='bookmark-item' oncommand="document.location.reload()" type='menu-button' label='reload' id='shadia-window-reload'>
 		<menupopup><menuitem oncommand="try{
 		var s=Cc['@mozilla.org/browser/sessionstore;1']
 			.getService(Ci.nsISessionStore);
 		for(var i=10;--i;)s.forgetClosedWindow(0)
-		}catch(e){};" label='reload and forget'/>
+		}catch(e){};" label='reload and forget sessions'/>
 		<menuitem oncommand="event.stopPropagation();document.location.reload()" label='reload'/>
 		</menupopup>		
 	</toolbarbutton>
- </statusbar>
+</toolbarpalette>
 
- <menupopup id="menu_ToolsPopup">
-		<shadiaglue buttons='jsMirror,cssMirror,inspector,chromeMirror' style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")'/>
- </menupopup>
- <menupopup id="appmenu-popup">
-		<shadiaglue insertbefore='appmenu_webDeveloper'
+<menupopup id="menu_ToolsPopup">
+	<shadiaglue buttons='jsMirror,cssMirror,inspector,chromeMirror' style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")' position='1000'/>
+</menupopup>
+<menupopup id="appmenu-popup">
+	<shadiaglue insertbefore='appmenu_webDeveloper'
 		buttons='jsMirror,cssMirror,chromeMirror,errorConsole'
 		style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")'/>
- </menupopup>
+</menupopup>
  
 </overlay>

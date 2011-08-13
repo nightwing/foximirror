@@ -2392,9 +2392,9 @@ function contextMenuPopupShowing(event){
 		var i=getSlatePosition(dr)
 		if(i){
 			try{
-				let script =  Services.jsd.wrapValue(saidFuncs[i.slateId]).script
-				mURI=script.fileName
-				mLine=script.baseLineNumber	
+				let script = Services.jsd.wrapValue(saidFuncs[i.slateId]).script
+				mURI = script.fileName
+				mLine = script.baseLineNumber	
 			}catch(e){}			
 		}
 	}

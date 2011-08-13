@@ -45,7 +45,7 @@ var addDevelopmentUtils = function(window){
 	if(!('Cu' in window))
 		window.Cu=Components.utils
 	var href = window.location.href
-	if(href.substring(0,15)=='chrome://shadia'||href=='chrome://global/content/console.xul'){
+	if(href.substring(0,15)=='chrome://shadia'||href=='chrome://console2/content/console2.xul'){
 		for each(var i in ["getLocalFile","makeReq","viewFileURI","npp"]){
 			window[i]=this[i]
 		}
@@ -55,7 +55,7 @@ var addDevelopmentUtils = function(window){
 /** **************************************************************
  *    exported functions
  ** ********************** **/
-toOpenWindowByURI =function (uri, features) {
+toOpenWindowByURI = function (uri, features) {
     var winEnum = Services.wm.getEnumerator("");
     while (winEnum.hasMoreElements()) {
         let win = winEnum.getNext();
@@ -268,10 +268,12 @@ var externalEditors = {
 	archivePrompt: function(uri, line, column){
 		var arr=['extract file and edit', 'show archive', 'open with view-source:', 'open with edit:']
 		var sel={}
-		Services.prompt.select(null, 'file is in archive', 'what do you want to do',
+		var proceed = Services.prompt.select(null, 'file is in archive', 'this file is in archive,\n what do you want to do?',
 			arr.length, arr,
 			sel
 		)
+		if(!proceed)
+			return false
 		if(sel.value==0){
 			return true
 		}else if(sel.value==1){
@@ -445,7 +447,8 @@ registerStyles()
 
 //******************************************************************************************************//
 reloadModule = function(href){
-	href = this.__URI__
+	if(!href)
+		href = this.__URI__
 	var bp = Cu.import(href)
 	// query needed to confuse startupcache in ff 8.0+
 	Services.scriptloader.loadSubScript(href+'?'+Date.now(), bp);
