@@ -49,10 +49,12 @@
     </resources>
 	
 	<implementation>
+	<method name="_popupshown">
+		<body><![CDATA[
+			this.actions.noCache(this)
+		]]></body>
+	</method>
 		<constructor><![CDATA[{
-_popupshown=function(popup){
-	popup.lastChild.checked=devPrefState()
-}
   //**********************************************************
  //* actions
 //****/
@@ -82,6 +84,27 @@ this.actions={//external
 	,reloadChrome:function()  {Services.chromeReg.reloadChrome()}
 	,refreshSkins:function()  {Services.chromeReg.refreshSkins()}
 	,revealCurDoc:function()  {$shadia.getLocalFile(location.href).reveal()}
+	,toggleOnTop: function(item) {dump(120, item)
+		var xulWin = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShellTreeItem).treeOwner.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIXULWindow);
+		if (!item) {
+			xulWin.zLevel = xulWin.zLevel > xulWin.normalZ ? xulWin.normalZ : xulWin.raisedZ;
+		} else {
+			item.setAttribute('checked', xulWin.zLevel > xulWin.normalZ);
+		}
+	}
+	,noCache: function(item){
+		var p = devPrefState()
+		dump(p)
+		if (!item) {
+			p = !p
+			$shadia.setPref("nglayout.debug.disable_xul_cache",    p, 'bool')
+			$shadia.setPref("nglayout.debug.disable_xul_fastload", p, 'bool')
+		} else
+			item = document.getAnonymousElementByAttribute(item, "aID", "noCache");
+		if (item) {
+			item.setAttribute("checked", p);
+		}
+	}
 }
 var activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','errorConsole','jsMirror','domi']
 var actionNames={reload:'reload',reopen:':)',errorConsole:'errors',restartApp:'restart firefox'}
@@ -97,17 +120,38 @@ function toOpenWindowByType(inType, uri, features) {
         window.open(uri, "_blank", "modal=no,chrome,extrachrome,menubar,resizable=yes,scrollbars,status,toolbar");
     }
 }
+this.devPrefState = function devPrefState(){
+	return $shadia.getPref("nglayout.debug.disable_xul_cache",    'bool')
+	    && $shadia.getPref("nglayout.debug.disable_xul_fastload", 'bool')
+}
 
-//document.getAnonymousElementByAttribute(this.actionpopup.parentNode, 'class', 'menulist-dropmarker').className = "toolbarbutton-menu-dropmarker"
-
-var el1=this.actionbar,el2=this.actionpopup
+var actionbar=this.actionbar,actionpopup=this.actionpopup
 for(var i in actions){
+	if(i == 'noCache') {
+		var newEl=document.createElement('menuseparator')
+		actionpopup.appendChild(newEl)
+		var newEl=document.createElement('checkbox')
+		newEl.setAttribute('aID',i);
+		newEl.setAttribute('label', i);	
+		actionpopup.appendChild(newEl)
+		continue
+	}else if(i == 'toggleOnTop'){
+		if(!('npp' in window))
+			continue
+		var newEl=document.createElement('toolbarbutton')
+		newEl.setAttribute('aID',i);
+		newEl.setAttribute('type','checkbox');
+		newEl.className = 'pinbox';	
+		actionbar.appendChild(newEl)
+		setTimeout(this.actions.toggleOnTop, 400, newEl)
+		continue
+	}
 	var newEl=document.createElement('menuitem')
 	newEl.setAttribute('aID',i);
 	newEl.setAttribute('label', actionNames[i]||i);	
 	if(i in actionsColors)
 		newEl.style.color = actionsColors[i];
-	el2.appendChild(newEl)
+	actionpopup.appendChild(newEl)
 	
 
 	if(activeactions.indexOf(i)>-1){
@@ -116,27 +160,12 @@ for(var i in actions){
 		var newEl=document.createElement('toolbarbutton')
 		newEl.setAttribute('aID',i);
 		newEl.setAttribute('label', actionNames[i]||i);
-		el1.appendChild(newEl)
+		actionbar.appendChild(newEl)
 	}
 }
-//last child is checkbox
-i='noCashe'
-var newEl=document.createElement('menuseparator')
-el2.appendChild(newEl)
-var newEl=document.createElement('checkbox')
-newEl.setAttribute('aID',i);
-newEl.setAttribute('label', i);	
-//newEl.setAttribute('type', 'checkbox')
-el2.appendChild(newEl)
-actions[i]=function(){
-	var p =!devPrefState()
-	$shadia.setPref("nglayout.debug.disable_xul_cache",    p, 'bool')
-	$shadia.setPref("nglayout.debug.disable_xul_fastload", p, 'bool')
-}
-this.devPrefState = function devPrefState(){
-	return $shadia.getPref("nglayout.debug.disable_xul_cache",    'bool')
-	    && $shadia.getPref("nglayout.debug.disable_xul_fastload", 'bool')
-}			
+
+		
+
 
 //inject shadia
 Components.utils.import('resource://shadia/main.js')

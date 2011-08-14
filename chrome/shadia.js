@@ -4,14 +4,14 @@ var shadowInspector=function(){}
 shadowInspector.debug=false
 
 
-shadowInspector.activate=function(aWindow){	
+shadowInspector.activate=function(aWindow){
 	var topWin=shadowInspector.getTopWindow(window)
 	if(!topWin.shadia)this.activateTop(topWin)//check is needed for debug
 	if(topWin!=window){dump('activateInner')
 		this.activateInner(window)
 	}
 }
-shadowInspector.activateTop=function(aWindow){	
+shadowInspector.activateTop=function(aWindow){
 	if(shadowInspector.debug||!aWindow["shadia"]){
 		if(aWindow["shadia"]){
 			aWindow["shadia"].finish()
@@ -25,15 +25,15 @@ shadowInspector.activateTop=function(aWindow){
 			aWindow.addEventListener('keydown',aWindow["shadia"],true)
 		}
 	}
-	//shadia.start()	
-	var keys=aWindow.document.querySelectorAll("key[keycode='VK_F1']")	
+	//shadia.start()
+	var keys=aWindow.document.querySelectorAll("key[keycode='VK_F1']")
 	for(var i=1,ii=keys.length;i<ii;i++){
 		keys[i].parentNode.removeChild(keys[i])
 	}
 	/* if(!Cu)Cu= Components.utils
 	Cu.import('resource://xqjs/Services.jsm'); */
 }
-shadowInspector.activateInner=function(){	
+shadowInspector.activateInner=function(){
 	if(shadowInspector.debug||!window["shadia"]){
 		if(window["shadia"])window["shadia"].finish()
 		shadia=new shadowInspector()
@@ -49,11 +49,11 @@ shadowInspector.injectShadia=function(mWindow){
 
 shadowInspector.browserPopup=function(event,pWin1){
 	var t=event.target,id=t.id
-	
+
 	if(event.button!==0){
-		var p=document.getElementById("shadia-window-menu")			
+		var p=document.getElementById("shadia-window-menu")
 		p.enableRollup(false)
-		p.openPopup(t,'before_start',0,0,false,true)	
+		p.openPopup(t,'before_start',0,0,false,true)
 	}else if(t.label==="help"&&!id){
 		openDialog('chrome://shadia/content/options.xul','resizable').focus();
 	}else if(t.label==="start inspector"&&!id){
@@ -63,7 +63,7 @@ shadowInspector.browserPopup=function(event,pWin1){
 	}else if(event.target.nodeName==="menuitem"&&id){
 		var resource = id
 		if(resource){
-			var mediator = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Components.interfaces.nsIWindowDataSource);	
+			var mediator = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Components.interfaces.nsIWindowDataSource);
 			this.start(mediator.getWindowForResource(resource))
 		}
 	}else if(pWin1){
@@ -74,21 +74,21 @@ shadowInspector.browserPopup=function(event,pWin1){
 }
 
 shadowInspector.getTopWindow=function(mWindow){
-	let domUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].getService(Components.interfaces.inIDOMUtils);   
-    var rt=mWindow,pw=mWindow
+	let domUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].getService(Components.interfaces.inIDOMUtils);
+	var rt=mWindow,pw=mWindow
 	while(rt){
 		rt=domUtils.getParentForNode(rt.document,false)
 		rt=rt&&rt.ownerDocument.defaultView
 		if(rt)pw=rt
 	}
 	return pw
-	
+
 	return mWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
 			.getInterface(Components.interfaces.nsIWebNavigation)
 			.QueryInterface(Components.interfaces.nsIDocShellTreeItem)
 			.rootTreeItem
 			.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-			.getInterface(Components.interfaces.nsIDOMWindow); 
+			.getInterface(Components.interfaces.nsIDOMWindow);
 }
 shadowInspector.start=function(mWindow,selectByClick){
 	var topWindow=this.getTopWindow(mWindow)
@@ -107,7 +107,7 @@ shadowInspector.allWindowsSelect=function(start,skipThis,selectByClick){
 			if(shadowInspector.debug||!aWin.shadia)this.injectShadia(aWin)
 
 			aWin.shadia.allWinsStarted=start
-			if(skipThis&&aWin==window){aWin.shadia.finish();continue}		
+			if(skipThis&&aWin==window){aWin.shadia.finish();continue}
 			if(start)
 				selectByClick?aWin.shadia.toggleClickSelect():aWin.shadia.start()
 			else
@@ -116,6 +116,9 @@ shadowInspector.allWindowsSelect=function(start,skipThis,selectByClick){
 	}
 }
 
+/** ***********************************************
+ * main highlighter
+ **********************/
 shadowInspector.prototype={
 	startKey1: KeyEvent.DOM_VK_PAUSE,
 	//startKey2: KeyEvent.DOM_VK_SCROLL_LOCK,
@@ -135,7 +138,7 @@ shadowInspector.prototype={
 			this.start()
 		}
 	},
-	start: function(aDocument){	
+	start: function(aDocument){
 		if(!this.infoPanel)
 			this.createInfoPanel()
 		if(!this.fm){
@@ -147,23 +150,23 @@ shadowInspector.prototype={
 						,get activeWindow() {return this.wm.getMostRecentWindow(null)}
 						}
 		}
-			
+
 		this.isSheetRegistered||this.register()
 		//this.topNode=aDocument?aDocument:window
 		this.finish()
 		this.light="lime"
 
-		window.addEventListener('mousemove',  this.l1 =function(e){shadia.mouseMoveListener(e)}, true);		
+		window.addEventListener('mousemove',  this.l1 =function(e){shadia.mouseMoveListener(e)}, true);
 		window.addEventListener('deactivate', this.l12=function(e){shadia.deactivateListener(e)}, true);
 		window.addEventListener('activate',   this.l13=function(e){shadia.activateListener(e)}, true);
-		
+
 		window.addEventListener('keydown',    this.l2 =function(e){shadia.keydownListener(e)}, true);
 		window.addEventListener('keypress',   this.l21=function(e){shadia.keydownListener(e)}, true);
 		window.addEventListener('keyup',      this.l22=function(e){shadia.keydownListener(e)}, true);
 
 		window.addEventListener('popupshown', this.l3=function(e){shadia.popupOpenListener(e)}, true);
-		
-		this.on=true;				
+
+		this.on=true;
 		this.updateLight()&&this.showHelp()
 	},
 
@@ -171,7 +174,7 @@ shadowInspector.prototype={
 		if(!this.on)
 			return;
 		this.on=false;
-		
+
 		window.removeEventListener('mousemove',  this.l1,  true); this.l1=null;
 		window.removeEventListener('deactivate', this.l12, true); this.l12=null;
 		window.removeEventListener('activate',   this.l13, true); this.l13=null;
@@ -181,7 +184,7 @@ shadowInspector.prototype={
 		window.removeEventListener('keyup',      this.l22, true); this.l22=null;
 
 		window.removeEventListener('popupshown', this.l3,  true); this.l3=null;
-		
+
 		/**clickselect listeners*/
 		window.removeEventListener('mousedown',  this.lcs, true);
 		window.removeEventListener('mouseup',    this.lcs, true);
@@ -204,42 +207,41 @@ shadowInspector.prototype={
 		document.documentElement.appendChild(this.infoPanel)
 		this.infoPanel.setAttribute("noautohide",true)
 		this.infoPanelBo=this.infoPanel.popupBoxObject//boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
-		
+
 	},
 
-	//	
+	//
 	popupOpenListener: function(event){
 		if( this.panelShowing&&event.target!=this.infoPanel) {
-			this.infoPanel.hidePopup()			
+			this.infoPanel.hidePopup()
 			this.infoPanel.showPopup(null,this.infoPanelBo.screenX, this.infoPanelBo.screenY, "tooltip")
-			dump('popupOpenListener',asd=event.target)
 			this.recentPopups.push(event.target)
-			if(this.recentPopups.length>10)this.recentPopups.shift()
+			if(this.recentPopups.length>10)
+				this.recentPopups.shift()
 		}
 	},
 	recentPopups:[],
-	
+
 	//catchNodes
-	$:[],	
+	$:[],
 	suspendMouse:function(){
 		if(this.l1){
 			window.removeEventListener('mousemove',  this.l1, true);
 			window.removeEventListener('deactivate', this.l12, true);
 			window.removeEventListener('activate',   this.l13, true);
-			this.infoPanel.setAttribute('onmousemove','')
+			this.infoPanel.hidePopup()
 
 			this.l1=null;
-			
+
 			this.$.unshift(this.historyA[0])
 			if(this.$.length>20)
 				this.$.pop()
 		}else{
-			var slf=this;
 			window.addEventListener('mousemove',  this.l1=function(e){shadia.mouseMoveListener(e)}, true);
 			window.addEventListener('deactivate', this.l12=function(e){shadia.deactivateListener(e)}, true);
 			window.addEventListener('activate',   this.l13=function(e){shadia.activateListener(e)}, true);
 
-			this.infoPanel.setAttribute('onmousemove','this.hidePopup()')
+			//this.editPanel.hidePopup()
 		}
 	},
 	//windowActive
@@ -254,7 +256,6 @@ shadowInspector.prototype={
 	},
 	updateLight: function(event){
 		var istop=this.fm.activeWindow==window
-		//dump('update.light','------------',istop,this.windowActive)	
 		if(istop){
 			this.windowActive=true
 			this.light=this.lcs?'click':'lime'
@@ -267,10 +268,10 @@ shadowInspector.prototype={
 	mouseMoveListener: function(event){
 		this.infoPanelBo.moveTo(event.screenX+10,event.screenY+10)
 		if(event[this.targetType]!=this.historyA[0])
-			this.advanceLight(event[this.targetType],"lime")		
+			this.advanceLight(event[this.targetType],"lime")
 		//	this.setLight(event.target,"blue")
 	},
-	targetType:'originalTarget',
+	targetType: 'originalTarget',
 	changeDepth: function(){
 		this.targetType=this.targetType=='originalTarget'?'target':'originalTarget'
 	},
@@ -286,12 +287,12 @@ shadowInspector.prototype={
 
 				case KeyEvent.DOM_VK_NUMPAD0  :this.suspendMouse();obj=null;break;
 				case KeyEvent.DOM_VK_NUMPAD1  :this.fullInfoInPanel=!this.fullInfoInPanel;
-											   this.fillPanel(this.historyA[0]);											   
+											   this.fillPanel(this.historyA[0]);
 											   break;
 				case KeyEvent.DOM_VK_NUMPAD3  :this.changeDepth() ;obj=null;break;
 				//case KeyEvent.DOM_VK_NUMPAD1  :shadowInspector.allWindowsSelect(true,true,false);obj=null;break;
 				//case KeyEvent.DOM_VK_NUMPAD2  :shadowInspector.allWindowsSelect(true,true,true);obj=null;break;
-				
+
 
 				case KeyEvent.DOM_VK_NUMPAD7  :this.inspect(obj);obj=null;if(event.ctrlKey)this.finish();break;
 				case KeyEvent.DOM_VK_NUMPAD8  :this.fbug(obj)   ;obj=null;if(event.ctrlKey)this.finish();break;
@@ -301,13 +302,13 @@ shadowInspector.prototype={
 
 				case KeyEvent.DOM_VK_RIGHT    :if(this.ignorekeys)return
 				case KeyEvent.DOM_VK_NUMPAD3  :obj=this.toRight(obj);break;
-				
+
 				case KeyEvent.DOM_VK_LEFT     :if(this.ignorekeys)return
 				case KeyEvent.DOM_VK_NUMPAD1  :obj=this.toLeft(obj);break;
-				
+
 				case KeyEvent.DOM_VK_UP       :if(this.ignorekeys)return
 				case KeyEvent.DOM_VK_NUMPAD5  :obj=this.toUp(obj);break;
-				
+
 				case KeyEvent.DOM_VK_DOWN     :if(this.ignorekeys)return
 				case KeyEvent.DOM_VK_NUMPAD2  :obj=this.toDown(obj);break;
 				default: return//need to return to not catch keys
@@ -328,7 +329,7 @@ shadowInspector.prototype={
 					this.keysToCatch.splice(i,1)
 				}
 			}
-		}	
+		}
 	},
 	keysToCatch:[],
 	//////
@@ -380,16 +381,16 @@ shadowInspector.prototype={
 		if(o){
 			return o;
 		}
-		o=this.toRight(o)		
+		o=this.toRight(o)
 		if(o.firstChild){
-			return o.firstChild		
+			return o.firstChild
 		}
 		return o;
 	},
 	toUp:function(obj){
 		let parent=obj.parentNode
 		if(parent) return parent
-		let domUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].getService(Components.interfaces.inIDOMUtils);   
+		let domUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].getService(Components.interfaces.inIDOMUtils);
         parent = domUtils.getParentForNode(obj, true);
 		return parent
 	},
@@ -398,26 +399,25 @@ shadowInspector.prototype={
 	copySelector:function(object){
 		var name=object.localName.toLowerCase()
 		if(object.id)
-			name+="#"+object.id		
+			name+="#"+object.id
 		if(object.className)
 			name+="."+object.className.toString().replace(" ",".",'g')
-		const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);  
-		gClipboardHelper.copyString(name);  
+		const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
+		gClipboardHelper.copyString(name);
 	},
 	selectorForObject:function(object){
 		var name=object.tagName
 		if(object.id)
-			name+="#"+object.id		
+			name+="#"+object.id
 		if(object.className)
 			name+="."+object.className.toString().replace(" ",".",'g')
 		return name;
 	},
-	
+
 	showHelp:function(){
-		var message=['shadia keys{',
+		var message = ['shadia keys{',
 			'/***basics***/',
-			'F1: open this message',
-			'Pause/Break: start shadia',
+			'F1/Pause/Break: start shadia',
 			'arrows: move in dom tree',
 			'numpad 4,6: previous/next',
 			'/***start inspecting document in***/',
@@ -430,8 +430,8 @@ shadowInspector.prototype={
 			'numpad 1: toggle tooltip mode (more/less info)',
 			'numpad 0: push current node into shadia.$ array',
 			'numpad 3: toggle between showing event.originalTarget and target',
-			].join('\n\t')+'\n}'
-	
+		].join('\n\t')+'\n}'
+
 		this.fillPanel(message)
 		// sometimes infopanel gets these set. why?
 		this.infoPanel.removeAttribute("width")
@@ -447,7 +447,6 @@ shadowInspector.prototype={
 			this.infoPanelBo.showPopup(null,this.infoPanel,this.infoPanelBo.screenX, this.infoPanelBo.screenY, "tooltip",null,null)
 		}
 	},
-	
 	fillPanel:function(el){
 		if(this.infoPanel.state!=="open")
 			this.showPanel()
@@ -458,16 +457,16 @@ shadowInspector.prototype={
 			container.appendChild(item);
 			item.style.MozUserSelect='text'
 		}
-		//container.removeChild(container.firstChild)	
+		//container.removeChild(container.firstChild)
 		if(el.nodeType==1){//node
 			var name=el.tagName,str
 			str=el.id
 			if(str)
-				name+="#"+str		
+				name+="#"+str
 			str=el.className
 			if(str&&typeof(str)=='string')
 				name+="."+str.replace(" ",".",'g')
-			
+
 			if(this.fullInfoInPanel){
 				var att=el.attributes,ans=[]
 				for(var i=0;i<att.length;i++){
@@ -495,32 +494,32 @@ shadowInspector.prototype={
 		//
 		item.textContent=name
 	},
-
-	hidePanel:function() {		
+	hidePanel:function() {
 		this.panelShowing=false
 		this.infoPanel.hidePopup()
 	},
-    /*******************
-	 * click select
-	 */
+
+	  //*************************************
+	 // click select
+	//*************
 	toggleClickSelect:function(){
 		if(this.lcs){
 			window.removeEventListener('mousedown', this.lcs, true);
 			window.removeEventListener('mouseup',   this.lcs, true);
 			window.removeEventListener('click',     this.lcs, true);
-			window.removeEventListener('mouseout',  this.lcs, true);	this.lcs=null	
+			window.removeEventListener('mouseout',  this.lcs, true);	this.lcs=null
 			this.finish()
 		}else{
-			this.on||this.start()		
+			this.on||this.start()
 			var slf=this
 			window.addEventListener('mousedown', this.lcs=function(e){slf.clickSelectListener(e)}, true);
 			this.updateLight()
-			//if(this.l2)this.suspendKeys()			
-		}		
+			//if(this.l2)this.suspendKeys()
+		}
 	},
 	clickSelectListener:function(event){
-		dump('<--*-*-->',event.type,this.windowWasActive)
-		if(event.button!=0)return
+		if(event.button!=0)
+			return
 		event.stopPropagation();event.preventDefault()
 		if(event.type=='mousedown'){
 			this.windowWasActive=this.windowActive//shouldn't open inpector if window is not active
@@ -530,41 +529,43 @@ shadowInspector.prototype={
 			window.addEventListener('mouseout',  this.lcs, true);
 		}else if(event.type=='click'||event.type=='mouseout'){
 			window.removeEventListener('click',    this.lcs, true);
-			window.removeEventListener('mouseout', this.lcs, true);	
+			window.removeEventListener('mouseout', this.lcs, true);
 			window.removeEventListener('mouseup',  this.lcs, true);
 		}else if(event.type=='mouseup'){
-			window.removeEventListener('mouseup',  this.lcs, true);				
+			window.removeEventListener('mouseup',  this.lcs, true);
 		}
 		if(event.type=='click'){
 			if(this.windowWasActive){
 				if(this.allWinsStarted)shadowInspector.allWindowsSelect(false)
 				this.inspect(event.originalTarget)
-			}else{this.updateLight();this.setLight(this.historyA[0])}
+			}else{
+				this.updateLight();
+				this.setLight(this.historyA[0])
+			}
 		}
 	},
-	
+
 	isTopWin:function(){
 		//var wm=Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
 		//return wm.getMostRecentWindow('')==window
 		return this.fm.activeWindow==window
 	},
-	light:"lime",
+
 	  //*************************************
 	 // inspector helpers
 	//*************
 	inspect: function(aNode){
 		aNode=aNode||document.documentElement
 		var windowsMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
-		var aWin = windowsMediator.getMostRecentWindow("shadia:inspector");		
+		var aWin = windowsMediator.getMostRecentWindow("shadia:inspector");
 		if(!aWin||aWin==window){
 			window.openDialog("chrome://shadia/content/domMirror/domMirror.xul", "", "chrome,all,dialog=no", aNode);
 		}else{
 			aWin.focus();
-			aWin.inspect(aNode)			
+			aWin.inspect(aNode)
 		}
 		if(this.lcs)this.finish()
 	},
-	
 	domi: function(aNode){
 		var windowsMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
 		var fWins=windowsMediator.getEnumerator('')
@@ -578,16 +579,15 @@ shadowInspector.prototype={
 		}
 		if(!DOMIWin){
 			DOMIWin=window.openDialog("chrome://inspector/content/", "", "chrome,all,dialog=no", aNode);
-		}else{			
+		}else{
 			DOMIWin.inspector.mInitTarget=aNode
 			DOMIWin.inspector.initViewerPanels()
 			DOMIWin.inspector.getViewer('dom').selectElementInTree(aNode)
 			//subject
-			DOMIWin.focus();			
+			DOMIWin.focus();
 		}
 		if(this.lcs)this.finish()
-	},	
-
+	},
 	fbug: function(aNode){
 		var fb=window["Firebug"]
 		if(!fb){
@@ -601,11 +601,11 @@ shadowInspector.prototype={
 		aWin.focus();
 		if(this.lcs)this.finish()
 	},
-	
-	
+
+
 	  //*************************************
-	 // history 
-	//*************		
+	 // history
+	//*************
 	advanceLight:function(obj){
 		this.unLightElement(this.historyA[0])
 		this.setLight(obj)
@@ -617,7 +617,7 @@ shadowInspector.prototype={
 		var obj=this.historyA.shift()
 		this.historyA.push("")
 		this.unLightElement(obj)
-		this.historyB.push(obj)	
+		this.historyB.push(obj)
 		this.setLight(this.historyA[0])
 		this.fillPanel(obj)
 	},
@@ -633,21 +633,21 @@ shadowInspector.prototype={
 	},
 	historyA:new Array(20),
 	historyB:[],
-	
-	
+
 
 	  //*************************************
 	 //  light
-	//*************	
-	register:function(){
+	//*************
+	light: "lime",
+	register: function(){
 		this.activeURL=this.getDataUrl()
 		let sss= Components.classes["@mozilla.org/content/style-sheet-service;1"].getService(Components.interfaces.nsIStyleSheetService)
 		if(sss.sheetRegistered(this.activeURL, sss.AGENT_SHEET) )
-			sss.unregisterSheet(this.activeURL, sss.AGENT_SHEET) ;	
+			sss.unregisterSheet(this.activeURL, sss.AGENT_SHEET) ;
 		sss.loadAndRegisterSheet(this.activeURL, sss.AGENT_SHEET) ;
 		this.isSheetRegistered=true
 	},
-	unregister:function(){
+	unregister: function(){
 		let sss= Components.classes["@mozilla.org/content/style-sheet-service;1"].getService(Components.interfaces.nsIStyleSheetService)
 		if(sss.sheetRegistered(this.activeURL, sss.AGENT_SHEET))
 			sss.unregisterSheet(this.activeURL, sss.AGENT_SHEET);
@@ -662,24 +662,24 @@ shadowInspector.prototype={
 *[shadia-lighted="2"]{outline:1px solid rgb(213,80,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}\
 *[shadia-lighted="off"]{outline:1px solid rgb(80,213,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}\
 *[shadia-lighted="lime"]{outline:2px solid lime!important;outline-offset:-2px!important;-moz-outline-radius:2px!important;}\
-*[shadia-lighted="click"]{outline:2px solid #d528ff!important;outline-offset:-2px!important;-moz-outline-radius: 2px!important;}'		
+*[shadia-lighted="click"]{outline:2px solid #d528ff!important;outline-offset:-2px!important;-moz-outline-radius: 2px!important;}'
 		let ios= Components.classes['@mozilla.org/network/io-service;1'].getService(Components.interfaces.nsIIOService)
 		return ios.newURI("data:text/css," + encodeURIComponent(code), null, null);
 	},
 
-	
-	setLight:function(obj,color) {
-		obj&&obj.setAttribute&&obj.setAttribute("shadia-lighted",color||this.light)	
+
+	setLight: function(obj,color) {
+		obj&&obj.setAttribute&&obj.setAttribute("shadia-lighted",color||this.light)
 	},
 	unLightElement: function(obj) {
 		obj&&obj.hasAttribute&&obj.hasAttribute("shadia-lighted")&&obj.removeAttribute("shadia-lighted");
-	},	
-	
-	
-	lightParents:function(obj){
+	},
+
+
+	lightParents: function(obj){
 		this.unlightParents()
 		var n=0
-		for(var p=obj;p;p=p.parentNode){			
+		for(var p=obj;p;p=p.parentNode){
 			p.setAttribute&&p.setAttribute('shadia-lighted',n)
 			this.lnodes.push(p)
 			if(n>3)break;n++;
@@ -687,18 +687,18 @@ shadowInspector.prototype={
 		this.lnodestimeout=setTimeout(function(){shadia.unlightParents()},1000)
 
 	},
-	unlightParents:function(){		
+	unlightParents: function(){
 		for each(var p in this.lnodes ){
 			p.removeAttribute&&p.removeAttribute('shadia-lighted')
 		}
 		this.lnodes=[]
 		clearTimeout(this.lnodestimeout)
 	},
-	lnodes:[]	
+	lnodes:[]
 }
 
-shadowInspector.activate(window)	 
-/* 
+shadowInspector.activate(window)
+/*
 stub=function(e){
 
 for(var i in KeyEvent){
