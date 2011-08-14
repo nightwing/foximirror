@@ -32,10 +32,9 @@
       </handler> 
     </handlers>
   </binding>
-  
-  
-  
-  
+
+
+
 <binding id="shadiaGlue">
     <content>
 		<xul:arrowscrollbox aID='actionbar'/>	
@@ -84,17 +83,9 @@ this.actions={//external
 	,reloadChrome:function()  {Services.chromeReg.reloadChrome()}
 	,refreshSkins:function()  {Services.chromeReg.refreshSkins()}
 	,revealCurDoc:function()  {$shadia.getLocalFile(location.href).reveal()}
-	,toggleOnTop: function(item) {dump(120, item)
-		var xulWin = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShellTreeItem).treeOwner.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIXULWindow);
-		if (!item) {
-			xulWin.zLevel = xulWin.zLevel > xulWin.normalZ ? xulWin.normalZ : xulWin.raisedZ;
-		} else {
-			item.setAttribute('checked', xulWin.zLevel > xulWin.normalZ);
-		}
-	}
+
 	,noCache: function(item){
 		var p = devPrefState()
-		dump(p)
 		if (!item) {
 			p = !p
 			$shadia.setPref("nglayout.debug.disable_xul_cache",    p, 'bool')
@@ -122,7 +113,7 @@ function toOpenWindowByType(inType, uri, features) {
 }
 this.devPrefState = function devPrefState(){
 	return $shadia.getPref("nglayout.debug.disable_xul_cache",    'bool')
-	    && $shadia.getPref("nglayout.debug.disable_xul_fastload", 'bool')
+		&& $shadia.getPref("nglayout.debug.disable_xul_fastload", 'bool')
 }
 
 var actionbar=this.actionbar,actionpopup=this.actionpopup
@@ -134,16 +125,6 @@ for(var i in actions){
 		newEl.setAttribute('aID',i);
 		newEl.setAttribute('label', i);	
 		actionpopup.appendChild(newEl)
-		continue
-	}else if(i == 'toggleOnTop'){
-		if(!('npp' in window))
-			continue
-		var newEl=document.createElement('toolbarbutton')
-		newEl.setAttribute('aID',i);
-		newEl.setAttribute('type','checkbox');
-		newEl.className = 'pinbox';	
-		actionbar.appendChild(newEl)
-		setTimeout(this.actions.toggleOnTop, 400, newEl)
 		continue
 	}
 	var newEl=document.createElement('menuitem')
@@ -164,7 +145,7 @@ for(var i in actions){
 	}
 }
 
-		
+
 
 
 //inject shadia
