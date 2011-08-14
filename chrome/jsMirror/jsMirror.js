@@ -429,7 +429,7 @@ function executeJS(sel, printProps){
     appendToConsole(jn.inspect(result,'long'));
 
     codebox.focus();
-	printProps&&printPropertiesForTarget(target)
+	printProps&&printPropertiesForTarget(result)
     return result;
 }
 function ejsInspectError(e){

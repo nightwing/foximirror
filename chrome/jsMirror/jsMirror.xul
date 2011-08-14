@@ -92,7 +92,7 @@
 		</toolbar>
 		<vbox flex="10">
 			<textbox id="jsCode" multiline="true" flex="1"  wrap='off'
-				style="overflow:hidden;font-family:monospace;font-size:9.5pt;-moz-tab-size:4" persist='height' />
+				style="overflow:hidden;word-wrap: break-word;font-family:monospace;font-size:9.5pt;-moz-tab-size:4" persist='height' />
 	  
 			<splitter>
 				<hbox flex="1">
