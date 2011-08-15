@@ -82,7 +82,19 @@ openWindow = function (uri, features){
 		array
 	)
 }
+/***loging**/
 dump = function(){
+	var aMessage="#>: ";
+    for(var i=0,l=arguments.length; i<l; ++i){
+		var a=arguments[i]
+        aMessage += (a&&!a.toString?'[object call]':a) + " , ";
+    }
+	var stack = Components.stack.caller
+	var consoleMessage = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+	consoleMessage.init(aMessage, stack.filename, null, stack.lineNumber, 0, 0, "component javascript");
+	Services.console.logMessage(consoleMessage);
+}
+dump.log = function(){
     var aMessage="aMessage: ";
     for(var i=0,l=arguments.length; i<l; ++i){
 		var a=arguments[i]
@@ -96,6 +108,40 @@ dump.trace = function dumpComponentsStack(from){
         msg.push(frame.filename + "#@" + frame.lineNumber +": "+frame.sourceLine  );
     dump(from+" has stack size:" +msg.length, msg.join('\n'));
 }
+dump.clear = function(){
+	Services.console.reset()
+	Services.console.logStringMessage("");
+}
+/*
+
+    XPConnect JavaScript
+    component javascript
+    chrome javascript
+    chrome registration
+    XBL
+    XBL Prototype Handler
+    XBL Content Sink
+    xbl javascript
+    FrameConstructor
+
+    HUDConsole
+    CSS Parser
+    CSS Loader
+    content javascript
+    DOM Events
+    DOM:HTML
+    DOM Window
+    SVG
+    ImageMap
+    HTML
+    Canvas
+    DOM3 Load
+    DOM
+    malformed-xml
+    DOM Worker javascript
+
+/***loging**/
+
 getLocalFile=function getLocalFile(mPath){
 	var uri = Services.io.newURI(mPath, null, null),file;
 	if(uri.schemeIs('resource')){//about?
@@ -452,9 +498,52 @@ registerStyles()
 reloadModule = function(href){
 	if(!href)
 		href = this.__URI__
+	if(href == this.__URI__)
+		shutdown()
+
 	var bp = Cu.import(href)
 	// query needed to confuse startupcache in ff 8.0+
 	Services.scriptloader.loadSubScript(href+'?'+Date.now(), bp);
 	return bp
 }
 
+
+
+/**************************************************************************
+ * bootstrap.js API
+ *****************/
+WindowListener={
+	onOpenWindow: function(aWindow){
+		// Wait for the window to finish loading
+		let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal||Ci.nsIDOMWindow).window;
+		domWindow.addEventListener("keypress", $shadia, false); 
+	},
+	onCloseWindow: function(aWindow){ },
+	onWindowTitleChange: function(aWindow, aTitle){ }
+}
+startup()
+
+function startup(aData, aReason) {
+	// Load into any existing windows
+	let enumerator = Services.wm.getEnumerator("navigator:browser");
+	while(enumerator.hasMoreElements()) {
+		let win = enumerator.getNext();
+	}
+	// Load into all new windows
+	Services.wm.addListener(WindowListener);
+}
+
+function shutdown(aData, aReason) {
+	if (aReason == APP_SHUTDOWN)
+		return;
+		
+	let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);	
+	// Unload from any existing windows
+	let enumerator = Services.wm.getEnumerator("navigator:browser");
+	while(enumerator.hasMoreElements()) {
+		let win = enumerator.getNext();
+	}
+	Services.wm.removeListener(WindowListener);
+}
+
+handleEvent=function(e){dump(e)}

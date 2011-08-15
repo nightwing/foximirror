@@ -6,8 +6,9 @@ shadowInspector.debug=false
 
 shadowInspector.activate=function(aWindow){
 	var topWin=shadowInspector.getTopWindow(window)
-	if(!topWin.shadia)this.activateTop(topWin)//check is needed for debug
-	if(topWin!=window){dump('activateInner')
+	if(!topWin.shadia)
+		this.activateTop(topWin)//check is needed for debug
+	if(topWin!=window){
 		this.activateInner(window)
 	}
 }
@@ -30,8 +31,6 @@ shadowInspector.activateTop=function(aWindow){
 	for(var i=1,ii=keys.length;i<ii;i++){
 		keys[i].parentNode.removeChild(keys[i])
 	}
-	/* if(!Cu)Cu= Components.utils
-	Cu.import('resource://xqjs/Services.jsm'); */
 }
 shadowInspector.activateInner=function(){
 	if(shadowInspector.debug||!window["shadia"]){
@@ -43,8 +42,7 @@ shadowInspector.activateInner=function(){
 	shadia.start=shadia.toggle=shadia.createInfoPanel=shadia.showPanel=shadia.fillPanel=shadia.toggleClickSelect=function(){}
 }
 shadowInspector.injectShadia=function(mWindow){
-	Components.classes["@mozilla.org/moz/jssubscript-loader;1"].createInstance(Components.interfaces.mozIJSSubScriptLoader)
-					.loadSubScript('chrome://shadia/content/shadia.js', mWindow);
+	Services.scriptloader.loadSubScript('chrome://shadia/content/shadia.js', mWindow);
 }
 
 shadowInspector.browserPopup=function(event,pWin1){
@@ -63,8 +61,7 @@ shadowInspector.browserPopup=function(event,pWin1){
 	}else if(event.target.nodeName==="menuitem"&&id){
 		var resource = id
 		if(resource){
-			var mediator = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Components.interfaces.nsIWindowDataSource);
-			this.start(mediator.getWindowForResource(resource))
+			this.start(Services.wm.getWindowForResource(resource))
 		}
 	}else if(pWin1){
 		this.start(pWin1)
@@ -74,32 +71,35 @@ shadowInspector.browserPopup=function(event,pWin1){
 }
 
 shadowInspector.getTopWindow=function(mWindow){
-	let domUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].getService(Components.interfaces.inIDOMUtils);
+	let domUtils = Services.domUtils 
 	var rt=mWindow,pw=mWindow
 	while(rt){
 		rt=domUtils.getParentForNode(rt.document,false)
 		rt=rt&&rt.ownerDocument.defaultView
-		if(rt)pw=rt
+		if(rt)
+			pw=rt
 	}
 	return pw
 
-	return mWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-			.getInterface(Components.interfaces.nsIWebNavigation)
-			.QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+	return mWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+			.getInterface(Ci.nsIWebNavigation)
+			.QueryInterface(Ci.nsIDocShellTreeItem)
 			.rootTreeItem
-			.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-			.getInterface(Components.interfaces.nsIDOMWindow);
+			.QueryInterface(Ci.nsIInterfaceRequestor)
+			.getInterface(Ci.nsIDOMWindow); 
 }
-shadowInspector.start=function(mWindow,selectByClick){
+shadowInspector.start=function(mWindow, selectByClick){
 	var topWindow=this.getTopWindow(mWindow)
-	if(shadowInspector.debug||!topWindow.shadia)this.injectShadia(topWindow)//----
-	topWindow.shadia.start();topWindow.focus()
-	if(selectByClick)topWindow.shadia.toggleClickSelect()
+	if(shadowInspector.debug||!topWindow.shadia)
+		this.injectShadia(topWindow)//----
+	topWindow.shadia.start();
+	topWindow.focus()
+	if(selectByClick)
+		topWindow.shadia.toggleClickSelect()
 }
 
 shadowInspector.allWindowsSelect=function(start,skipThis,selectByClick){
-	var windowsMediator=Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
-	var fWins=windowsMediator.getEnumerator('')
+	var fWins = Services.wm.getEnumerator('')
 	var aWin
 	while(fWins.hasMoreElements()) {
 		aWin= fWins.getNext()
@@ -132,27 +132,23 @@ shadowInspector.prototype={
 		}
 	},
 	toggle:function(){
-		if(this.on){
+		if(this.on)
 			this.finish()
-		}else{
+		else
 			this.start()
-		}
 	},
 	start: function(aDocument){
 		if(!this.infoPanel)
 			this.createInfoPanel()
 		if(!this.fm){
-			this.fm=Components.classes["@mozilla.org/focus-manager;1"]
+			this.fm=Cc["@mozilla.org/focus-manager;1"]
 			if(this.fm)//prior 3.6 we dont have focusmanager
-				this.fm=this.fm.getService(Components.interfaces.nsIFocusManager);
+				this.fm=this.fm.getService(Ci.nsIFocusManager);
 			else
-				this.fm={wm: Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator)
-						,get activeWindow() {return this.wm.getMostRecentWindow(null)}
-						}
+				this.fm={get activeWindow() {return Services.wm.getMostRecentWindow(null)}}
 		}
-
+			
 		this.isSheetRegistered||this.register()
-		//this.topNode=aDocument?aDocument:window
 		this.finish()
 		this.light="lime"
 
@@ -206,8 +202,7 @@ shadowInspector.prototype={
 		this.infoPanel.setAttribute('onmousemove','this.hidePopup()')
 		document.documentElement.appendChild(this.infoPanel)
 		this.infoPanel.setAttribute("noautohide",true)
-		this.infoPanelBo=this.infoPanel.popupBoxObject//boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
-
+		this.infoPanelBo=this.infoPanel.popupBoxObject//boxObject.QueryInterface(Ci.nsIPopupBoxObject);		
 	},
 
 	//
@@ -390,7 +385,7 @@ shadowInspector.prototype={
 	toUp:function(obj){
 		let parent=obj.parentNode
 		if(parent) return parent
-		let domUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].getService(Components.interfaces.inIDOMUtils);
+		let domUtils = Services.domUtils;   
         parent = domUtils.getParentForNode(obj, true);
 		return parent
 	},
@@ -402,7 +397,7 @@ shadowInspector.prototype={
 			name+="#"+object.id
 		if(object.className)
 			name+="."+object.className.toString().replace(" ",".",'g')
-		const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"].getService(Components.interfaces.nsIClipboardHelper);
+		const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);  
 		gClipboardHelper.copyString(name);
 	},
 	selectorForObject:function(object){
@@ -442,7 +437,7 @@ shadowInspector.prototype={
 		if(this.infoPanel.state==="open"){
 			return;
 		}else{
-			//this.infoPanelBo=this.infoPanel.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+			//this.infoPanelBo=this.infoPanel.boxObject.QueryInterface(Ci.nsIPopupBoxObject);
 			this.panelShowing=true
 			this.infoPanelBo.showPopup(null,this.infoPanel,this.infoPanelBo.screenX, this.infoPanelBo.screenY, "tooltip",null,null)
 		}
@@ -538,16 +533,11 @@ shadowInspector.prototype={
 			if(this.windowWasActive){
 				if(this.allWinsStarted)shadowInspector.allWindowsSelect(false)
 				this.inspect(event.originalTarget)
-			}else{
-				this.updateLight();
-				this.setLight(this.historyA[0])
-			}
+			}else{this.updateLight();this.setLight(this.historyA[0])}
 		}
 	},
-
+	
 	isTopWin:function(){
-		//var wm=Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
-		//return wm.getMostRecentWindow('')==window
 		return this.fm.activeWindow==window
 	},
 
@@ -556,8 +546,7 @@ shadowInspector.prototype={
 	//*************
 	inspect: function(aNode){
 		aNode=aNode||document.documentElement
-		var windowsMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
-		var aWin = windowsMediator.getMostRecentWindow("shadia:inspector");
+		var aWin = Services.wm.getMostRecentWindow("shadia:inspector");		
 		if(!aWin||aWin==window){
 			window.openDialog("chrome://shadia/content/domMirror/domMirror.xul", "", "chrome,all,dialog=no", aNode);
 		}else{
@@ -567,8 +556,7 @@ shadowInspector.prototype={
 		if(this.lcs)this.finish()
 	},
 	domi: function(aNode){
-		var windowsMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
-		var fWins=windowsMediator.getEnumerator('')
+		var fWins=Services.wm.getEnumerator('')
 		var aWin, DOMIWin
 		while(fWins.hasMoreElements()) {
 			aWin= fWins.getNext()
@@ -591,8 +579,7 @@ shadowInspector.prototype={
 	fbug: function(aNode){
 		var fb=window["Firebug"]
 		if(!fb){
-			var windowsMediator=Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
-			var aWin=windowsMediator.getMostRecentWindow("navigator:browser");
+			var aWin=Services.wm.getMostRecentWindow("navigator:browser");
 			fb=aWin.Firebug
 			if(!fb)
 				return;
@@ -641,14 +628,14 @@ shadowInspector.prototype={
 	light: "lime",
 	register: function(){
 		this.activeURL=this.getDataUrl()
-		let sss= Components.classes["@mozilla.org/content/style-sheet-service;1"].getService(Components.interfaces.nsIStyleSheetService)
+		let sss = Services.sss
 		if(sss.sheetRegistered(this.activeURL, sss.AGENT_SHEET) )
 			sss.unregisterSheet(this.activeURL, sss.AGENT_SHEET) ;
 		sss.loadAndRegisterSheet(this.activeURL, sss.AGENT_SHEET) ;
 		this.isSheetRegistered=true
 	},
 	unregister: function(){
-		let sss= Components.classes["@mozilla.org/content/style-sheet-service;1"].getService(Components.interfaces.nsIStyleSheetService)
+		let sss = Services.sss
 		if(sss.sheetRegistered(this.activeURL, sss.AGENT_SHEET))
 			sss.unregisterSheet(this.activeURL, sss.AGENT_SHEET);
 		this.isSheetRegistered=false
@@ -663,8 +650,7 @@ shadowInspector.prototype={
 *[shadia-lighted="off"]{outline:1px solid rgb(80,213,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}\
 *[shadia-lighted="lime"]{outline:2px solid lime!important;outline-offset:-2px!important;-moz-outline-radius:2px!important;}\
 *[shadia-lighted="click"]{outline:2px solid #d528ff!important;outline-offset:-2px!important;-moz-outline-radius: 2px!important;}'
-		let ios= Components.classes['@mozilla.org/network/io-service;1'].getService(Components.interfaces.nsIIOService)
-		return ios.newURI("data:text/css," + encodeURIComponent(code), null, null);
+		return Services.io.newURI("data:text/css," + encodeURIComponent(code), null, null);
 	},
 
 

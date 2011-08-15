@@ -72,43 +72,41 @@
 	<toolbarbutton label="//" oncommand="commentLine();" tabindex="8"/>
 	<toolbarbutton label="/*" oncommand="commentBlock();"/>
 	<toolbarbutton label="\t" oncommand="codebox.value=codebox.value.replace('\t','  ','g');"/>
+	<hbox width="10px"/>
+	<toolbar align="center">
+		<menulist id="targetWin" oncommand="targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
+			<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+				<template>
+					<rule>
+						<menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+					</rule>
+				</template>
+			</menupopup>
+		</menulist>
+		<checkbox id="contentWinCB" persist="checked" disabled="false" label="Content Window" oncommand="targetWinChanged()" tabindex="2"/>
+	</toolbar>
 	<spacer flex='1'/>
 	<shadiaglue/>		
 </toolbar>
-      
-		<toolbar align="center">
-			<label control="targetWin" accesskey="w" value="Target window" />
-			<menulist id="targetWin" oncommand="targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
-				<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
-					<template>
-						<rule>
-							<menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-						</rule>
-					</template>
-				</menupopup>
-			</menulist>
-			<checkbox id="contentWinCB" persist="checked" disabled="false" label="Content Window" accesskey="t" 
-				oncommand="targetWinChanged()" tabindex="2"/>
-		</toolbar>
-		<vbox flex="10">
-			<textbox id="jsCode" multiline="true" flex="1"  wrap='off'
-				style="overflow:hidden;word-wrap: break-word;font-family:monospace;font-size:9.5pt;-moz-tab-size:4" persist='height' />
-	  
-			<splitter>
-				<hbox flex="1">
-					<toolbarbutton label="Clear"      oncommand="clearResult()" />
-					<hbox style='border:solid gray 1px'/>
-					<toolbarbutton label="Execute"    onclick="executeJS('',     event.button==2)" style='color:darkblue' />
-					<toolbarbutton label="`selection" onclick="executeJS('sel',  event.button==2)" style='color:green'/>
-					<toolbarbutton label="`line"      onclick="executeJS('line', event.button==2)"  />
-					<spacer flex='1'/>
-					<toolbarbutton label="wrap"      onclick="toggleWrap(event.button==2?resultbox:codebox)"/>
-					<toolbarbutton label="timer"     oncommand="insertTimer()"  />
-				</hbox>
-			</splitter>
-			<textbox id="result" multiline="true" flex="1" wrap='on'  persist='height'
-					style="-moz-tab-size:4"	/>
-		</vbox>
+<vbox flex="10">
+	<textbox id="jsCode" multiline="true" flex="1"  wrap='off'
+		style="overflow:hidden;word-wrap:  normal | break-word;font-family:monospace;font-size:9.5pt;-moz-tab-size:4" persist='height' />
+
+	<splitter>
+		<hbox flex="1">
+			<toolbarbutton label="Clear"      oncommand="clearResult()" />
+			<hbox style='border:solid gray 1px'/>
+			<toolbarbutton label="Execute"    onclick="executeJS('',     event.button==2)" style='color:darkblue' />
+			<toolbarbutton label="`selection" onclick="executeJS('sel',  event.button==2)" style='color:green'/>
+			<toolbarbutton label="`line"      onclick="executeJS('line', event.button==2)"  />
+			<spacer flex='1'/>
+			<toolbarbutton label="wrap"      onclick="toggleWrap(event.button==2?resultbox:codebox)"/>
+			<toolbarbutton label="timer"     oncommand="insertTimer()"  />
+		</hbox>
+	</splitter>
+	<textbox id="result" multiline="true" flex="1" wrap='on'  persist='height'
+			style="-moz-tab-size:4"	/>
+</vbox>
     </vbox>
 
 </window>
