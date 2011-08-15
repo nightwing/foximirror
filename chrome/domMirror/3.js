@@ -1463,7 +1463,7 @@ function sayAttrs(mNode){
 		ans.push('<span class="name">text</span>= <span class="val">'+mNode.nodeValue+'</span>')
 
 	ans.push('<span class="moreinfo">xmlns= '+mNode.namespaceURI)
-	return '<div id="attributes-slate"><div>'+ans.join('</div><div class="prop">')+'</div></div>'
+	return '<div id="attributes-slate" slateID><div>'+ans.join('</div><div class="prop">')+'</div></div>'
 }
 function saveAttrs(mNode,text){
 	var attrs=text.split('\n')
@@ -1829,7 +1829,7 @@ function enableJSD(element){
 	element.parentNode.removeChild(element)
 }
 function wrapFuncs(){
-	var st = content.document.styleSheets[0].cssRules[37].style
+	var st = content.document.styleSheets[0].cssRules[0].style
 	st.whiteSpace = st.whiteSpace=='nowrap'?'':'nowrap'
 }
 /*******/
@@ -1942,6 +1942,7 @@ setContentState=function(state){
 slateViewer={
 	initialize: function(){
 		content.wrappedJSObject.gClipboardHelper=gClipboardHelper
+		content.wrappedJSObject.slateViewer=this
 
 		viewDoc=document.getElementById('slate-browser').contentDocument
 		viewDoc.addEventListener("mouseover",this.mouseover,false)
@@ -1972,24 +1973,26 @@ slateViewer={
 
 	mouseover:function(event){
 		clearTimeout(this.mouseoverTimeout)
-		this.mouseoverTimeout=setTimeout(function(){slateViewer.overNode(event)},100)
+		this.mouseoverTimeout=setTimeout(function(){
+			slateViewer.overNode(event)
+		},100)
 	},
 	overNode:function(event){
 		var node=event.target
 		if(node.nodeName){
 			var i=getSlatePosition(node)
 			if(i)
-				dump('infotip', i.id, i.slateId,currentRules[i.slateId].parentStyleSheet.href)
+				dump('infotip', i.id, i.slateId,
+					currentRules[i.slateId]&&currentRules[i.slateId].parentStyleSheet.href)
 		}
 	},
 	click:function(event){
 		var node=event.target
-		dump(domNodeSummary(node))
-		var cl = getAncestorByAttribute(node, 'closer')
-		var ac = getAncestorByAttribute(node, 'aID')
+		var closerNode = getAncestorByAttribute(node, 'closer')
+		var actionNode = getAncestorByAttribute(node, 'aID')
 		
-		!ac[1]&&cl[1]&&closeNodeInSlate(cl[1], cl[0])
-		ac[1]&&ac[0]&&window[ac[0]](ac[1])
+		!actionNode[1] && closerNode[1] && closeNodeInSlate(closerNode[1], closerNode[0])
+		 actionNode[1] && actionNode[0] && window[actionNode[0]](actionNode[1])
 		
 		if(node.nodeName=='SP'){
 			if(node.textContent=='edit')
@@ -2001,17 +2004,60 @@ slateViewer={
 	
 	sayXBL:function(mNode){
 
-		return '<div id="XBL-slate" closed="'+ this["XBL-slate"+"-closed"]+'">'+
-		"<div class='parents' closer='XBL-slate'><a11> "
-			+(this["XBL-slate"+"-closed"]?'\u25e5':'\u25e2')+
-		" </a11><a>bindings</a></div>"+
-		'<div class="prop closable">'+sayXBL(mNode).join('')+'</div></div>'+
+		return '<div id="XBL-slate" closed="'+ this["XBL-slate"+"-closed"]+'">'
+			+"<div class='parents' closer='XBL-slate'><a11> "
+				+(this["XBL-slate"+"-closed"]?'\u25e5':'\u25e2')
+			+" </a11><a>bindings</a></div>"
+			+'<div class="prop closable">'+sayXBL(mNode).join('')+'</div></div>'
+			
+			+'<div id="event-slate" closed="'+ this["event-slate"+"-closed"] +'">'
+			+"<div class='parents' closer='event-slate'><a11> "
+				+(this["event-slate"+"-closed"]?'\u25e5':'\u25e2' )
+			+" </a11><a>events</a> </div>"
+			+'<div class="prop closable" >' + "<sp class='sp2' aID='wrapFuncs'>wrap</sp>"
+				+sayEvents(mNode).join('')
+			+'</div></div>'
+	},
+	
+	isEditable: function(node){
+		var i=getSlatePosition(node)
 		
-		'<div id="event-slate" closed="'+ this["event-slate"+"-closed"] +'">'+
-		"<div class='parents' closer='event-slate'><a11> "
-			+(this["event-slate"+"-closed"]?'\u25e5':'\u25e2' )+
-		" </a11><a>events</a> <a1><em aID='wrapFuncs'>wrap</em><a1></div>"+
-		'<div class="prop closable" >'+sayEvents(mNode).join('')+'</div></div>'
+	},
+	sceduleSave: function(){
+		
+	},
+	saveEdit: function(oldval, newVal){
+		var node = viewDoc.getElementsByClassName('editing')[0]
+		var i=getSlatePosition(node)
+		
+		if(!i)
+			return
+			
+		if(i.id=='attributes-slate'){
+			if(node.classList.contains('name')){
+				var name = newVal
+				if(mNode.hasAttribute(oldval))
+					mNode.removeAttribute(oldval)
+				dump(oldval,mNode.getAttribute(oldval))
+				if(!name)
+					return
+				var valNode = node.parentNode.getElementsByClassName('val')[0]
+				var value = (valNode||'') && valNode.textContent
+				mNode.setAttribute(name, value)
+				return name
+			}else if(node.classList.contains('val')){
+				var value = newVal
+				var nameNode = node.parentNode.getElementsByClassName('name')[0]
+				var name = nameNode && nameNode.textContent
+				if(name)
+					mNode.setAttribute(name, value)
+				return value
+			}
+				dump(name, value)
+		}if(i.id=='InlineCSS-slate.gray'){
+			m
+		}
+		
 	}
 }
 	initializeables.push(slateViewer)

@@ -1,3 +1,134 @@
+Dom={}
+Dom.collapse = function(elt, collapsed){
+    if (!elt)
+        return;
+    elt.setAttribute("collapsed", collapsed ? "true" : "false");
+}
+Dom.getAncestorByClass = function(node, className){
+    for (var parent = node; parent; parent = parent.parentNode)    {
+        if (parent.classList.contains(className))
+            return parent;
+    }
+    return null;
+}
+Dom.getBody = function(doc){
+    if (doc.body)
+        return doc.body;
+
+    var body = doc.getElementsByTagName("body")[0];
+    if (body)
+        return body;
+
+    return doc.documentElement;  // For non-HTML docs
+};
+
+Dom.getNextByClass = function(root, state)
+{
+    function iter(node) { return node.nodeType == 1 && Css.hasClass(node, state); }
+    return Dom.findNext(root, iter);
+};
+
+Dom.getPreviousByClass = function(root, state)
+{
+    function iter(node) { return node.nodeType == 1 && Css.hasClass(node, state); }
+    return Dom.findPrevious(root, iter);
+};
+
+Dom.findNextDown = function(node, criteria)
+{
+    if (!node)
+        return null;
+
+    for (var child = node.firstChild; child; child = child.nextSibling)
+    {
+        if (criteria(child))
+            return child;
+
+        var next = Dom.findNextDown(child, criteria);
+        if (next)
+            return next;
+    }
+};
+
+Dom.findPreviousUp = function(node, criteria)
+{
+    if (!node)
+        return null;
+
+    for (var child = node.lastChild; child; child = child.previousSibling)
+    {
+        var next = Dom.findPreviousUp(child, criteria);
+        if (next)
+            return next;
+
+        if (criteria(child))
+            return child;
+    }
+};
+
+Dom.findNext = function(node, criteria, upOnly, maxRoot)
+{
+    if (!node)
+        return null;
+
+    if (!upOnly)
+    {
+        var next = Dom.findNextDown(node, criteria);
+        if (next)
+            return next;
+    }
+
+    for (var sib = node.nextSibling; sib; sib = sib.nextSibling)
+    {
+        if (criteria(sib))
+            return sib;
+
+        var next = Dom.findNextDown(sib, criteria);
+        if (next)
+            return next;
+    }
+
+    if (node.parentNode && node.parentNode != maxRoot)
+        return Dom.findNext(node.parentNode, criteria, true, maxRoot);
+};
+
+Dom.findPrevious = function(node, criteria, downOnly, maxRoot)
+{
+    if (!node)
+        return null;
+
+    for (var sib = node.previousSibling; sib; sib = sib.previousSibling)
+    {
+        var prev = Dom.findPreviousUp(sib, criteria);
+        if (prev)
+            return prev;
+
+        if (criteria(sib))
+            return sib;
+    }
+
+    if (!downOnly)
+    {
+        var next = Dom.findPreviousUp(node, criteria);
+        if (next)
+            return next;
+    }
+
+    if (node.parentNode && node.parentNode != maxRoot)
+    {
+        if (criteria(node.parentNode))
+            return node.parentNode;
+
+        return Dom.findPrevious(node.parentNode, criteria, true);
+    }
+};
+Css = {}
+Css.hasClass = function(node, cl){
+	return node.classList.contains(cl)
+}
+
+//*************************************************************
+
 var reSplitCSS =  /(url\("?[^"\)]+?"?\))|(rgba?\(.*?\))|(hsla?\(.*?\))|(#[\dA-Fa-f]+)|(-?\d+(\.\d+)?(%|[a-z]{1,4})?)|([^,\s\/!\(\)]+)|"(.*?)"|(!(.*)?)/;
 var reURL = /url\("?([^"\)]+)?"?\)/;
 function parseCSSValue(value, offset) {
@@ -40,30 +171,8 @@ function parseCSSValue(value, offset) {
     return cssValue;
 }
 
-function(Obj,  Domplate,   Css, Dom) {
-Dom={}
-Dom.collapse = function(elt, collapsed){
-    if (!elt)
-        return;
-    elt.setAttribute("collapsed", collapsed ? "true" : "false");
-}
-Dom.getAncestorByClass = function(node, className){
-    for (var parent = node; parent; parent = parent.parentNode)    {
-        if (parent.classList.contains(className))
-            return parent;
-    }
-    return null;
-}
-Dom.getBody = function(doc){
-    if (doc.body)
-        return doc.body;
 
-    var body = doc.getElementsByTagName("body")[0];
-    if (body)
-        return body;
 
-    return doc.documentElement;  // For non-HTML docs
-};
 // ************************************************************************************************
 // Constants
 
@@ -136,7 +245,7 @@ InfoTip = {
                 }
             }
 
-            caption.innerHTML = w+'\x'+h;
+            caption.innerHTML = w+':'+h;
 
             innerBox.classList.remove("infoTipLoading");
         },
@@ -158,7 +267,7 @@ InfoTip = {
             var innerBox = img.parentNode;
             innerBox.classList.remove("infoTipLoading");
         }
-    }),
+    },
 
     initializeBrowser: function(browser) {
         browser.onInfoTipMouseOut = Obj.bind(this.onMouseOut, this, browser);
@@ -254,4 +363,4 @@ InfoTip = {
 
         return true;
     }
-})};
+}

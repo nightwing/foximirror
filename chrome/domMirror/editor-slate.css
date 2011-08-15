@@ -1,3 +1,6 @@
+.func{
+	margin:0
+}
 /** 12px 4*12 2*12
  **--------------------~~~~~-------------------**/
 body{
@@ -98,7 +101,8 @@ a11:hover:active{
 	-moz-border-bottom-colors: grey aliceblue;
 }
 
-buttondiv{
+/*** clickables ***/
+buttondiv,sp{
 	display:block;
 	text-align:center;
 	cursor: pointer!important;
@@ -128,8 +132,16 @@ sp:hover{
 sp1{
 	position: absolute;
 	right:0px!important;
+	cursor: pointer!important;
 }
-
+.sp2{
+	position: fixed;
+	left:0px!important;
+	top: 80%;
+	cursor: pointer!important;
+	-moz-transform: rotate(-90deg);
+	margin-left:-5px!important;
+}
 
 /*** /*/
 
@@ -189,6 +201,3 @@ div[closed='true']>.closable{
 }
 
 
-.func{
-	margin:0
-}

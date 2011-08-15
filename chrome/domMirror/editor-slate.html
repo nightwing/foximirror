@@ -1,15 +1,10 @@
 <!doctype HTML>
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<!--   <script src="js/highlight.js" type="text/javascript"></script>
-		<script src="js/stringstream.js" type="text/javascript"></script>
-		<script src="js/tokenize.js" type="text/javascript"></script>
-		<script src="js/tokenizejavascript.js" type="text/javascript"></script>
-		<script src="js/parsejavascript.js" type="text/javascript"></script>
-		<script src="js/parsecss.js" type="text/javascript"></script>-->
-			<script src="../property_database.js" type="text/javascript"></script>
+		<script src="../property_database.js" type="text/javascript"></script>
+		<script src="firebug-css-utils.js" type="text/javascript"></script>
 
-		<title>CodeMirror: String highlight demonstration</title>
+		<title></title>
 		<link rel="stylesheet" type="text/css" media="screen" href="editor-slate.css" />
 
 	</head>
@@ -75,9 +70,15 @@ keyListener={
 		if(!lt)
 			return;
 		sel=window.getSelection()
-		var range=sel.getRangeAt(0)
+		if(sel.rangeCount)
+			var range=sel.getRangeAt(0)
+		else{
+			var range=document.createRange()
+			range.selectNodeContents(lt)
+		}
+			
 		c=range.startContainer
-		var a=range.startOffset,b=range.endOffset
+		var a=range.startOffset, b=range.endOffset
 		if(c!=lt.firstChild){
 			c=lt.firstChild
 			a=0
@@ -86,6 +87,7 @@ keyListener={
 		}else{
 			text=lt.textContent
 		}
+		oldText=text
 
 
 		switch(event.keyCode){
@@ -117,7 +119,8 @@ keyListener={
 				event.preventDefault();event.stopPropagation();
 				break
 			case KeyEvent.DOM_VK_RETURN:
-				editNext()
+			case KeyEvent.DOM_VK_TAB:
+				editNext(event.shiftKey)
 				event.preventDefault();event.stopPropagation();
 				return;
 				break
@@ -150,11 +153,27 @@ keyListener={
 					}
 				}
 		}
+		if(oldText!=text)try{
+			text = slateViewer.saveEdit(oldText, text, lt)
+			lt.parentNode.setAttribute('saveSuccess', 'true')
+		}catch(e){
+			lt.parentNode.setAttribute('saveSuccess', 'fail')
+		}
+		if(text == null)
+			text = oldText
 		c.textContent=text
+		if(b<a){
+			var tmp = a, a = b, b = tmp
+		}
+		if(b>text.length)
+			b=text.length
+
 		range.setStart(c,a)
 		range.setEnd(c,b)
 		sel.removeAllRanges()
 		sel.addRange(range)
+
+
 	},
 
 	keydown:function(e){
@@ -179,8 +198,56 @@ keyListener={
 			sel.addRange(range)
 	}
 }
-function editNext(){
-	startEditingElement(lt.nextSibling)
+
+function editNext(back){
+	var pn = lt.parentNode
+	var termClass = back ? 'name' : 'val'
+	var otherClass = back ? 'val' : 'name'
+	
+	if(lt.classList.contains(termClass)) {
+		var sib = back?"previousSibling" : "nextSibling"
+		var npn = pn[sib]
+		
+		while(npn && (!npn.classList.contains('prop') || !npn.getElementsByClassName(termClass)[0])){
+			npn = npn[sib]
+		}
+		if(!npn && pn.getAttribute('saveSuccess') == 'unknown'){
+			npn = Dom.getNextByClass(lt, otherClass)
+			npn = npn && npn.parentNode
+		}else if(!npn){
+			npn = pn.cloneNode(true)
+			
+			if(back)
+				pn.parentNode.insertBefore(npn, pn)
+			else
+				pn.parentNode.insertBefore(npn, pn[sib])
+			
+			npn.getElementsByClassName(otherClass)[0].textContent= '  '
+			npn.getElementsByClassName(termClass)[0].textContent= '  '
+			var edi = npn.getElementsByClassName('editing')
+			for(var i = edi.length; i--;){
+				edi[i].classList.remove('editing')
+			}
+			npn.setAttribute('saveSuccess', 'unknown')
+		}
+		pn = npn
+	}else{
+		otherClass=termClass
+	}
+	
+	var nextNode = pn && pn.getElementsByClassName(otherClass)[0]
+	
+	if(!nextNode)
+		return finishEditing()
+	startEditingElement(nextNode)
+}
+function clearSaveSuccess(){
+	var els = document.querySelectorAll('div[saveSuccess="unknown"]')
+	for(var i = els.length; i--;){
+		var pn = els[i]
+		if(!pn.getElementsByClassName('editing')[0])
+			pn.parentNode.removeChild(pn)
+	}
 }
 function startEditingElement(el){
 	if(lt==el){
@@ -188,7 +255,8 @@ function startEditingElement(el){
 	}else if(lt){
 		finishEditing()
 	}
-	lt=el
+	ltt=lt=el
+	
 	if(lt.nodeName!='SPAN'&&!lt.classList.contains('selectAll')){
 		lt=''
 		return
@@ -229,7 +297,9 @@ function finishEditing(e){
 		lt.blur()
 		lt.className=lt.className.replace(' editing','','g')
 		//lt.contentEditable=false
-		lt=''
+		lt=null
+		setTimeout(clearSaveSuccess)
+
 	}
 }
 function select(a,b){
@@ -239,7 +309,9 @@ function select(a,b){
 	sel.removeAllRanges()
 
 	searchRange = document.createRange()
-	searchRange.selectNodeContents(lt.firstChild);
+	if(!lt.firstChild)
+		lt.textContent=' '
+	searchRange.selectNodeContents(lt.firstChild||lt);
 	sel.addRange(searchRange);
 	//sel=window.getSelection()
 	a=sel.focusOffset,b=sel.anchorOffset
