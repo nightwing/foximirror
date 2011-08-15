@@ -522,11 +522,10 @@ lightStarter ={
 	startKey1: 19,//DOM_VK_PAUSE,
 	startKey2: 112,//DOM_VK_F1,
 
-	handleEvent: function(e){
-	dump(e.view)
+	handleEvent: function(e){	
 		if(e.keyCode==this.startKey1||e.keyCode==this.startKey2){
 			var win = this.getTopWindow(e.view)
-			uio=e
+			dump(win.location, ('shadia' in win))
 			if(!('shadia' in win))
 				this.loadScript(win)
 			win.shadia.toggle()
@@ -539,6 +538,9 @@ lightStarter ={
 	},
 	init: function(domWindow){
 		domWindow.addEventListener("keydown", lightStarter, true); 
+	},
+	uninit: function(domWindow){
+		domWindow.removeEventListener("keydown", lightStarter, true); 
 	},
 	getTopWindow: function(mWindow){
 		let domUtils = Services.domUtils 
@@ -557,7 +559,6 @@ WindowListener={
 	onOpenWindow: function(aWindow){
 		// Wait for the window to finish loading
 		let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal||Ci.nsIDOMWindow).window;
-		domWindow.addEventListener("keydown", lightStarter, true); 
 		lightStarter.init(domWindow)
 		dump(domWindow)
 	},
@@ -568,10 +569,11 @@ startup()
 
 function startup(aData, aReason) {
 	// Load into any existing windows
-	/* let enumerator = Services.wm.getEnumerator("navigator:browser");
+	let enumerator = Services.wm.getEnumerator("navigator:browser");
 	while(enumerator.hasMoreElements()) {
 		let win = enumerator.getNext();
-	} */
+		lightStarter.init(win)
+	}
 	// Load into all new windows
 	Services.wm.addListener(WindowListener);
 }

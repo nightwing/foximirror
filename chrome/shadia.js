@@ -1,4 +1,3 @@
-dump(1)
 Components.utils.import('resource://shadia/main.js', window).addDevelopmentUtils(window)
 /**/
 var shadowInspector=function(){}
@@ -17,14 +16,14 @@ shadowInspector.activateTop=function(aWindow){
 	if(shadowInspector.debug||!aWindow["shadia"]){
 		if(aWindow["shadia"]){
 			aWindow["shadia"].finish()
-			aWindow.removeEventListener('keydown',$shadia.lightStarter,true)
+			//$shadia.lightStarter.uninit(aWindow)
 		}
 		aWindow["shadia"]=new shadowInspector()
-		aWindow.addEventListener('keydown', $shadia.lightStarter, true)
+		//$shadia.lightStarter.init(aWindow)
 	}else{
 		if(!aWindow["shadia"]){
 			aWindow["shadia"]=new shadowInspector()
-			aWindow.addEventListener('keydown',$shadia.lightStarter,true)
+			//$shadia.lightStarter.init(aWindow)
 		}
 	}
 	//shadia.start()
@@ -638,6 +637,7 @@ shadowInspector.prototype={
 		if(this.activeURL) return this.activeURL;
 		var code='D550FF'
 		var code='\
+#shadiaInfoTip{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#tooltip");}\
 *[shadia-lighted="0"]{outline:1px solid rgb( 83,80,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}\
 *[shadia-lighted="1"]{outline:1px solid rgb(173,80,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}\
 *[shadia-lighted="2"]{outline:1px solid rgb(213,80,255)!important;outline-offset:-3px!important;-moz-outline-radius:2px!important;}\
