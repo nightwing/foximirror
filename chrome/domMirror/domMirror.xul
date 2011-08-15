@@ -48,7 +48,7 @@
 	<toolbarbutton id='windowViewerButton' 	 oncommand='windowViewer.toggle()'				label='xx' popup='po' type='checkbox' >		
 	</toolbarbutton>
 	
-	<toolbarbutton id="shadiaButton" 		 oncommand="shadowInspector.allWindowsSelect(true,true,true)" label='all' />
+	<toolbarbutton id="shadiaButton" 		 oncommand="shadowInspector.allWindowsSelect(true,true,true);mWindow.focus()" label='all' />
 </toolbar>
 
 

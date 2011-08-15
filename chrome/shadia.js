@@ -1,3 +1,4 @@
+dump(1)
 Components.utils.import('resource://shadia/main.js', window).addDevelopmentUtils(window)
 /**/
 var shadowInspector=function(){}
@@ -16,14 +17,14 @@ shadowInspector.activateTop=function(aWindow){
 	if(shadowInspector.debug||!aWindow["shadia"]){
 		if(aWindow["shadia"]){
 			aWindow["shadia"].finish()
-			aWindow.removeEventListener('keydown',aWindow["shadia"],true)
+			aWindow.removeEventListener('keydown',$shadia.lightStarter,true)
 		}
 		aWindow["shadia"]=new shadowInspector()
-		aWindow.addEventListener('keydown',aWindow["shadia"],true)
+		aWindow.addEventListener('keydown', $shadia.lightStarter, true)
 	}else{
 		if(!aWindow["shadia"]){
 			aWindow["shadia"]=new shadowInspector()
-			aWindow.addEventListener('keydown',aWindow["shadia"],true)
+			aWindow.addEventListener('keydown',$shadia.lightStarter,true)
 		}
 	}
 	//shadia.start()
@@ -40,9 +41,6 @@ shadowInspector.activateInner=function(){
 		if(!window["shadia"])shadia=new shadowInspector()
 	}
 	shadia.start=shadia.toggle=shadia.createInfoPanel=shadia.showPanel=shadia.fillPanel=shadia.toggleClickSelect=function(){}
-}
-shadowInspector.injectShadia=function(mWindow){
-	Services.scriptloader.loadSubScript('chrome://shadia/content/shadia.js', mWindow);
 }
 
 shadowInspector.browserPopup=function(event,pWin1){
@@ -91,7 +89,7 @@ shadowInspector.getTopWindow=function(mWindow){
 shadowInspector.start=function(mWindow, selectByClick){
 	var topWindow=this.getTopWindow(mWindow)
 	if(shadowInspector.debug||!topWindow.shadia)
-		this.injectShadia(topWindow)//----
+		$shadia.lightStarter.loadScript(topWindow)//----
 	topWindow.shadia.start();
 	topWindow.focus()
 	if(selectByClick)
@@ -104,7 +102,8 @@ shadowInspector.allWindowsSelect=function(start,skipThis,selectByClick){
 	while(fWins.hasMoreElements()) {
 		aWin= fWins.getNext()
 		try{
-			if(shadowInspector.debug||!aWin.shadia)this.injectShadia(aWin)
+			if(shadowInspector.debug || !aWin.shadia)
+				$shadia.lightStarter.loadScript(aWin)
 
 			aWin.shadia.allWinsStarted=start
 			if(skipThis&&aWin==window){aWin.shadia.finish();continue}
@@ -116,21 +115,10 @@ shadowInspector.allWindowsSelect=function(start,skipThis,selectByClick){
 	}
 }
 
-/** ***********************************************
- * main highlighter
- **********************/
+  //** ***********************************************
+ //* main highlighter
+//**********************/
 shadowInspector.prototype={
-	startKey1: KeyEvent.DOM_VK_PAUSE,
-	//startKey2: KeyEvent.DOM_VK_SCROLL_LOCK,
-	startKey2: KeyEvent.DOM_VK_F1,
-
-	handleEvent: function(event){
-		if(event.keyCode==this.startKey1||event.keyCode==this.startKey2){
-			this.toggle()
-			event.stopPropagation()
-			event.preventDefault()
-		}
-	},
 	toggle:function(){
 		if(this.on)
 			this.finish()
@@ -153,8 +141,9 @@ shadowInspector.prototype={
 		this.light="lime"
 
 		window.addEventListener('mousemove',  this.l1 =function(e){shadia.mouseMoveListener(e)}, true);
-		window.addEventListener('deactivate', this.l12=function(e){shadia.deactivateListener(e)}, true);
-		window.addEventListener('activate',   this.l13=function(e){shadia.activateListener(e)}, true);
+		window.addEventListener('mouseout',   this.l12=function(e){shadia.mouseOutListener(e)}, true);
+		window.addEventListener('deactivate', this.l13=function(e){shadia.deactivateListener(e)}, true);
+		window.addEventListener('activate',   this.l14=function(e){shadia.activateListener(e)}, true);
 
 		window.addEventListener('keydown',    this.l2 =function(e){shadia.keydownListener(e)}, true);
 		window.addEventListener('keypress',   this.l21=function(e){shadia.keydownListener(e)}, true);
@@ -172,8 +161,9 @@ shadowInspector.prototype={
 		this.on=false;
 
 		window.removeEventListener('mousemove',  this.l1,  true); this.l1=null;
-		window.removeEventListener('deactivate', this.l12, true); this.l12=null;
-		window.removeEventListener('activate',   this.l13, true); this.l13=null;
+		window.removeEventListener('mouseout',   this.l12, true); this.l12=null;
+		window.removeEventListener('deactivate', this.l13, true); this.l13=null;
+		window.removeEventListener('activate',   this.l14, true); this.l14=null;
 
 		window.removeEventListener('keydown',    this.l2,  true); this.l2=null;
 		window.removeEventListener('keypress',   this.l21, true); this.l21=null;
@@ -240,6 +230,10 @@ shadowInspector.prototype={
 		}
 	},
 	//windowActive
+	mouseOutListener: function(event){
+		if(!event.relatedTarget)
+			this.infoPanelBo.hidePopup()
+	},
 	deactivateListener: function(event){
 		this.infoPanelBo.hidePopup()
 		this.windowActive=false

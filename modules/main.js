@@ -91,7 +91,7 @@ dump = function(){
     }
 	var stack = Components.stack.caller
 	var consoleMessage = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
-	consoleMessage.init(aMessage, stack.filename, null, stack.lineNumber, 0, 0, "component javascript");
+	consoleMessage.init(aMessage, stack.filename, null, stack.lineNumber, 0, 9, "component javascript");
 	Services.console.logMessage(consoleMessage);
 }
 dump.log = function(){
@@ -496,10 +496,17 @@ registerStyles()
 
 //******************************************************************************************************//
 reloadModule = function(href){
-	if(!href)
-		href = this.__URI__
-	if(href == this.__URI__)
-		shutdown()
+	var bp = Cu.import(href)
+	// query needed to confuse startupcache in ff 8.0+
+	Services.scriptloader.loadSubScript(href+'?'+Date.now(), bp);
+	return bp
+}
+reloadModule = function(href){
+	try{
+		this.shutdown()
+	}catch(e){
+		Cu.reportError(e)
+	}
 
 	var bp = Cu.import(href)
 	// query needed to confuse startupcache in ff 8.0+
@@ -508,15 +515,51 @@ reloadModule = function(href){
 }
 
 
-
 /**************************************************************************
  * bootstrap.js API
  *****************/
+lightStarter ={
+	startKey1: 19,//DOM_VK_PAUSE,
+	startKey2: 112,//DOM_VK_F1,
+
+	handleEvent: function(e){
+	dump(e.view)
+		if(e.keyCode==this.startKey1||e.keyCode==this.startKey2){
+			var win = this.getTopWindow(e.view)
+			uio=e
+			if(!('shadia' in win))
+				this.loadScript(win)
+			win.shadia.toggle()
+			e.stopPropagation()
+			e.preventDefault()
+		}
+	},
+	loadScript: function(mWindow){
+		Services.scriptloader.loadSubScript('chrome://shadia/content/shadia.js', mWindow);
+	},
+	init: function(domWindow){
+		domWindow.addEventListener("keydown", lightStarter, true); 
+	},
+	getTopWindow: function(mWindow){
+		let domUtils = Services.domUtils 
+		var rt=mWindow,pw=mWindow
+		while(rt){
+			rt=domUtils.getParentForNode(rt.document,false)
+			rt=rt&&rt.ownerDocument.defaultView
+			if(rt)
+				pw=rt
+		}
+		return pw
+	}
+}
+
 WindowListener={
 	onOpenWindow: function(aWindow){
 		// Wait for the window to finish loading
 		let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal||Ci.nsIDOMWindow).window;
-		domWindow.addEventListener("keypress", $shadia, false); 
+		domWindow.addEventListener("keydown", lightStarter, true); 
+		lightStarter.init(domWindow)
+		dump(domWindow)
 	},
 	onCloseWindow: function(aWindow){ },
 	onWindowTitleChange: function(aWindow, aTitle){ }
@@ -525,19 +568,18 @@ startup()
 
 function startup(aData, aReason) {
 	// Load into any existing windows
-	let enumerator = Services.wm.getEnumerator("navigator:browser");
+	/* let enumerator = Services.wm.getEnumerator("navigator:browser");
 	while(enumerator.hasMoreElements()) {
 		let win = enumerator.getNext();
-	}
+	} */
 	// Load into all new windows
 	Services.wm.addListener(WindowListener);
 }
 
 function shutdown(aData, aReason) {
-	if (aReason == APP_SHUTDOWN)
-		return;
+	//if (aReason == APP_SHUTDOWN)return;
 		
-	let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);	
+	let wm = Services.wm;	
 	// Unload from any existing windows
 	let enumerator = Services.wm.getEnumerator("navigator:browser");
 	while(enumerator.hasMoreElements()) {
@@ -546,4 +588,3 @@ function shutdown(aData, aReason) {
 	Services.wm.removeListener(WindowListener);
 }
 
-handleEvent=function(e){dump(e)}

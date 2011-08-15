@@ -583,6 +583,5 @@ urlOperations=function(command){
 function contextMenuPopupShowing(event){
 	dr=document.popupNode
 	dr2=event
-	shadia.advanceLight(dr)
 }
 

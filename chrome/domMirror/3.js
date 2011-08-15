@@ -1044,7 +1044,7 @@ domLighter={
 		if(mWindow.shadia)
 			mWindow.shadia.lightParents(node)
 		else
-			shadowInspector.injectShadia(mWindow)
+			$shadia.lightStarter.loadScript(mWindow)
 	}
 }
 

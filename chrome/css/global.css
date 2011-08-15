@@ -1,5 +1,5 @@
 textbox[type='search']{
-	-moz-binding:url("chrome://shadia/content/bindings/debug.xml#search-textbox");
+	-moz-binding:url("chrome://shadia/content/bindings/textbox.xml#search-textbox");
 	min-width: 0px!important;	
 	width: 0px!important;	
 }
