@@ -555,16 +555,14 @@ lightStarter ={
 	}
 }
 
-WindowListener={
-	onOpenWindow: function(aWindow){
-		// Wait for the window to finish loading
-		let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal||Ci.nsIDOMWindow).window;
+
+windowObserver = {
+	observe: function(domWindow, topic){
+		dump(domWindow, topic)
 		lightStarter.init(domWindow)
-		dump(domWindow)
 	},
-	onCloseWindow: function(aWindow){ },
-	onWindowTitleChange: function(aWindow, aTitle){ }
-}
+	QueryInterface: function() this
+},
 startup()
 
 function startup(aData, aReason) {
@@ -575,7 +573,7 @@ function startup(aData, aReason) {
 		lightStarter.init(win)
 	}
 	// Load into all new windows
-	Services.wm.addListener(WindowListener);
+	Services.obs.addObserver(windowObserver, 'chrome-document-global-created', true)
 }
 
 function shutdown(aData, aReason) {
@@ -587,6 +585,6 @@ function shutdown(aData, aReason) {
 	while(enumerator.hasMoreElements()) {
 		let win = enumerator.getNext();
 	}
-	Services.wm.removeListener(WindowListener);
+	Services.obs.removeObserver(windowObserver, 'chrome-document-global-created'
 }
 

@@ -952,6 +952,12 @@ autocompleter={
 		if(!this.panel){//get domNodes
 			this.inputField=inputField;
 			this.panel=document.getElementById("autocomplatePanel")
+
+if(!modernFox){
+	var s = document.querySelector('#autocomplatePanel stack')
+	s.removeChild(s.lastChild)
+	s.removeChild(s.lastChild)
+}
 			this.tree=this.panel.getElementsByTagName('tree')[0]
 			this.number=this.panel.getElementsByTagName('label')[0]
 

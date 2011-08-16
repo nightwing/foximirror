@@ -61,7 +61,8 @@
 					<splitter/>
 					<textbox multiline='true' id='autocomplate-bubble' flex='1' wrap='off' width='200' />
 				</hbox>
-				<resizer element='autocomplatePanelStack' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
+				<resizer element='autocomplatePanel' dir="bottomleft" left="0" bottom="0" width="16" height="16"/>
+				<resizer element='autocomplatePanel' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
 			</stack>
 		</panel>
     </popupset>
