@@ -38,7 +38,7 @@
 <binding id="shadiaGlue">
     <content>
 		<xul:arrowscrollbox aID='actionbar'/>	
-		<xul:menulist  type='menu' label='tools' class='plain' sizetopopup='false' align='center'>
+		<xul:menulist  type='menu' class='plain' sizetopopup='false' align='center' id='more'>
 			<xul:menupopup aID='actionpopup' onpopupshowing='_popupshown(this)'/>	
 		</xul:menulist>
     </content>

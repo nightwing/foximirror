@@ -18,3 +18,10 @@ menulist{
 	height: auto;
 	margin-top: 1px;
 } 
+#more{
+	list-style-image: url("chrome://mozapps/skin/extensions/utilities.png");
+	padding: 0 8px!important;
+} 
+menupopup{
+	list-style-image:none
+} 
