@@ -585,6 +585,6 @@ function shutdown(aData, aReason) {
 	while(enumerator.hasMoreElements()) {
 		let win = enumerator.getNext();
 	}
-	Services.obs.removeObserver(windowObserver, 'chrome-document-global-created'
+	Services.obs.removeObserver(windowObserver, 'chrome-document-global-created')
 }
 

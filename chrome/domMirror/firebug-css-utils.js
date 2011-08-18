@@ -183,17 +183,6 @@ const infoTipWindowPadding = 25;
 // ************************************************************************************************
 
 InfoTip = {
-    tags: {
-        infoTipTag: '<div class="infoTip">',
-
-        imgTag:
-            DIV({"class": "infoTipImageBox infoTipLoading"},
-                IMG({"class": "infoTipImage", src: "$urlValue", repeat: "$repeat",
-                    onload: "$onLoadImage", onerror: "$onErrorImage"}),
-                IMG({"class": "infoTipBgImage", collapsed: true, src: "blank.gif"}),
-                DIV({"class": "infoTipCaption"})
-            ),
-
         onLoadImage: function(event) {
             var img = event.currentTarget;
             var bgImg = img.nextSibling;
@@ -266,8 +255,8 @@ InfoTip = {
 
             var innerBox = img.parentNode;
             innerBox.classList.remove("infoTipLoading");
-        }
-    },
+        },
+    
 
     initializeBrowser: function(browser) {
         browser.onInfoTipMouseOut = Obj.bind(this.onMouseOut, this, browser);
@@ -281,7 +270,9 @@ InfoTip = {
         doc.addEventListener("mouseout", browser.onInfoTipMouseOut, true);
         doc.addEventListener("mousemove", browser.onInfoTipMouseMove, true);
 
-        return browser.infoTip = this.tags.infoTipTag.append({}, Dom.getBody(doc));
+		var div = doc.createElement('div')
+		div.className = 'infoTip'		
+        return browser.infoTip = Dom.getBody(doc).appendChild(div)
     },
 
     uninitializeBrowser: function(browser) {
@@ -360,6 +351,14 @@ InfoTip = {
             repeat = "no-repeat";
 
         this.tags.imgTag.replace({urlValue: url, repeat: repeat}, infoTip);
+		
+		   /*
+            DIV({"class": "infoTipImageBox infoTipLoading"},
+                IMG({"class": "infoTipImage", src: "$urlValue", repeat: "$repeat",
+                    onload: "$onLoadImage", onerror: "$onErrorImage"}),
+                IMG({"class": "infoTipBgImage", collapsed: true, src: "blank.gif"}),
+                DIV({"class": "infoTipCaption"})
+            )*/
 
         return true;
     }
