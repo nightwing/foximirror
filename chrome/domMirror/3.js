@@ -2448,7 +2448,7 @@ function contextMenuPopupShowing(event){
 	var sel = dr.ownerDocument.defaultView.getSelection().toString()
 	if(sel && sel.search(':')!=-1){
 		mURI = sel
-		var m = mURI.match(/\("?([^"\)]+)?"?\)/)
+		var m = mURI.match(/\(?"?([^"\)]+)?"?\)?/)
 		if(m)
 			mURI = m[1]
 		mLine = null

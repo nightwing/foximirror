@@ -457,7 +457,7 @@ function getCssMirrorDir(){
 		try{
 			let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);	
 			var data='shadiaglue{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")!important}\n'+
-				'parseerror{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#parseerror")!important}\n'+
+				'*|parseerror{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#parseerror")!important}\n'+
 				'*{-moz-tab-size:4!important}\n'
 			var entryPath='debug.css'
 			istream.setData(data, data.length);
@@ -544,7 +544,7 @@ lightStarter ={
 	},
 	getTopWindow: function(mWindow){
 		let domUtils = Services.domUtils 
-		var rt=mWindow,pw=mWindow
+		var rt=mWindow, pw=mWindow
 		while(rt){
 			rt=domUtils.getParentForNode(rt.document,false)
 			rt=rt&&rt.ownerDocument.defaultView
@@ -558,7 +558,8 @@ lightStarter ={
 
 windowObserver = {
 	observe: function(domWindow, topic){
-		dump(domWindow, topic)
+		dump(domWindow.location, topic)
+		dump(Services.domUtils.getParentForNode(domWindow.document,false));
 		lightStarter.init(domWindow)
 	},
 	QueryInterface: function() this
@@ -574,6 +575,7 @@ function startup(aData, aReason) {
 	}
 	// Load into all new windows
 	Services.obs.addObserver(windowObserver, 'chrome-document-global-created', true)
+	//Services.obs.addObserver(windowObserver, 'content-document-global-created', true)
 }
 
 function shutdown(aData, aReason) {
