@@ -1,0 +1,174 @@
+<?xml version="1.0"?>  
+ <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>  
+
+<window
+	title="chrome mirror"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:h="http://www.w3.org/1999/xhtml"
+	id="shadia1" width="800" height="500"
+	windowtype='shadia:chrome'
+	persist="screenX screenY width height sizemode"
+	onload="initAll()"
+	onunload='unload()'>
+
+	<h:head>
+		<h:link rel="icon"        href="../turnoff.gif"/>
+		<h:link rel="stylesheet"  href="chrome://shadia/content/css/global.css" type="text/css" />
+		<h:link rel="stylesheet"  href="chromeMirror.css" type="text/css" />
+	</h:head>	
+	<script type="application/javascript" src="../shadia.js"/>
+
+	
+	
+	<script><![CDATA[{
+	function initAll(){
+		initialize();	
+	}
+	function unload(){
+		var e=document.getElementsByTagName('tree')
+		for(var i=0;i<e.length;i++)
+			e[i].view=null
+		//windowViewer.deactivate()
+		domUtils = winService=null
+	}
+	}]]></script>
+
+
+
+<toolbar id='actionsp'>
+	<shadiaglue/>	
+	<toolbarbutton oncommand="Services.chromeReg.checkForNewChrome()" label='checkForNewChrome'></toolbarbutton>
+	
+	<spacer flex='1'/>
+	
+	<toolbarbutton id="install" oncommand="installUnpacked()" label='installUnpacked'></toolbarbutton>
+	<toolbarbutton id="make-xpi" oncommand="makeXPI()" label='make.xpi' />
+	<toolbarbutton id="restart" oncommand="document.querySelector('shadiaglue').actions.restartApp()" label='restart' hidden='true'/>
+	<!-- <toolbarbutton id="makeAllCompatible" oncommand="compatibleForever.removeAllMinMax()" label='makeAllCompatible' /> -->
+</toolbar>
+
+
+<panelset>	
+	<menupopup id="globalContext" onpopupshowing='contextMenuPopupShowing(event)' oncommand="this.hidePopup()">
+		<menuseparator/>
+		<hbox class="split-menuitem">
+		<toolbarbutton id="copy" label='copy' oncommand=" var controller=document.commandDispatcher.getControllerForCommand('cmd_copy');
+													if(controller)controller.doCommand('cmd_copy')//goDoCommand('cmd_copy')"/>
+		</hbox>
+		<menuseparator/>
+		<hbox class="split-menuitem">
+			<toolbarbutton id="p" label='delete' oncommand="mNode.parentNode.removeChild(mNode)"/>
+			
+			<toolbarbutton id="p" label='cut'/>
+			<toolbarbutton id="o" label='paste'/>
+		</hbox>
+		<groupbox id='urlOperations' oncommand="urlOperations(event.target.id)" class="split-menuitem">
+		<caption label='url'/>
+			<hbox>
+				<toolbarbutton label='view source' id='view'   class="split-menuitem-item"/>
+				<toolbarbutton label='copy'        id='copy'   class="split-menuitem-menu"/>
+			</hbox>
+			<hbox>
+				<toolbarbutton label='reveal' id='reveal' class="split-menuitem-menu" flex='1'/>
+				<toolbarbutton label='launch' id='launch' class="split-menuitem-menu"/>
+			</hbox>
+		</groupbox>
+	
+	</menupopup>
+
+
+</panelset>
+
+<vbox flex="1" >
+		<hbox id='leftPane-search' class='bottomDelim'>
+				<vbox>
+			<tabs oncommand='addonViewer.activate(event.target.id)'>
+				<tab label='addons' id='addons'/>
+				<tab label='chrome' id='chrome'/>
+			</tabs>	
+				</vbox>
+			<textbox type='' flex="1" id='urlbar' />
+			<toolbarbutton oncommand='navigate(this.previousSibling.value)' label="go"/>
+		</hbox>	
+<hbox flex="1">
+	<vbox flex="0" id='treessd' persist='width' width='150'>
+		<hbox id='dvwrap1' flex="1" persist='width'>
+			<tree id="addonViewer" class="plain" onselect="selectObjectInTree('addonViewer')"
+					hidecolumnpicker='true' treelines="true" flex="1" >
+				<treecols>
+					<treecol id="name" hideheader="true" flex="1" primary="true" />          
+				</treecols>
+				<treechildren onmousedown="if(event.button==0)selectObjectInTree('addonViewer')" />
+			</tree>
+		</hbox>
+		<hbox>
+			<textbox type="search" flex='1'/>
+			<toolbarbutton label='n' tooltiptext='name' type='checkbox'/>
+			<toolbarbutton label='d' tooltiptext='date' type='radio'/>
+		</hbox>
+	</vbox>	
+	<splitter collapse="before" state="collapsed2"><grippy/></splitter>
+	<vbox id='dvwrap' flex="1" persist='width'>
+		<hbox id='dirViewerButtons'>
+			<description flex='1'>  ..</description>
+			<toolbarbutton label="&#10227;" oncommand='dirViewer.reload()'   />
+			<toolbarbutton label="&#9664;"  oncommand='dirViewer.back()'    disabled='true'/>
+			<toolbarbutton label="&#9654;"  oncommand='dirViewer.forward()' disabled='true'/>
+			<toolbarbutton label="&#9710;"  oncommand='dirViewer.up()'/>
+		</hbox>
+		<tree id="dirViewer" class="plain" onselect="selectObjectInTree('dirViewer')"  
+				hidecolumnpicker='true' treelines="true"  flex="1" orient='vertical' >
+			<treecols>
+				<treecol id="name" hideheader="true" flex="1" primary="true" ordinal='0'/>
+			</treecols>			
+			<treechildren flex='1' contextmenu='globalContext' ondblclick="dirViewer.ondblclick(event)" onmousedown="if(event.button==0)selectObjectInTree('dirViewer')"/>									
+		</tree>
+	</vbox>
+	<splitter collapse="before" state="collapsed2"><grippy/></splitter>
+	<vbox id='right-deck' flex="6" selectedIndex='1'>		
+		<vbox collapsed='true' flex='1'>		
+			<tree id="window-tree" class="plain" flex='1' seltype="single" treelines="true" hidecolumnpicker='true'>
+				<treecols>
+				  <treecol id="text" hideheader="true" primary="true" flex="1" />          
+				</treecols>				
+				<treechildren id="inspector-tree-body"/>
+			</tree>				
+		</vbox>
+		
+		<vbox collapsed='false' flex='1'>
+			<deck id='slateDeck' flex='1'>
+				<browser type="content" id='dirView' flex='1' src="chrome://shadia/content/chromeMirror/slate.html" context='globalContext' onclick='slateViewer.onClick(event)' disablehistory='true'/>
+				<browser type="content" id='file' flex='1' src="chrome://shadia/content/chromeMirror/slate.html" context='globalContext' disablehistory='true'/>
+				<browser type="content" id='ace' flex='1' src="chrome://shadia/content/ace++/edit-protocol-editor.html" context='globalContext'  disablehistory='true'/>
+			</deck>
+			<arrowscrollbox >
+				<textbox type='search' flex="1" id='slate-finder'/>
+				<checkbox label='' style='margin:0;padding:0' oncommand='browserFind.updateAutoHighlight()' tooltiptext='autohighlight'/>
+				<tabs setfocus='false' onmousedown='gMode=event.target.id; dirViewer.onSelect()'>
+					<tab label='code'   id='code'/>
+					<tab label='view'   id='view'/>
+				</tabs>
+				<toolbarbutton label='launch' oncommand='getCurrentFile().launch()'/>
+				<toolbarbutton label='reveal' oncommand='getCurrentFile().reveal()'/>
+				<toolbarbutton label='npp' oncommand='npp1()'/>
+			</arrowscrollbox>
+		</vbox>
+		<vbox collapsed='true' flex='1'>
+			<textbox id='editbox' multiline='true' flex='1'  wrap='off'/>
+			<toolbar>
+				<toolbarbutton label='save' oncommand="attributeViewer.saveEdit()"/>
+				<checkbox label='wrap' oncommand="attributeViewer.toggleWrap()"/>
+				<label value='status' id='editboxlabel'/>
+			</toolbar>
+		</vbox>
+	</vbox>
+	</hbox>
+</vbox>
+
+<script type="application/javascript" src="chromeMirrorUtils.js"/>
+<script type="application/javascript" src="chromeMirror.js"/>
+<script type="application/javascript" src="addonManager.js"/>
+<script type="application/javascript" src="chrome://shadia/content/utils/prefUtils.js"/>
+<script type="application/javascript" src="chrome://shadia/content/utils/fileUtils.js"/>
+
+</window>

@@ -34,11 +34,11 @@
 </toolbarpalette>
 
 <menupopup id="menu_ToolsPopup">
-	<shadiaglue buttons='jsMirror,cssMirror,inspector,chromeMirror' style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")' position='1000'/>
+	<shadiaglue buttons='log,jsMirror,cssMirror,inspector,chromeMirror' style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue");padding-left:10px' position='1000'/>
 </menupopup>
 <menupopup id="appmenu-popup">
 	<shadiaglue insertbefore='appmenu_webDeveloper'
-		buttons='jsMirror,cssMirror,chromeMirror,errorConsole'
+		buttons='log,jsMirror,cssMirror,chromeMirror'
 		style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")'/>
 </menupopup>
  

@@ -1,0 +1,6 @@
+[submodule "ace"]
+	path = chrome/ace++/ace
+	url = https://github.com/ajaxorg/ace.git
+[submodule "chrome/ace++/ace"]
+	path = chrome/ace++/ace
+	url = https://github.com/ajaxorg/ace.git

@@ -139,7 +139,7 @@
 			<deck id='slateDeck' flex='1'>
 				<browser type="content" id='dirView' flex='1' src="chrome://shadia/content/chromeMirror/slate.html" context='globalContext' onclick='slateViewer.onClick(event)' disablehistory='true'/>
 				<browser type="content" id='file' flex='1' src="chrome://shadia/content/chromeMirror/slate.html" context='globalContext' disablehistory='true'/>
-				<browser type="content" id='ace' flex='1' src="chrome://shadia/content/fbace/edit-protocol-editor.html" context='globalContext'  disablehistory='true'/>
+				<browser type="content" id='ace' flex='1' src="chrome://shadia/content/ace++/edit-protocol-editor.html" context='globalContext'  disablehistory='true'/>
 			</deck>
 			<arrowscrollbox >
 				<textbox type='search' flex="1" id='slate-finder'/>
@@ -172,37 +172,3 @@
 <script type="application/javascript" src="chrome://shadia/content/utils/fileUtils.js"/>
 
 </window>
-
-
-<!-- 
-  <vbox id='i2'  style='position:absolute;background-color:blue' >
-       <vbox id='i1'  style='position:absolute;right:0px'>
-       <textbox value='5554' style='border:solid;width:20px;height:20px;max-width30px;' type='search'/>
-  </vbox></vbox>
-
-
-
-function asyncLoadDom(uri, callback){
-  let doc = Cc['@mozilla.org/appshell/window-mediator;1']
-              .getService(Ci.nsIWindowMediator)
-              .getMostRecentWindow("mail:3pane").document;
-  let frame = doc.createElement("iframe");
-  frame.setAttribute("type", "content");
-  frame.setAttribute("collapsed", "true");
-  doc.documentElement.appendChild(frame);
-  let ds = frame.webNavigation;
-  ds.allowPlugins = ds.allowJavascript = ds.allowImages = false;
-  ds.allowSubframes = false;
-  ds.allowMetaRedirects = true;
-  frame.addEventListener("load", function (event){
-    if(event.originalTarget.location.href == "about:blank") return;
-    callback(frame.contentDocument);
-    doc.documentElement.removeChild(frame);
-  }, true);
-  frame.contentDocument.location.href = uri;
-} 
-
-let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-
-parent=document.querySelector('browser').contentDocument
-domUtils.getParentForNode(parent,true)-->

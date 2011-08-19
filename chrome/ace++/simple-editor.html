@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Editor</title>
+
+    <link rel="stylesheet" href="styles.css" type="text/css" media="screen" charset="utf-8">
+</head>
+<body>
+    <div id="editor">
+        <div id="toggleWrap" onclick="toggleWrapMode();"></div>
+        <div id="toggleGutter" onclick="toggleGutter();"></div>
+		<img id="reqUI" onclick="stopReq();" src='chrome://shadia/content/icons/lightbox-ico-loading.gif'></img>		
+    </div>
+
+    <script type="text/javascript" src='boot.js'></script>
+	<script type="text/javascript" >
+		startAce(null, null)
+    </script>
+</body>
+</html>

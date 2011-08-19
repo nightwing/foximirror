@@ -58,7 +58,7 @@
  //* actions
 //****/
 this.actions={//external
-	 errorConsole:function(){toOpenWindowByType("global:console", "chrome://global/content/console.xul")}
+	 log:function(){toOpenWindowByType("global:console", "chrome://global/content/console.xul")}
 	,reload:function(){document.location=document.location}
 	,reopen:function(){
 		((window.Services&&Services.ww)||Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher))
@@ -97,8 +97,16 @@ this.actions={//external
 		}
 	}
 }
-var activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','errorConsole','jsMirror','domi']
-var actionNames={reload:'reload',reopen:':)',errorConsole:'errors',restartApp:'restart firefox'}
+var activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','log','jsMirror']
+var actionNames={
+	 reload:'reload'
+	,reopen:':)'
+	,restartApp:'restart firefox'
+	,jsMirror:'js'
+	,inspector:'dom'
+	,chromeMirror:'chrome'
+	,cssMirror:'css'
+}
 var actionsColors = {restartApp:'red',reloadChrome:'orange',reload:'orange',magnifier:'blue'}    
 function toOpenWindowByType(inType, uri, features) {
     var windowManager = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);

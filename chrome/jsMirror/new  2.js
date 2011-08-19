@@ -1,8 +1,25 @@
-﻿Ci.IDispatch.name
+﻿function generateDataURI(file) {
+  var contentType = Components.classes["@mozilla.org/mime;1"]
+                              .getService(Components.interfaces.nsIMIMEService)
+                              .getTypeFromFile(file);
+  var inputStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
+                              .createInstance(Components.interfaces.nsIFileInputStream);
+  inputStream.init(file, 0x01, 0600, 0);
+  var stream = Components.classes["@mozilla.org/binaryinputstream;1"]
+                         .createInstance(Components.interfaces.nsIBinaryInputStream);
+  stream.setInputStream(inputStream);
+  var encoded = btoa(stream.readBytes(stream.available()));
+  return "data:" + contentType + ";base64," + encoded;
+}
+
+
+Ci.IDispatch.name
 Cc["@mozilla.org/generic-factory;1"]
 Cc["@mozilla.org/dom/storage;2"]
 ComponentClassCrashers = ["@mozilla.org/generic-factory;1", "QueryInterface", "@mozilla.org/dom/storage;2"];
 ComponentInterfaceCrashers = ["IDispatch"];
+
+// classInfo obj.QueryInterface(Ci.nsIClassInfo)
 
 function getserviceOrCreateInstance(p){
 	// These were needed because some Component access crash FF window.dump("get service "+this.nsIJSCID.name+"\n");
@@ -17,10 +34,8 @@ function getserviceOrCreateInstance(p){
 			return "not a service or object";
 		}
 	}
-
-try{obj.QueryInterface(Ci.nsIClassInfo);rt1++;jn.say(p)}catch(e){rt++}
-       // ifaces = jn.supportedInterfaces(obj);  // QI it
-        return obj;
+    // ifaces = jn.supportedInterfaces(obj);  // QI it
+    return obj;
 }
 rt=0;rt1=0
 //getserviceOrCreateInstance(Cc["@mozilla.org/autocomplete/controller;1"])
@@ -28,8 +43,8 @@ rt=0;rt1=0
 //Cc["@mozilla.org/autocomplete/controller;1"].createInstance()
 
 for (var i in Cc)
-if(Cc[i] instanceof Ci.nsIJSCID)
-getserviceOrCreateInstance(Cc[i])
+	if(Cc[i] instanceof Ci.nsIJSCID)
+		getserviceOrCreateInstance(Cc[i])
 rt1
 
 
@@ -80,7 +95,7 @@ for each(var i in Ci) {
 function supportedInterfaces(element) {
     var ans = [];
     for(var i=cii.length;i--;) {
-		var p =cii[i]        
+		var p =cii[i]
 		try {
 			if (element instanceof p) {
 				ans.push(p);
@@ -163,7 +178,7 @@ cii
 function supportedInterfaces(element) {
     var ans = [];
     for(var i=cii.length;i--;) {
-    var p =cii[i]        
+    var p =cii[i]
     try {
          if (element instanceof p) {
                 ans.push(p.name);
