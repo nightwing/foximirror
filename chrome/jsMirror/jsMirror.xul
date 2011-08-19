@@ -93,16 +93,18 @@
 	<textbox id="jsCode" multiline="true" flex="1"  wrap='off'
 		style="overflow:hidden;word-wrap:  normal | break-word;font-family:monospace;font-size:9.5pt;-moz-tab-size:4" persist='height' />
 
+		<browser id="jsCode" context='main-context'
+				type='content' persist='height' src='chrome://shadia/content/ace++/simple-editor.html'/>
 	<splitter>
 		<hbox flex="1">
 			<toolbarbutton label="Clear"      oncommand="clearResult()" />
 			<hbox style='border:solid gray 1px'/>
-			<toolbarbutton label="Execute"    onclick="executeJS('',     event.button==2)" style='color:darkblue' />
-			<toolbarbutton label="`selection" onclick="executeJS('sel',  event.button==2)" style='color:green'/>
-			<toolbarbutton label="`line"      onclick="executeJS('line', event.button==2)"  />
+			<toolbarbutton label="run"  	onclick="executeJS('',     event.button==2)" style='color:darkblue' />
+			<toolbarbutton label="dir" 		onclick="executeJS('sel',  event.button==2)" style='color:green'/>
+			<toolbarbutton label="line"    	onclick="executeJS('line', event.button==2)"  />
 			<spacer flex='1'/>
-			<toolbarbutton label="wrap"      onclick="toggleWrap(event.button==2?resultbox:codebox)"/>
-			<toolbarbutton label="timer"     oncommand="insertTimer()"  />
+			<toolbarbutton label="wrap"     onclick="toggleWrap(event.button==2?resultbox:codebox)"/>
+			<toolbarbutton label="timer"    oncommand="insertTimer()"  />
 		</hbox>
 	</splitter>
 	<textbox id="result" multiline="true" flex="1" wrap='on'  persist='height'

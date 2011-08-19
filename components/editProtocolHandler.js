@@ -11,7 +11,7 @@ editProtocolHandler.prototype = {
 	classDescription: "edit anything",
 	classID: Components.ID("01234567-1234-1234-1234-123456789ABC"),
 	contractID: "@mozilla.org/network/protocol;1?name=edit",
-	editorURI: 'chrome://shadia/content/fbace/edit-protocol-editor.html',
+	editorURI: 'chrome://shadia/content/ace++/edit-protocol-editor.html',
 	defaultPort: -1,
 	protocolFlags: Ci.nsIProtocolHandler.URI_NORELATIVE | Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE,
 	allowPort: function(port, scheme) false,

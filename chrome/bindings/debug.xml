@@ -102,7 +102,7 @@ var actionNames={
 	 reload:'reload'
 	,reopen:':)'
 	,restartApp:'restart firefox'
-	,jsMirror:'js'
+	//,jsMirror:'js'
 	,inspector:'dom'
 	,chromeMirror:'chrome'
 	,cssMirror:'css'
