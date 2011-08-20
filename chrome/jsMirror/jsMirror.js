@@ -571,17 +571,14 @@ function doOnload(){
 	Firebug.Ace.initialize()
 	
 	initTargetWindow()
-	if($shadia.jsMirror && $shadia.jsMirror.value){
-		codebox.value = $shadia.jsMirror.value
-		codebox.select();		
-	}
-	    codebox.focus();
+	
+	codebox.focus();
 
 }
 function doOnUnload(){
 	if(!$shadia.jsMirror)
 		$shadia.jsMirror = {}
-	$shadia.jsMirror.value = codebox.value
+	$shadia.jsMirror.value = codebox.session.getValue()
 	$shadia.jsMirror.targetWindowId = targetWindowId
 	
 	var maxHistSize = 100
@@ -749,9 +746,9 @@ Firebug.evaluate = function(code, onSuccess, onerror){
 		if(win.location.href!=window.location.href)
 			win.jn=''
 
-		onSuccess(ans)
+		onSuccess(ans, Firebug.currentContext)
 	}catch(e){
-		onerror(e)
+		onerror(e, Firebug.currentContext)
 	}
 	return ans	
 
@@ -773,7 +770,8 @@ Firebug.currentContext = {
 		return  getTargetWindow()
 	}
 }
- 
+
+FBL.unwrapObject = jn.unwrap
 $=function(x)document.getElementById(x)
 /**======================-==-======================*/
 
@@ -1032,6 +1030,10 @@ Firebug.largeCommandLineEditor = {
 		// fixme
 		codebox = Firebug.Ace.win2.editor
 		resultbox = Firebug.Ace.win1.editor
+		if($shadia.jsMirror && $shadia.jsMirror.value){
+			codebox.session.doc.setValue($shadia.jsMirror.value)
+			codebox.selectAll();		
+		}
 		codebox.focus()
     },
 

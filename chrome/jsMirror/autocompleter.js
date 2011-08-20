@@ -191,10 +191,12 @@ Firebug.Ace.BaseAutocompleter = {
 
             try {
                 var index = this.tree.currentIndex;
+				if(!this.sortedArray)
+					return
                 this.number.value = index + ':' +this.sortedArray.length + "/" + this.unfilteredArray.length;
                 var hint = this.getHint(index);
                 this.sayInBubble(hint);
-            } catch(e) {}
+            } catch(e) {Cu.reportError(e)}
 
     },
 
