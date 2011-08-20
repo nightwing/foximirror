@@ -779,14 +779,14 @@ aceManager = Firebug.Ace = {
 
         items.push(
             {
-                label: $ACESTR("acebug.copy"),
+                label: "copy",
                 command: function() {
                     gClipboardHelper.copyString(editorText);
                 },
                 disabled: !editorText
             },
             {
-                label: $ACESTR("acebug.cut"),
+                label: ("cut"),
                 command: function() {
                     gClipboardHelper.copyString(editorText);
                     editor.onCut();
@@ -794,7 +794,7 @@ aceManager = Firebug.Ace = {
                 disabled: !editorText
             },
             {
-                label: $ACESTR("acebug.paste"),
+                label: ("paste"),
                 command: function() {
                     editor.onTextInput(clipBoardText);
                 },
@@ -802,17 +802,9 @@ aceManager = Firebug.Ace = {
             },
             "-",
             {
-                label: $ACESTR("acebug options"),
+                label: "help",
                 command: function() {
-                    openDialog('chrome://acebug/content/options.xul','','resizable,centerscreen')
-                }
-            },
-            {
-                label: $ACESTR("acebug.reportissue"),
-                command: function() {
-                    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                        .getService(Components.interfaces.nsIWindowMediator);
-                    var mainWindow = wm.getMostRecentWindow("navigator:browser");
+                    var mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
                     mainWindow.gBrowser.selectedTab = mainWindow.gBrowser.addTab("https://github.com/MikeRatcliffe/Acebug/issues");
                 }
             }
@@ -854,9 +846,9 @@ aceManager = Firebug.Ace = {
             fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker),
             ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
         if (mode == 'save')
-            fp.init(window, $ACESTR("acebug.saveas"), Ci.nsIFilePicker.modeSave);
+            fp.init(window, ("saveas"), Ci.nsIFilePicker.modeSave);
         else
-            fp.init(window, $ACESTR("acebug.selectafile"), Ci.nsIFilePicker.modeOpen);
+            fp.init(window, ("selectafile"), Ci.nsIFilePicker.modeOpen);
 
         // try to set initial file
         if (session.filePath) {
@@ -1022,14 +1014,14 @@ Firebug.largeCommandLineEditor = {
     addContextMenuItems: function(items, editor, editorText) {
         items.unshift(
             {
-                label: $ACESTR("acebug.executeselection"),
+                label: ("Execute selection"),
                 command: function() {
                     Firebug.CommandLine.enter(Firebug.currentContext, editorText);
                 },
                 disabled: !editorText
             },
             {
-                label: $ACESTR("acebug.streamcomment"),
+                label: ("Stream comment"),
                 command: function() {
                     editor.execCommand('toggleStreamComment');
                 }

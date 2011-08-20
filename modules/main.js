@@ -33,6 +33,34 @@ XPCOMUtils.defineLazyServiceGetter(Services, "domUtils", "@mozilla.org/inspector
 XPCOMUtils.defineLazyServiceGetter(Services, "sss", "@mozilla.org/content/style-sheet-service;1", "nsIStyleSheetService");
 XPCOMUtils.defineLazyServiceGetter(Services, "atom", "@mozilla.org/atom-service;1", "nsIAtomService");
 
+clipboardHelper = {
+    copyString: function(str) {
+        if (str)
+            this.cbHelperService.copyString(str);
+    },
+
+    getData: function() {
+        try{
+            var pastetext,
+                clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard),
+                trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable),
+                str={},
+                strLength={};
+
+            trans.addDataFlavor("text/unicode");
+            clip.getData(trans,1);
+            trans.getTransferData("text/unicode",str,strLength);
+            str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
+            pastetext = str.data.substring(0, strLength.value/2) || "";
+            return pastetext;
+        } catch(e) {
+            Components.utils.reportError(e);
+            return "";
+        }
+    }
+};
+XPCOMUtils.defineLazyServiceGetter(clipboardHelper, "cbHelperService", "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
+
 
 var addDevelopmentUtils = function(window){
 	//window.toOpenWindowByType = toOpenWindowByType;
@@ -45,7 +73,7 @@ var addDevelopmentUtils = function(window){
 	if(!('Cu' in window))
 		window.Cu=Components.utils
 	var href = window.location.href
-	if(href.substring(0,15)=='chrome://shadia'||href=='chrome://console2/content/console2.xul'){
+	if(href.substring(0,15)=='chrome://shadia' || href=='chrome://console2/content/console2.xul'){
 		for each(var i in ["getLocalFile","makeReq","viewFileURI","npp"]){
 			window[i]=this[i]
 		}

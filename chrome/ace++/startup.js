@@ -830,7 +830,7 @@ exports.launch = function(env, options) {
             var placeHolder = session.getTextRange(range);
             if(placeHolder.length < 3)
                 return;
-            placeHolder = placeHolder.trim().substring(0, 3).replace(' ','','g') + "...";
+            placeHolder = "...";
             session.addFold(placeHolder, range);
         }
     }

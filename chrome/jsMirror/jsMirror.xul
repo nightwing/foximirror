@@ -50,9 +50,8 @@
 
 <vbox flex="1">
 	<toolbar id='actionsp'>
-		<toolbarbutton label="//" oncommand="commentLine();" tabindex="8"/>
-		<toolbarbutton label="/*" oncommand="commentBlock();"/>
-		<toolbarbutton label="\t" oncommand="codebox.value=codebox.value.replace('\t','  ','g');"/>
+		<toolbarbutton label="//" oncommand="Firebug.Ace.win2.editor.execCommand('togglecomment')"/>
+		<toolbarbutton label="/*" oncommand="Firebug.Ace.win2.editor.execCommand('toggleStreamComment')"/>
 		<hbox width="10px"/>
 		<toolbar align="center">
 			<menulist id="targetWin" oncommand="targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
@@ -74,13 +73,12 @@
 					type='content' persist='height' src='chrome://shadia/content/ace++/simple-editor.html'/>
 		<splitter>
 			<hbox flex="1">
-				<toolbarbutton label="Clear"      oncommand="clearResult()" />
+				<toolbarbutton label="Clear"      oncommand="Firebug.Ace.win1.editor.execCommand('clear')" />
 				<hbox style='border:solid gray 1px'/>
-				<toolbarbutton label="run"  	onclick="executeJS('',     event.button==2)" style='color:darkblue' />
-				<toolbarbutton label="dir" 		onclick="executeJS('sel',  event.button==2)" style='color:green'/>
-				<toolbarbutton label="line"    	onclick="executeJS('line', event.button==2)"  />
+				<toolbarbutton label="run"  	onclick="Firebug.largeCommandLineEditor.enter(!(event.button||event.shiftKey||event.ctrlKey), false)" style='color:darkblue' />
+				<toolbarbutton label="dir" 		onclick="Firebug.largeCommandLineEditor.enter(!(event.button||event.shiftKey||event.ctrlKey), true)" style='color:green'/>
+				<toolbarbutton label="line"    	onclick="Firebug.largeCommandLineEditor.enter('line', event.button||event.shiftKey||event.ctrlKey)"  />
 				<spacer flex='1'/>
-				<toolbarbutton label="wrap"     onclick="toggleWrap(event.button==2?resultbox:codebox)"/>
 				<toolbarbutton label="timer"    oncommand="insertTimer()"  />
 			</hbox>
 		</splitter>

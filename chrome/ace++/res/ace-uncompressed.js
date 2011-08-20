@@ -12865,7 +12865,7 @@ define('ace/theme/textmate', ['require', 'exports', 'module' , 'pilot/dom'], fun
   color: #333;\
   overflow : hidden;\
 }\
-.ace-tm.ace_focus .ace_gutter{\
+..ace-tm.ace_focus .ace_gutter{\
   background-color: #E1EBFB;\
   border-right: 1px solid #B1BADF;\
 }\
