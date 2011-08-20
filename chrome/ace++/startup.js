@@ -458,8 +458,21 @@ exports.launch = function(env, options) {
 		this.container.fontSize = size
 		this.renderer.$textLayer.checkForSizeChanges()
 	}
-	// todo: selection on first/last lines
-	//Renderer.prototype.
+	// selection on first/last lines
+	Renderer.prototype.screenToTextCoordinates = function(pageX, pageY) {
+        var canvasPos = this.scroller.getBoundingClientRect();
+
+        var col = Math.round((pageX + this.scroller.scrollLeft - canvasPos.left - this.$padding - window.pageYOffset)
+                / this.characterWidth);
+        var row = Math.floor((pageY + this.scrollTop - canvasPos.top - window.pageYOffset)
+                / this.lineHeight);
+		if(row<0)
+			row=0
+		else if(row>this.session.getLength()-1)
+			row = this.session.getLength()-1
+
+        return this.session.screenToDocumentPosition(row, Math.max(col, 0));
+    };
 
     var container = document.getElementById("editor");
     editor = env.editor = new Editor(new Renderer(container, options.theme));

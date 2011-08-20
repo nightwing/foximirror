@@ -51,11 +51,11 @@ Firebug.Ace.startAutocompleter = FBL.bind(function(editor) {
 
 Firebug.Ace.BaseAutocompleter = {
     initPanel: function(panelH, panelW) {
-        this.panel = FBL.$("aceAutocompletePanel");
-        this.panel.height = panelH;
-        this.panel.width = panelW;
-        this.tree = this.panel.getElementsByTagName('tree')[0];
-        this.number = this.panel.getElementsByTagName('label')[0];
+        this.panel = $("autocomplatePanel");
+        //this.panel.height = panelH;
+        //this.panel.width = panelW;
+        this.tree = this.panel.querySelector('tree');
+        this.number = this.panel.querySelector('label');
 
         this.bubble = document.getElementById("autocomplate-info-bubble");
         //set handlers
@@ -64,7 +64,7 @@ Firebug.Ace.BaseAutocompleter = {
         this.tree.setAttribute('ondblclick', 'Firebug.Ace.autocompleter.insertSuggestedText();Firebug.Ace.autocompleter.finish()');
         this.tree.setAttribute('onclick', 'Firebug.Ace.autocompleter.editor.focus()');
         this.tree.setAttribute('onselect', 'Firebug.Ace.autocompleter.onSelect()');
-        this.panel.getElementsByTagName('toolbarbutton')[0].setAttribute('oncommand', 'Firebug.Ace.autocompleter.compare()');
+        //this.panel.getElementsByTagName('toolbarbutton')[0].setAttribute('oncommand', 'Firebug.Ace.autocompleter.compare()');
     },
 
     showPanel: function() {
@@ -118,8 +118,8 @@ Firebug.Ace.BaseAutocompleter = {
             l: bubbleX,
             t: posY
         };
-        this.bubble.height = this.bubblePos.h;
-        this.bubble.width = this.bubblePos.w;
+        //this.bubble.height = this.bubblePos.h;
+        //this.bubble.width = this.bubblePos.w;
     },
 
     $selectionListener: function(e) {
@@ -201,17 +201,14 @@ Firebug.Ace.BaseAutocompleter = {
     sayInBubble: function(text) {
         if (!this.bubble)
             this.initPanel()
-        if (!text) {
+        /* if (!text) {
             this.bubble.hidePopup();
             return;
-        }
+        } */
         //if (this.hidden)
         //    return;
-        var item = this.bubble.firstChild;
+        var item = this.bubble//.firstChild;
         item.value = text;
-        if (this.bubble.state!='open')
-            this.bubble.showPopup(null, this.bubblePos.l, this.bubblePos.t, "popup");
-
     },
 
     setView: function(si) {
@@ -332,7 +329,7 @@ Firebug.Ace.BaseAutocompleter = {
         this.text = this.sortedArray = this.unfilteredArray = this.object = this.text = null;
         this.editor.setKeyboardHandler(this.editor.normalKeySet);
         this.panel.hidePopup();
-        this.bubble.hidePopup();
+        //this.bubble.hidePopup();
     },
 
 };
@@ -381,7 +378,7 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
         if (!string)
             this.onEvalSuccess(context.global, context);
         else
-            Firebug.CommandLine.evaluate(string, context, context.thisValue, null,
+            Firebug.evaluate(string,
                 FBL.bind(this.onEvalSuccess, this),
                 FBL.bind(this.onEvalFail, this)
             );
@@ -809,6 +806,10 @@ var backParse = (function() {
                 var state='.'
                 outer: while (ch) {
                     switch (ch) {
+						case "'": case '"':
+							eatString(ch);
+							next()
+						break outer;
                         case '.':
                             eatWhile(/\s/)
                             state='.'

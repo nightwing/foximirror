@@ -38,7 +38,7 @@
 					</treecols>
 				</tree>
 				<splitter/>
-				<textbox multiline='true' id='autocomplate-bubble' flex='1' wrap='off' width='200' />
+				<textbox multiline='true' id='autocomplate-info-bubble' flex='1' wrap='off' width='200' />
 			</hbox>
 			<resizer element='autocomplatePanel' dir="bottomleft" left="0" bottom="0" width="16" height="16"/>
 			<resizer element='autocomplatePanel' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
@@ -50,11 +50,11 @@
 
 <vbox flex="1">
 	<toolbar id='actionsp'>
-		<toolbarbutton label="//" oncommand="Firebug.Ace.win2.editor.execCommand('togglecomment')"/>
-		<toolbarbutton label="/*" oncommand="Firebug.Ace.win2.editor.execCommand('toggleStreamComment')"/>
+		<toolbarbutton label="//" oncommand="codebox.focus();Firebug.Ace.win2.editor.execCommand('togglecomment')"/>
+		<toolbarbutton label="/*" oncommand="codebox.focus();Firebug.Ace.win2.editor.execCommand('toggleStreamComment')"/>
 		<hbox width="10px"/>
 		<toolbar align="center">
-			<menulist id="targetWin" oncommand="targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
+			<menulist id="targetWin" oncommand="codebox.focus();targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
 				<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
 					<template>
 						<rule>
@@ -73,13 +73,13 @@
 					type='content' persist='height' src='chrome://shadia/content/ace++/simple-editor.html'/>
 		<splitter>
 			<hbox flex="1">
-				<toolbarbutton label="Clear"      oncommand="Firebug.Ace.win1.editor.execCommand('clear')" />
+				<toolbarbutton label="Clear"      oncommand="codebox.focus();Firebug.Ace.win1.editor.execCommand('clear')" />
 				<hbox style='border:solid gray 1px'/>
-				<toolbarbutton label="run"  	onclick="Firebug.largeCommandLineEditor.enter(!(event.button||event.shiftKey||event.ctrlKey), false)" style='color:darkblue' />
-				<toolbarbutton label="dir" 		onclick="Firebug.largeCommandLineEditor.enter(!(event.button||event.shiftKey||event.ctrlKey), true)" style='color:green'/>
-				<toolbarbutton label="line"    	onclick="Firebug.largeCommandLineEditor.enter('line', event.button||event.shiftKey||event.ctrlKey)"  />
+				<toolbarbutton label="run"  	onclick="codebox.focus();Firebug.largeCommandLineEditor.enter(!(event.button||event.shiftKey||event.ctrlKey), false)" style='color:darkblue' />
+				<toolbarbutton label="dir" 		onclick="codebox.focus();Firebug.largeCommandLineEditor.enter(!(event.button||event.shiftKey||event.ctrlKey), true)" style='color:green'/>
+				<toolbarbutton label="line"    	onclick="codebox.focus();Firebug.largeCommandLineEditor.enter('line', event.button||event.shiftKey||event.ctrlKey)"  />
 				<spacer flex='1'/>
-				<toolbarbutton label="timer"    oncommand="insertTimer()"  />
+				<toolbarbutton label="timer"    oncommand="codebox.focus();insertTimer()"  />
 			</hbox>
 		</splitter>
 		<browser id="result"  context='main-context' flex='1'

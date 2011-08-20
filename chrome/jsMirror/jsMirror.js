@@ -646,7 +646,7 @@ function insertTimer(){
 
 
 function appendToConsole(string){
-	insertTextAtEnd("\n"+ string, resultbox)
+	insertTextAtEnd(string+'\n', resultbox)
 }
 function clearResult(){
 	resultbox.value="";
@@ -729,6 +729,51 @@ jsExplore.eval=function(){
  *  end of code completion utils
  ****************************************************************/
 
+Firebug.evaluate = function(code, onSuccess, onerror){
+	try{
+		var win = getTargetWindow()	
+		//unwrap
+		try{
+			win = XPCNativeWrapper.unwrap(win)
+		}catch(e){
+			if('wrappedJSObject' in win)
+				win = win.wrappedJSObject||win
+		}
+			
+		//add jn
+		win.jn=jn
+		//evaluate
+		stackStartLineNumber=Components.stack.lineNumber
+		var ans=win.eval(code)
+		//remove jn
+		if(win.location.href!=window.location.href)
+			win.jn=''
+
+		onSuccess(ans)
+	}catch(e){
+		onerror(e)
+	}
+	return ans	
+
+}
+Firebug.dir = function(obj){
+	appendToConsole("Properties for object:");
+	appendToConsole(jn.inspect(obj, 'long'));
+	appendToConsole(jn.inspect(obj, 'long'));
+	
+}
+Firebug.log = function(obj){
+	appendToConsole(obj)
+}
+Firebug.currentContext = {
+	get window(){
+		return  getTargetWindow()
+	},
+	get global(){
+		return  getTargetWindow()
+	}
+}
+ 
 $=function(x)document.getElementById(x)
 /**======================-==-======================*/
 
@@ -987,6 +1032,7 @@ Firebug.largeCommandLineEditor = {
 		// fixme
 		codebox = Firebug.Ace.win2.editor
 		resultbox = Firebug.Ace.win1.editor
+		codebox.focus()
     },
 
     _setValue: function(text) {
@@ -997,20 +1043,12 @@ Firebug.largeCommandLineEditor = {
 
     //* * * * * * * * * * * * * * * * * * * * * * * * *
     set value(val) {
-        if (this._setValue)
-            return this.setValue(val);
-        if (arguments.callee.caller == Firebug.CommandLine.commandHistory.onMouseUp) {
-            var mode = Firebug.Ace.win2.editor.session.getMode()
-            if (mode.setCellText)
-                return mode.setCellText(val)
-            return this.setValue(val);
-        }
-        return val;
+		var mode = Firebug.Ace.win2.editor.session.getMode()
+		if (mode.setCellText)
+			return mode.setCellText(val)
+		return this.setValue(val);
     },
 
-    // emulate textarea for firebug compatibility
-    __noSuchMethod__: function() {
-    },
     addContextMenuItems: function(items, editor, editorText) {
         items.unshift(
             {
@@ -1059,7 +1097,7 @@ Firebug.largeCommandLineEditor = {
                     }
                     return x;
                 }).join('\n');
-            Firebug.CommandLine.commandHistory.appendToHistory(cell.body.join('\n'));
+            //Firebug.commandHistory.appendToHistory(cell.body.join('\n'));
         }
         text = text.replace(/\.\s*$/, '');
 
@@ -1075,9 +1113,11 @@ Firebug.largeCommandLineEditor = {
         return code
     },
     setErrorLocation: function(context){
-        Firebug.CommandLine.evaluate('++++', context, context.thisValue, null,
-            dump, function(error) {
-                var source = error.source.split('++++')
+        Firebug.evaluate(
+			'++++',
+            dump,
+			function(error) {
+                var source = ['','']//error.source.split('++++')
                 context.errorLocation={
                     fileName: error.fileName,
                     lineNumber: error.lineNumber,
@@ -1093,36 +1133,36 @@ Firebug.largeCommandLineEditor = {
         if(!context.errorLocation)
             this.setErrorLocation(context);
 
-        var shortExpr = FBL.cropString(code.replace(/\s*/g, ''), 100);//\xAD \u2009
-        Firebug.Console.log("in:" + (inputNumber++) + ">>> " + cell.sourceLang + shortExpr, context, "command", FirebugReps.Text);
+       // Firebug.log("in:" + (inputNumber++) + ">>> " + cell.sourceLang);
 
         code = this.setThisValue(code, this.cell);
         this.lastEvaledCode = code;
-        Firebug.CommandLine.evaluate(code, context, context.thisValue, null,
+        Firebug.evaluate(code,
             Firebug.largeCommandLineEditor.logSuccess,
             Firebug.largeCommandLineEditor.logError
         );
     },
     logSuccess: function(e){
         Firebug.largeCommandLineEditor.$useConsoleDir?
-            Firebug.Console.log(e,  Firebug.currentContext, "dir", Firebug.DOMPanel.DirTable):
-            Firebug.Console.log(e);
+            Firebug.dir(e):
+            Firebug.log(jn.inspect(e));
     },
     logError: function(error) {
         var loc = Firebug.currentContext.errorLocation
         var self = Firebug.largeCommandLineEditor;
+		error.source=self.lastEvaledCode
         var source = error.source.slice(loc.before, loc.after);
         if(loc.fileName == error.fileName && source == self.lastEvaledCode) {
             var cellStart = self.cell.bodyStart;
             var lineNumber = error.lineNumber - loc.lineNumber;
             var lines = source.split('\n');
             var line = lines[lineNumber]||lines[lineNumber-1];
-            Firebug.Console.log(error.toString() + ' `' + line + '` @'+(lineNumber+cellStart));
+            Firebug.log(error.toString() + ' `' + line + '` @'+(lineNumber+cellStart));
         } else
-            Firebug.Console.log(error);
+            Firebug.log(jn.inspect(error));
     },
     logCoffeeError: function(error) {
-        Firebug.Console.log(error.text + ' `' + error.source + '` @'+(error.row+this.cell.bodyStart));
+        Firebug.log(error.text + ' `' + error.source + '` @'+(error.row+this.cell.bodyStart));
     }
 };
 
