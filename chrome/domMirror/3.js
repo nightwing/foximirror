@@ -2368,27 +2368,7 @@ function empty(lm){
   //**********************************************************
  //* context menu
 //****/
-const gClipboardHelper = {
-	cbHelperService: Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper),
-	copyString: function(str) this.cbHelperService.copyString(str),
-	getData: function(){
-		try{
-			var clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-			var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
-			trans.addDataFlavor("text/unicode");
-			clip.getData(trans,1)
-			var str={},strLength={}
-			trans.getTransferData("text/unicode",str,strLength)
-			str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
-			pastetext = str.data.substring(0, strLength.value/2);
-			return pastetext||''
-		}catch(e){
-			Cu.reportError(e)
-			return ''
-		}
-	}
-}
-
+const gClipboardHelper = $shadia.clipboardHelper
 
 
 urlOperations=function(command){

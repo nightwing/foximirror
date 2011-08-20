@@ -12,6 +12,9 @@ function HashHandler(config) {
             .replace(/(?:^\s+|\n|\s+$)/g, "")
             .split(new RegExp("[\\s ]*" + separator + "[\\s ]*", "g"), limit || 999);
     }
+	function splitSafe(s, separator, limit, bLowerCase) {
+        return s.toLowerCase().split('-');
+    }
 
     function parseKeys(keys, val, ret) {
         var key,
@@ -455,6 +458,8 @@ exports.launch = function(env, options) {
 		this.container.fontSize = size
 		this.renderer.$textLayer.checkForSizeChanges()
 	}
+	// todo: selection on first/last lines
+	//Renderer.prototype.
 
     var container = document.getElementById("editor");
     editor = env.editor = new Editor(new Renderer(container, options.theme));

@@ -213,8 +213,7 @@ separator{
 	cursor: default !important;
 }
 .ace_gutter-cell:hover{
-    box-shadow: 0 0 1px 1px blue inset;
-    -moz-box-shadow: 0 0 1px 1px blue inset;
+    background: #BACADF
 }
 .ace_gutter-cell.ace_breakpoint{
     border-radius: 20px 0 0 20px;

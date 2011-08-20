@@ -388,9 +388,9 @@ jn.$x = function(xpath){
 	return jn.getElementsByXPath(FBL.unwrapObject(context.baseWindow.document), xpath);
 };
  
-/********************************************************
- * start of tral
- **/
+  /********************************************************/
+ /** start of tral ***/
+/**/
 var stackStartLineNumber
 function executeJS(sel, printProps){
 	/*jn.exec();return;*/
@@ -517,9 +517,9 @@ function printPropertiesForTarget(target){
   }
   appendToConsole(index+'\n'+result.join("\n"));
 }
-/**
- * end of tral
- ********************************************************/
+  /**/
+ /** end of tral **/
+/********************************************************/
 
 
 var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
@@ -568,7 +568,8 @@ function byId(id){
 
 function doOnload(){
 	initGlobals();
-		shortCuts=new initShortCuts()
+	Firebug.Ace.initialize()
+	
 	initTargetWindow()
 	if($shadia.jsMirror && $shadia.jsMirror.value){
 		codebox.value = $shadia.jsMirror.value
@@ -635,57 +636,6 @@ function getSelectedWinID(){
 }
 
 /***/
-function commentBlock(){
-	commentBlockTB(codebox)
-	codebox.focus();
-}
-function commentBlockTB(elem){
-	var value=elem.value
-	var selectedText= value.substring(elem.selectionStart,elem.selectionEnd);
-	if(selectedText==""){
-		if(value[elem.selectionStart-1]=="/"&&value[elem.selectionStart-2]=="*")
-			var next=elem.selectionStart-2
-		else if(value[elem.selectionStart]=="/"&&value[elem.selectionStart-1]=="*")
-			var next=elem.selectionStart-1
-		else var next=value.indexOf("*/",elem.selectionStart)
-		var prev=value.lastIndexOf("/*",elem.selectionStart)
-		if(next<0||prev<0)return;
-		elem.selectionStart=prev;elem.selectionEnd=next+2
-		selectedText= value.substring(prev+2,next);
-	}else if (selectedText.search(/^[\s]*\/\*[\s\S]*\*\/[\s]*$/)){ //comment it
-		selectedText = "/*" + selectedText + "*/";
-
-	} else { //uncomment it
-		selectedText = selectedText.replace(/^([\s]*)\/\*([\s\S]*)\*\/([\s]*)$/gm,"$1$2$3");
-
-	}
-	insertText(selectedText, elem)
-	elem.selectionStart-=selectedText.length
-}
-function commentLine() {
-    commentLineTB(codebox)
-    codebox.focus();
-}
-function commentLineTB(elem) {
-	var start=elem.selectionStart
-	var end=elem.selectionEnd
-    var prevLine = elem.value.lastIndexOf("\n", start)+1
-    var nextLine = elem.value.indexOf("\n", end)
-	if(nextLine<prevLine)return
-    var alltext = elem.value.substring(prevLine, nextLine)
-    if (alltext[0] == "/" && alltext[1] == "/") { //needs uncomment
-		alltext=alltext.replace(/^\/\/+/mg,"")
-	}else{
-		alltext=alltext.replace(/^(?!\/\/)/mg,"//")
-	}
-    elem.selectionStart = prevLine
-    elem.selectionEnd = nextLine
-	insertText(alltext, elem)
-	elem.selectionStart = elem.selectionEnd = start
-
-appendToConsole(alltext+" "+nextLine+" "+elem.selectionEnd)
-}
-
 function insertTimer(){
 	var st=codebox.selectionStart, en=codebox.selectionEnd
 	codebox.selectionEnd=st
@@ -704,29 +654,13 @@ function clearResult(){
 }
 
 /********* textbox utils *******/
-function insertText(iText, elem){
-	elem.editor.QueryInterface(Ci.nsIPlaintextEditor).insertText(iText);
+function insertText(iText,editor){
+	editor.session.insert(editor.selection.getCursor(), iText)
 }
-function insertTextAtEnd(iText, elem){
-		var ed=elem.editor,	sc=ed.selectionController
-		sc.completeMove(1,false)//codebox.editor.endOfDocument()
-		var l=elem.selectionStart,st=ed.rootElement.scrollHeight-16//Math.min(,ed.rootElement.scrollHeight)
-		elem.editor.QueryInterface(Ci.nsIPlaintextEditor).insertText(iText);//elem.editor.insertText(iText)//
-		elem.selectionStart=l;//	elem.selectionEnd=l+10;
-		//sc.intraLineMove(1,true)
-		//elem.focus()
-		//scrollSelectionIntoView(in short type, in short  region, in boolean isSynchronous)
-		//sc.scrollSelectionIntoView(1, 0, false)
-		ed.rootElement.scrollTop=st
+function insertTextAtEnd(iText, editor){
+	editor.selection.moveCursorFileEnd()
+	editor.session.insert(editor.selection.getCursor(), iText)
 }
-function toggleWrap(codebox){	
-	let wr=(codebox.hasAttribute('wrap')&&(codebox.getAttribute('wrap')=='off'))?'on':'off'	
-	codebox.setAttribute('wrap',wr)	
-	codebox.editor.QueryInterface(Ci.nsIPlaintextEditor).wrapWidth= wr=='off'?-1:1
-}
-
-
-
 
 function nextCommandFromHistory(){
 	if(currentCommandHistoryPos>=commandHistory.length-1)
@@ -743,538 +677,11 @@ function previousCommandFromHistory(){
 /*****************************************************************
  *  code completion utils
  ****************/
-function treeView(table){
-	this.rowCount = table.length;
-	this.getCellText  = function(row, col){return table[row][col.id]}
-	this.getCellValue = function(row, col){return table[row][col.id]}
-	this.setTree = function(treebox){this.treebox = treebox}
-	this.isEditable = function(row, col){return false}
-
-	this.isContainer = function(row){return false}
-	this.isContainerOpen = function(row){return false}
-	this.isContainerEmpty = function(row){return true }
-	this.getParentIndex = function(row){ return 0}
-	this.getLevel = function(row){return 0}
-	this.hasNextSibling = function(row){return false}
-
-	this.isSeparator = function(row){return false}
-	this.isSorted = function(){ return false}
-	this.getImageSrc = function(row,col){}// return "chrome://global/skin/checkbox/cbox-check.gif"; };
-	this.getRowProperties = function(row,props){
-		
-		//var aserv=Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
-		//props.AppendElement(aserv.getAtom(table[row].depth));		
-		//props.AppendElement(aserv.getAtom('a'));		
-	};
-	this.getCellProperties = function(row,col,props){
-		var aserv=Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
-		props.AppendElement(aserv.getAtom('d'+table[row].depth));
-	};
-	this.getColumnProperties = function(colid,col,props){}
-	this.cycleHeader = function(col, elem){}
-}
-
-function startCodeCompletion(mode){
-	var editor=codebox.editor
-	editor.rootElement.normalize()
-	var selection = editor.selection//.getRangeAt(0);
-	var range = selection.getRangeAt(0);
-
-	var line=range.startContainer,br=line, completionEndIndex=range.startOffset, lineLength=0,evalString
-	if(line&&line.nodeType!=3){
-		line=line.childNodes[range.startOffset]
-		completionEndIndex='end'
-	}
-	if(line&&line.nodeType!=3)
-		line=line.previousSibling
-	//2
-
-	if(line&&line.nodeType==3){
-		if(completionEndIndex=='end'){
-			evalString=line.nodeValue
-			lineLength=completionEndIndex=evalString.length
-		}else{
-			evalString=line.nodeValue
-			lineLength=evalString.length
-			evalString=evalString.substring(0,completionEndIndex)
-		}
-	}else{
-		 evalString=''
-		 lineLength=completionEndIndex=0
-	}
-	//*********************
-	autocompleter.specFunc=false
-	var [objString,filterText]=parseJSFragment(evalString)
-	var error = false
-	if(objString==""){
-		var evalObj = getTargetWindow()
-	}else{
-		try{
-			var evalObj = evalStringOnTarget(objString)
-		}catch(e){
-			appendToConsole('autocomlater got an error: '+e.message)
-			return
-		}
-	}
-
-
-	//var utils=(window.getInterface||window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface)(Ci.nsIDOMWindowUtils);
-	//br=utils.sendQueryContentEvent(utils.QUERY_CARET_RECT, 0, 0, 0, 0)
-
-	if(modernFox){
-		var cl=codebox.editor.selection.getRangeAt(0).getClientRects()
-		var clLast=cl.length-1
-		if(clLast>-1)
-			var {right:pX,bottom:pY}=cl[clLast]
-		else // bug in firefox when selection is at end getClientRects is empty
-			var {right:pX,bottom:pY}=editor.rootElement.lastChild.getClientRects()[0]
-	}else{
-		br=line||br
-		var nbr=br.nextSibling
-		if(nbr&&nbr.nodeType==1)
-			br=nbr//br.nextSibling
-		else if(br.nodeType!='br'){
-			br=editor.rootElement.lastChild
-		}
-		//dump(br.nodeName,br.offsetHeight,br.offsetTop)
-		var pX,pY
-		pY=br.offsetHeight+br.offsetTop
-		pX=br.offsetLeft
-		if(lineLength>0)
-			pX=completionEndIndex/lineLength*pX
-	}
-	pX=window.mozInnerScreenX+pX-editor.rootElement.scrollLeft
-	pY=window.mozInnerScreenY+pY-editor.rootElement.scrollTop
-	//try{autocompleter.finish()}catch(e){}
-
-	autocompleter.create(codebox,mode)
-	autocompleter.start(evalObj,filterText,pX,pY)
-
-}
-
-function parseJSFragment(evalString){
-	var i=evalString.length-1,i0
-	var rx=/[a-z$_0-9]/i
-	var next
-	var skipWord=function(){i0=i
-		while(rx.test(next=evalString.charAt(i))){
-			i--;
-		}
-	}
-	var skipString=function(comma){
-		next=evalString.charAt(--i)
-		while(next&&(next!=comma||evalString.charAt(i-1)=="\\")){
-			next=evalString.charAt(--i)
-		}
-	}
-	var skipStacks=function(){
-		var stack=[]
-		while(next=evalString.charAt(--i)){
-			skipWord();//print(next)
-			switch(next){
-				case ".":
-					skipWord();//print(next)
-					break;
-				case "'":
-				case '"':
-					skipString(next);
-					break;
-				case '}':stack.push("{");break;
-				case ']':stack.push("[");break;
-				case ')':stack.push("(");break;
-					stack.push(next);
-					break;
-				case '{':
-				case '[':
-				case '(':
-									//print(next+"bb");
-					if(stack.pop()!==next)
-						return;
-									//print(next+"bb2");
-					break;
-				default:   //print(next+22);
-					if(stack.length===0)
-						return;
-			}
-		}
-	++i;
-	}
-
-	skipWord()
-	var it=i
-	if(next==="."){
-		skipStacks()
-		i+=1
-	}else if(next==="("){
-		var irestore=i
-		i--;skipWord()
-		var funcName=evalString.substring(i+1,it)
-		if(funcName&&"QueryInterface,getAttribute,setAttribute,hasAttribute,getInterface,getService".indexOf(funcName)!=-1){
-			var jsf=parseJSFragment(evalString.substring(0,i+1))[0]
-			autocompleter.specFunc=[jsf,funcName]
-		}else if(funcName=="getElementById"){
-			autocompleter.specFunc=['',funcName]
-		}
-		i=irestore
-	}
-	return [evalString.substr(i,it-i),evalString.substr(it+1)];
-}
-/******/
-/**************************************/
-autocompleter={
-	mode:false,
-	toggleMode: function(all){
-		if(typeof all=='undefined')
-			this.mode=!this.mode
-		else
-			this.mode=all
-		if(this.mode){
-			this.tree.width=620
-			this.tree.setAttribute('hidecolumnpicker',false)
-			this.tree.columns[2].element.width=32
-
-			this.tree.columns[0].element.setAttribute('hideheader',false)
-			this.tree.columns[1].element.setAttribute('hideheader',false)
-			this.tree.columns[1].element.hidden=false
-			this.tree.columns[2].element.setAttribute('hideheader',false)
-		}else{
-			this.tree.width=280
-			this.tree.columns[2].element.width=32
-			this.tree.setAttribute('hidecolumnpicker',true)
-			this.tree.columns[0].element.setAttribute('hideheader',true)
-			this.tree.columns[1].element.setAttribute('hideheader',true)
-			this.tree.columns[1].element.hidden=true
-			this.tree.columns[2].element.setAttribute('hideheader',true)
-		}
-
-	},
-	create: function(inputField,mode){
-		if(!this.panel){//get domNodes
-			this.inputField=inputField;
-			this.panel=document.getElementById("autocomplatePanel")
-
 if(!modernFox){
 	var s = document.querySelector('#autocomplatePanel stack')
 	s.removeChild(s.lastChild)
 	s.removeChild(s.lastChild)
 }
-			this.tree=this.panel.getElementsByTagName('tree')[0]
-			this.number=this.panel.getElementsByTagName('label')[0]
-
-			this.bubble=document.getElementById("autocomplate-bubble")
-			//tree view doesnt exist for closed popups
-			this.panel.setAttribute('onpopupshown','if(event.target==this)autocompleter.setView(0)')
-			this.tree.setAttribute('ondblclick','autocompleter.insertSuggestedText(),autocompleter.finish()')
-			this.tree.setAttribute('onselect','autocompleter.onSelect()')
-		}
-		try{this.toggleMode(mode)}catch(e){}
-
-		this.inputField.addEventListener("keypress", this, true);
-	},
-	start:function(evalObj,filterText,posX,posY){
-
-		if(typeof posX=='undefined'||typeof posY=='undefined'){
-			let bo=this.panel.boxObject
-			posX=bo.screenX;posY=bo.screenY;
-
-		}
-		this.object=evalObj
-		this.text=filterText
-		var t=Date.now()
-		this.unfilteredArray=getProps(evalObj)
-
-		if(this.specFunc)
-			this.getSpecialEntries()
-
-		this.filterText=filterText
-		this.filter(this.unfilteredArray,filterText)
-
-		if(this.panel.state=='open'){
-			this.setView(0)
-			this.panel.moveTo(posX,posY)
-		}else
-			this.panel.showPopup(null,posX,posY, "popup")
-	},
-	getSpecialEntries: function(){
-		var [spo,funcName]=this.specFunc
-		var ans=[]
-		try{
-			if(funcName=='QueryInterface'||funcName=='getService'){
-				var spo = evalStringOnTarget(spo)
-				if(funcName=='getService')try{
-					spo = spo.getService()
-				}catch(e){}
-				supportedInterfaces(spo).forEach(function(x){
-					ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:'interface', depth:-1,special:true})
-				})
-			}else if(funcName=="getInterface"){
-				var spo = evalStringOnTarget(spo)
-				supportedgetInterfaces(spo).forEach(function(x){
-					ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:'interface', depth:-1,special:true})
-				})
-			}else if(funcName=='getElementById'){
-				ans=getIDsInDoc()
-			}else if(funcName=="getAttribute"||funcName=="setAttribute"||funcName=="hasAttribute"){
-				var spo = evalStringOnTarget(spo)
-				var att=spo.attributes
-				for(var i=0;i<att.length;i++){
-					var x=att[i]
-					ans.push({name:'\u2555"'+x.nodeName+'")',comName: '"'+x.nodeName.toLowerCase(),description:x.value, depth:-1,special:true})
-				}
-			}
-		}catch(e){Cu.reportError(e)}
-		this.unfilteredArray=ans.concat(this.unfilteredArray)
-	},
-	setView: function(si){
-		if(typeof si!='number')
-			si=this.tree.currentIndex
-		this.tree.view=new treeView(this.sortedArray)
-		this.tree.view.selection.select(si);
-        this.tree.treeBoxObject.ensureRowIsVisible(si);
-		this.number.value=si+':'+this.sortedArray.length+'/'+this.unfilteredArray.length
-	},
-	finish:function(i){
-		this.hidden=true
-		this.inputField.removeEventListener("keypress", this, true);
-		window.removeEventListener("mousedown",this.u,true)
-
-		this.panel.hidePopup()
-	},
-
-	filter:function(data,text){
-		var table =[];
-		if(!text){
-			data.forEach(function(val) {table.push(val)})
-			table.sort()
-			this.sortedArray=table
-			return;
-		}
-		var filterText=text.toLowerCase()
-		var filterTextCase=this.text
-
-		//**funcs*****/
-		function springyIndex(val){
-			var lowVal=val.comName
-			var priority=0,lastI=0,ind1=0;
-			if(val.name.indexOf(filterTextCase)===0){
-				val.priority=-2
-				table.push(val);
-				return;//exact match
-			}
-			for(var j=0;j<filterText.length;j++){
-				lastI = lowVal.indexOf(filterText[j],ind1);				
-				if(lastI===-1)
-					break;//doesn't match
-				priority += lastI-ind1
-				ind1 = lastI+1;
-			}
-			if(lastI != -1){
-				val.priority=priority
-				table.push(val);
-			}
-		}
-
-		function sorter(a,b){
-
-		}
-		var sortVals=['priority','depth','comName']
-
-		data.forEach(springyIndex)
-		table.sort(function (a, b) {
-			if(!a.special&&b.special) return 1;
-			if(a.special&&!b.special) return -1;//???
-			for each(var i in sortVals){
-			  if (a[i]<b[i]) return -1;
-			  if (a[i]>b[i]) return 1;
-			}
-			return 0;
-		})
-		this.sortedArray=table
-	},
-
-	handleEvent: function(event){
-		if(String.fromCharCode(event.charCode)=='t'&&event.ctrlKey){
-			this.toggleMode()
-			event.preventDefault();event.stopPropagation();
-		}
-		var t
-		if(event.ctrlKey||event.altKey){
-			if(event.charCode!=0&&(t=String.fromCharCode(event.charCode))){
-				if (t=='.'){//complete object and start inspecting it
-					var o=this.sortedArray[this.tree.currentIndex]
-					if(o){
-						this.insertSuggestedText(t)
-						this.start(o.object,"")
-					}
-				}
-			}
-			return;
-		}
-		switch(event.keyCode){
-			case KeyEvent.DOM_VK_HOME:
-				if(this.moveTreeSelectionBig('top')){
-				event.preventDefault();event.stopPropagation();
-				}
-				break
-			case KeyEvent.DOM_VK_END:
-				if(this.moveTreeSelectionBig('end')){
-				event.preventDefault();event.stopPropagation();
-				}
-				break
-			case KeyEvent.DOM_VK_UP:
-				this.moveTreeSelection(-1);
-				event.preventDefault();event.stopPropagation();
-				break
-			case KeyEvent.DOM_VK_DOWN:
-				this.moveTreeSelection(1);
-				event.preventDefault();event.stopPropagation();
-				break
-			case KeyEvent.DOM_VK_BACK_SPACE:
-				this.text=this.text.substr(0,this.text.length-1)
-				this.filter(this.unfilteredArray,this.text);
-				this.setView(0);
-				break
-			case KeyEvent.DOM_VK_RETURN:
-				this.insertSuggestedText();
-				this.finish()
-				event.preventDefault();event.stopPropagation();
-				break
-			case 46:
-			this.startMain(this.object[this.selected()],"")
-				break;
-			case KeyEvent.DOM_VK_RIGHT:
-				this.finish();break
-			case KeyEvent.DOM_VK_RIGHT:
-			default:
-
-				if(event.charCode==0){
-					this.finish();event.preventDefault();event.stopPropagation();break
-				}
-				var t=String.fromCharCode(event.charCode)
-				if (!event.ctrlKey&&/[; \+\-\*\:;\]\)\(\)\}\{\?]/.test(t))
-					this.finish()
-
-				this.text+=t;
-
-				this.filter(this.unfilteredArray,this.text);
-				this.setView(0)
-				//break
-		}
-	},
-
-	moveTreeSelectionBig: function(to){
-		var tree=this.tree,view=tree.view
-		switch(to){
-			case 'end':var c=view.rowCount-1;break
-			case 'top':var c=0;break
-			case 'pup':var c=view.rowCount-1;break
-			default: return false
-		}
-
-		if(c == tree.currentIndex)
-			return false
-		view.selection.timedSelect(c, tree._selectDelay);
-		tree.treeBoxObject.ensureRowIsVisible(c)//(c>0?c:0)
-		return true
-	},
-	moveTreeSelection: function(direction){
-		var tree=this.tree,view=tree.view,c=view.selection.currentIndex
-		c+=direction
-		if(c>=view.rowCount)	c=-1
-		if(c<-1)				c=view.rowCount-1
-		view.selection.timedSelect(c, tree._selectDelay);
-		tree.treeBoxObject.ensureRowIsVisible(c>=0?c:(direction>0?0:view.rowCount-1))
-	},
-	selectedText: function(){
-		var c=this.tree.view.selection.currentIndex
-		if(c<0) return
-		return this.sortedArray[c].name
-	},
-	insertSuggestedText: function(additionalText){
-		var c=this.tree.view.selection.currentIndex
-		if(c<0) return
-		var c=this.sortedArray[c]
-		var isSpecial=c.special
-		var text=c.name
-
-		var l=this.text.length
-		if(isSpecial){
-			text=text.substr(1)
-		}else if(/^\d*$/.test(text)){
-			text='['+text+']'
-			l++
-		}else if(!/^[a-z$_][a-z$_0-9]*$/i.test(text)){
-			text='["'+text+'"]'
-			l++
-		}
-		if(additionalText)
-			text=text+additionalText
-		this.inputField.selectionStart=this.inputField.selectionStart-l;
-		insertText(text, this.inputField)
-	},
-
-	/****helper bubble******/
-	onSelect: function(immediate){
-		if(!immediate){
-			if(this.onSelectTimeOut)
-				clearTimeout(this.onSelectTimeOut)
-			this.onSelectTimeOut=setTimeout(function(){autocompleter.onSelect(true)},10)
-			return
-		}
-		/**	 doOnselect  **/
-		this.onSelectTimeOut=null
-		
-		try{
-			var o=this.tree.currentIndex
-			if(o<0||o>this.tree.view.rowCount){
-				item.textContent=''
-				return
-			}			
-			var o = this.selectedObject = this.sortedArray[o]
-			if(!o)
-				return//why is o undefined?
-			var text=setget(this.object,o.name)
-			if(!text)
-				text=o.object
-			text += '\n'+o.description
-			if(o.depth!=0)
-				text += '\ninherited from level: '+o.depth
-			this.sayInBubble(text)
-		}catch(e){}
-	},
-	sayInBubble: function(text, append){
-		if(append){
-			insertTextAtEnd('\n'+text, this.bubble)
-		}else
-		this.bubble.value=text
-	},
-}
-getIDsInDoc=function(){
-	var doc=getTargetWindow().document
-	var xpe = new XPathEvaluator();
-	var nsResolver = xpe.createNSResolver(doc.documentElement);
-	result = xpe.evaluate('//*[@id]', doc.documentElement, nsResolver,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
-	var ans=[]
-    for(var i = 0; i < result.snapshotLength; i++){
-		var x=result.snapshotItem(i).id
-		ans[i]={name:' "'+x+'")',comName: 'ci.'+x.toString().toLowerCase(),description:'id', depth:-1,special:true}
-    }
-	return ans
-}
-getClassesInDoc=function(doc){
-	var xpe = new XPathEvaluator();
-	var nsResolver = xpe.createNSResolver(doc.documentElement);
-	result = xpe.evaluate('//*[@class]', doc.documentElement, nsResolver,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
-	var ans=[]
-    for(var i = 0; i < result.snapshotLength; i++){
-		var x=result.snapshotItem(i).className
-		if(ans.indexOf(x)==-1)ans.push(x)
-    }
-	return ans
-}
-
 
 /**======================-==-======================*/
 jsExplore={}
@@ -1322,98 +729,414 @@ jsExplore.eval=function(){
  *  end of code completion utils
  ****************************************************************/
 
+$=function(x)document.getElementById(x)
+/**======================-==-======================*/
 
+aceManager = Firebug.Ace = {
+    initialize: function() {
+        var browser = $("jsCode");
+        var win2Wrapped = browser.contentWindow;
+        this.win2 = win2Wrapped.wrappedJSObject;
 
+        var browser = $("result");
+        var win1Wrapped = browser.contentWindow;
+        this.win1 = win1Wrapped.wrappedJSObject;
 
-function initShortCuts(){
-	codebox.addEventListener("keydown", this, true);
-	codebox.addEventListener("keypress", this.keypress, true);
-	//codebox.addEventListener("keyup", this, true);
-}
+        this.win1.startAcebugAutocompleter =
+        this.win2.startAcebugAutocompleter = this.startAutocompleter;
 
-initShortCuts.prototype={
-	pressed:false,
-	stopEvent:function(e){
-		e.preventDefault();e.stopPropagation();
-	},
-	handleEvent:function(e){
-		if(e.ctrlKey)
-			switch(e.which){
-				case KeyboardEvent.DOM_VK_K:
-				case KeyboardEvent.DOM_VK_SPACE:
-					//autocompleter.toggleMode()
-					startCodeCompletion(e.shiftKey?!autocompleter.mode:autocompleter.mode);
-					this.stopEvent(e)
-					break
-				case KeyboardEvent.DOM_VK_RETURN:
-					if(e.shiftKey)
-						printProperties()
-					else
-						executeJS();
-					this.stopEvent(e)
-					break
-				case KeyboardEvent.DOM_VK_DOWN:
-					nextCommandFromHistory();
-					this.stopEvent(e)
-					break
-				case KeyboardEvent.DOM_VK_UP:
-					previousCommandFromHistory();
-					this.stopEvent(e)
-					break
-			}
-	},
-	keypress:function(e){
+        //set Firebug.Ace on wrapped window so that Firebug.getElementPanel can access it
+        win1Wrapped.document.getElementById('editor').ownerPanel = this;
+        win2Wrapped.document.getElementById('editor').ownerPanel = this;
+
+        this.win1.aceManager = this.win2.aceManager = this
+        this.win1.onclose = this.win2.onclose = this.shutdown.bind(this)
 		
-		if ((e.keyCode == e.DOM_VK_TAB) && !(e.ctrlKey || e.altKey || e.metaKey)) {//tab key
+		var starter = FBL.bind(Firebug.largeCommandLineEditor.initialize, Firebug.largeCommandLineEditor)
 
-			//var start = t.selectionStart, end = t.selectionEnd;
-			var ed=codebox.editor
-			var sel=ed.selection
-			var text=sel.toString()
-			var selCon=ed.selectionController
-			if(!text){
-				insertText('\t', codebox)
-			}else{
-				var start, end = codebox.selectionEnd;
-				sel.collapseToStart()
-				selCon.intraLineMove(false,false)
-				start = codebox.selectionStart
-				codebox.selectionEnd = end
+        Firebug.Ace.win2.startAce(starter, null, ['fbace/consoleMode', "fbace/worker"]);
+        Firebug.Ace.win1.startAce(starter, null, ['fbace/consoleMode', "fbace/worker"]);
+    },
 
-				text = codebox.value.slice(start, end)
-				text = e.shiftKey?text.replace('\n\t','\n','g').replace(/^\t/,''):
-								'\t'+text.replace('\n','\n\t','g')
-				insertText(text, codebox)
-				codebox.selectionStart=start
-			}
+    shutdown: function() {
+        if(!this.win1)
+            return
+        this.win1.aceManager = this.win2.aceManager = null
+        this.win1 = this.win2 = null
+    },
 
-			e.stopPropagation();
-			e.preventDefault();
-		}
-		if(String.fromCharCode(e.charCode).toLowerCase()=='d'&& e.ctrlKey){
-			var ed=codebox.editor
-			var sel=ed.selection
-			var text=sel.toString()
-			var selCon=ed.selectionController
-			if(!text){
-				selCon.intraLineMove(false,false)
-				selCon.intraLineMove(true,true)
-				text=sel.toString()
-				sel.collapseToEnd()
-				insertText('\n'+text, codebox)
-			}else{
-				sel.collapseToEnd()
-				insertText(text, codebox)
-			}
-			e.stopPropagation();
-			e.preventDefault();
-		}
-	},
-}
+    // context menu
+    getContextMenuItems: function(nada, target) {
+        var env = target.ownerDocument.defaultView.wrappedJSObject;
+
+        var items = [],
+            editor = env.editor,
+            clipBoardText = gClipboardHelper.getData(),
+            editorText = editor.getCopyText(),
+            self = this;
+        // important: make sure editor is focused
+        editor.focus()
+
+        items.push(
+            {
+                label: $ACESTR("acebug.copy"),
+                command: function() {
+                    gClipboardHelper.copyString(editorText);
+                },
+                disabled: !editorText
+            },
+            {
+                label: $ACESTR("acebug.cut"),
+                command: function() {
+                    gClipboardHelper.copyString(editorText);
+                    editor.onCut();
+                },
+                disabled: !editorText
+            },
+            {
+                label: $ACESTR("acebug.paste"),
+                command: function() {
+                    editor.onTextInput(clipBoardText);
+                },
+                disabled: !clipBoardText
+            },
+            "-",
+            {
+                label: $ACESTR("acebug options"),
+                command: function() {
+                    openDialog('chrome://acebug/content/options.xul','','resizable,centerscreen')
+                }
+            },
+            {
+                label: $ACESTR("acebug.reportissue"),
+                command: function() {
+                    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                        .getService(Components.interfaces.nsIWindowMediator);
+                    var mainWindow = wm.getMostRecentWindow("navigator:browser");
+                    mainWindow.gBrowser.selectedTab = mainWindow.gBrowser.addTab("https://github.com/MikeRatcliffe/Acebug/issues");
+                }
+            }
+        );
+
+        var sessionOwner;
+        switch(editor.session.owner) {
+            case 'console': sessionOwner = Firebug.largeCommandLineEditor; break;
+            case 'stylesheetEditor': sessionOwner = StyleSheetEditor.prototype; break;
+            case 'htmlEditor': sessionOwner = null; break;
+        }
+        sessionOwner && sessionOwner.addContextMenuItems(items, editor, editorText);
+
+        return items;
+    },
+
+    getSourceLink: function(target, object) {
+        var env = target.ownerDocument.defaultView.wrappedJSObject;
+        var session = env.editor.session;
+        if (!session.href)
+            return;
+        var cursor = Firebug.Ace.win1.editor.session.selection.selectionLead;
+        var link = new FBL.SourceLink(session.href, cursor.row);
+        link.column = cursor.column;
+        return link
+    },
+
+    getPopupObject: function(target) {
+        return null;
+    },
+
+    getTooltipObject: function(target) {
+        return null;
+    },
+
+    // save and load
+    initFilePicker: function(session, mode) {
+        var ext = session.extension,
+            fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker),
+            ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+        if (mode == 'save')
+            fp.init(window, $ACESTR("acebug.saveas"), Ci.nsIFilePicker.modeSave);
+        else
+            fp.init(window, $ACESTR("acebug.selectafile"), Ci.nsIFilePicker.modeOpen);
+
+        // try to set initial file
+        if (session.filePath) {
+            try{
+                var file = ios.newURI(session.filePath, null, null);
+                file = file.QueryInterface(Ci.nsIFileURL).file;
+                fp.displayDirectory = file.parent;
+                var name = file.leafName;
+                fp.defaultString = file.leafName;
+            } catch(e) {}
+        }
+        // session.extension not always is the same as real extension; for now 
+        if (name && name.slice(-ext.length) != ext)
+            fp.appendFilters(Ci.nsIFilePicker.filterAll);
+
+        if (ext)
+            fp.appendFilter(ext, "*." + ext);
+        fp.appendFilters(Ci.nsIFilePicker.filterAll);
+
+        return fp;
+    },
+
+    loadFile: function(editor) {
+        var result, name, result,
+            session = editor.session, ext = session.extension,
+            ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+        var fp = this.initFilePicker(session, 'open');
+
+        result = fp.show();
+
+        if (result == Ci.nsIFilePicker.returnOK) {
+            session.setValue(readEntireFile(fp.file));
+            session.setFileInfo(ios.newFileURI(fp.file).spec);
+        }
+    },
+
+    saveFile: function(editor, doNotUseFilePicker) {
+        var file, name, result, session = editor.session,
+            ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService),
+            fp = this.initFilePicker(session, 'save');
+
+        if (doNotUseFilePicker && session.href) {
+            try {
+                file = ios.newURI(session.href, null, null)
+                    .QueryInterface(Ci.nsIFileURL).file;
+                if (file.exists()) {
+                    result = Ci.nsIFilePicker.returnOK;
+                    fp = {file: file};
+                }
+            } catch(e){}
+        }
+
+        if (!fp.file)
+            result = fp.show();
+        if (result == Ci.nsIFilePicker.returnOK) {
+            file = fp.file;
+            name = file.leafName;
+
+            if (name.indexOf('.')<0) {
+                file = file.parent;
+                file.append(name + '.' + session.extension);
+            }
+
+            writeFile(file, session.getValue());
+            if (!session.filePath)
+                session.setFileInfo(ios.newFileURI(file).spec);
+        }
+        else if (result == Ci.nsIFilePicker.returnReplace) {
+            writeFile(fp.file, session.getValue());
+            if (!session.filePath)
+                session.setFileInfo(ios.newFileURI(file).spec);
+        }
+    },
+
+    savePopupShowing: function(popup) {
+        FBL.eraseNode(popup)
+        FBL.createMenuItem(popup, {label: 'save As', nol10n: true });
+    },
+
+    loadPopupShowing: function(popup) {
+        FBL.eraseNode(popup)
+        FBL.createMenuItem(popup, {label: 'ace auto save', nol10n: true });
+    },
+
+    getUserFile: function(id){
+        var file = Services.dirsvc.get(dir||"ProfD", Ci.nsIFile);
+        file.append('acebug')
+        file.append('autosave-'+id)
+        return file
+    },
 
 
+    // search
+    search: function(text, reverse) {
+        var e = this.editor;
+        e.$search.set({
+            needle: text,
+            backwards: reverse,
+            caseSensitive: Firebug.searchCaseSensitive,
+            //regExp: Firebug.searchUseRegularExpression,
+        });
 
+        var range = e.$search.find(e.session);
+        if (!range) {
+            range = e.selection.getRange();
+            if (!range.isEmpty()) {
+                range.end = range.start;
+                e.selection.setSelectionRange(range);
+                range = e.$search.find(e.session);
+            }
+        }
 
+        if (range) {
+            e.gotoLine(range.end.row + 1, range.end.column);
+            e.selection.setSelectionRange(range);
+        }
+        return range&&!range.isEmpty();
+    }
+};
+
+Firebug.largeCommandLineEditor = {
+    initialize: function(window) {       
+        var editor = window.editor;
+        editor.session.owner = 'console';
+        editor.session.href = '';
+        editor.session.autocompletionType = 'console';
+
+        // set mode which allows cells and, js+coffeescript combination
+        window.initConsoleMode(editor)
+
+        //add shortcuts
+        editor.addCommands({
+            execute: function()Firebug.largeCommandLineEditor.enter(true, false),
+            dirExecute: function()Firebug.largeCommandLineEditor.enter(true, true)
+        });
+		// fixme
+		codebox = Firebug.Ace.win2.editor
+		resultbox = Firebug.Ace.win1.editor
+    },
+
+    _setValue: function(text) {
+        var editor = Firebug.Ace.win2.editor;
+        editor.session.doc.setValue(text);
+        return text;
+    },
+
+    //* * * * * * * * * * * * * * * * * * * * * * * * *
+    set value(val) {
+        if (this._setValue)
+            return this.setValue(val);
+        if (arguments.callee.caller == Firebug.CommandLine.commandHistory.onMouseUp) {
+            var mode = Firebug.Ace.win2.editor.session.getMode()
+            if (mode.setCellText)
+                return mode.setCellText(val)
+            return this.setValue(val);
+        }
+        return val;
+    },
+
+    // emulate textarea for firebug compatibility
+    __noSuchMethod__: function() {
+    },
+    addContextMenuItems: function(items, editor, editorText) {
+        items.unshift(
+            {
+                label: $ACESTR("acebug.executeselection"),
+                command: function() {
+                    Firebug.CommandLine.enter(Firebug.currentContext, editorText);
+                },
+                disabled: !editorText
+            },
+            {
+                label: $ACESTR("acebug.streamcomment"),
+                command: function() {
+                    editor.execCommand('toggleStreamComment');
+                }
+            },
+            "-"
+        );
+    },
+
+    // * * * * * * * * * * * * * * * * * * * * * *
+    enter: function(runSelection, dir) {
+        this.$useConsoleDir = dir;
+        var editor = Firebug.Ace.win2.editor;
+        var cell = editor.session.getMode().getCurrentCell();
+        this.cell = cell;
+
+        if (runSelection)
+            var text = editor.getCopyText();
+        if (!text) {
+            //log lines with breakpoints
+            var bp = editor.session.$breakpoints;
+            if (cell.coffeeError) {
+                this.logCoffeeError(cell.coffeeError);
+                return;
+            } else if (cell.coffeeText) {
+                text = cell.coffeeText
+            } else
+                text = cell.body.map(function(x, i) {
+                    if (bp[i + cell.bodyStart]) {
+                        // strip comments and ;
+                        x = x.replace(/\/\/.*$/, '')
+                             .replace(/;\s*$/, '')
+                             .replace(/^\s*var\s+/g, '')
+                        if(x)
+                            x = 'console.log(' + x + ')'
+                    }
+                    return x;
+                }).join('\n');
+            Firebug.CommandLine.commandHistory.appendToHistory(cell.body.join('\n'));
+        }
+        text = text.replace(/\.\s*$/, '');
+
+        Firebug.largeCommandLineEditor.runUserCode(text, cell);
+    },
+    setThisValue: function(code, cell){
+        cell = cell || Firebug.Ace.win2.editor.session.getMode().getCurrentCell();
+        var thisValue = cell.headerText.match(/this\s*=(.*)/)
+        if (thisValue&&code){
+            code = '(function(){return eval(' + code.quote() + ')}).call(' + thisValue[1] + ')'
+        }
+        dump(code)
+        return code
+    },
+    setErrorLocation: function(context){
+        Firebug.CommandLine.evaluate('++++', context, context.thisValue, null,
+            dump, function(error) {
+                var source = error.source.split('++++')
+                context.errorLocation={
+                    fileName: error.fileName,
+                    lineNumber: error.lineNumber,
+                    before: source[0].length,
+                    after: -source[1].length,
+                }
+            }
+        );
+    },
+
+    runUserCode: function(code, cell) {
+        var context = Firebug.currentContext;
+        if(!context.errorLocation)
+            this.setErrorLocation(context);
+
+        var shortExpr = FBL.cropString(code.replace(/\s*/g, ''), 100);//\xAD \u2009
+        Firebug.Console.log("in:" + (inputNumber++) + ">>> " + cell.sourceLang + shortExpr, context, "command", FirebugReps.Text);
+
+        code = this.setThisValue(code, this.cell);
+        this.lastEvaledCode = code;
+        Firebug.CommandLine.evaluate(code, context, context.thisValue, null,
+            Firebug.largeCommandLineEditor.logSuccess,
+            Firebug.largeCommandLineEditor.logError
+        );
+    },
+    logSuccess: function(e){
+        Firebug.largeCommandLineEditor.$useConsoleDir?
+            Firebug.Console.log(e,  Firebug.currentContext, "dir", Firebug.DOMPanel.DirTable):
+            Firebug.Console.log(e);
+    },
+    logError: function(error) {
+        var loc = Firebug.currentContext.errorLocation
+        var self = Firebug.largeCommandLineEditor;
+        var source = error.source.slice(loc.before, loc.after);
+        if(loc.fileName == error.fileName && source == self.lastEvaledCode) {
+            var cellStart = self.cell.bodyStart;
+            var lineNumber = error.lineNumber - loc.lineNumber;
+            var lines = source.split('\n');
+            var line = lines[lineNumber]||lines[lineNumber-1];
+            Firebug.Console.log(error.toString() + ' `' + line + '` @'+(lineNumber+cellStart));
+        } else
+            Firebug.Console.log(error);
+    },
+    logCoffeeError: function(error) {
+        Firebug.Console.log(error.text + ' `' + error.source + '` @'+(error.row+this.cell.bodyStart));
+    }
+};
+
+var inputNumber = 0;
+
+/**======================-==-======================*/
 
 var ConfigManager = {
 	CONFIG_FILE_NAME: "executhistory.xml",
@@ -1430,7 +1153,7 @@ var ConfigManager = {
 	getConfigFile: function(){
 		
 		}
-			}
+}
 
 
 

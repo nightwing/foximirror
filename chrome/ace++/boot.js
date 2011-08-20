@@ -125,13 +125,15 @@ var lookup = function(moduleName) {
 };
 //*********************************************************************************************
 
-var onLaunch;
+var onLaunch, launched;
 var startAce = function(callback, options, deps) {
     if (onLaunch) {
         onLaunch = callback || onLaunch;
+		if(launched)
+			onLaunch(window)
         return;
     }
-    onLaunch = callback || function() {};
+    onLaunch = callback || true;
     // "ace/mode/javascript", "ace/mode/css", are loaded with html  // "ace-uncompressed" for debugging
     var rootDeps = ["fbace/scrollbar", "fbace/startup", "res/ace-uncompressed", "ace/mode/xml", "ace/mode/html"];
     if (!options)
@@ -152,12 +154,9 @@ var startAce = function(callback, options, deps) {
 		rootDeps.unshift.apply(rootDeps, deps)
 
 	require(rootDeps, function() {
-        var catalog = require("pilot/plugin_manager").catalog;
-        catalog.registerPlugins([ "pilot/index" ]).then(function() {
-            var env = require("pilot/environment").create();
-            catalog.startupPlugins({ env: env }).then(function() {
-                require("fbace/startup").launch(env, options);
-            }).then(onLaunch);
-        });
+        require("fbace/startup").launch({}, options);
+		launched = true
+		onLaunch(window)
+		onLaunch = true
     });
 };

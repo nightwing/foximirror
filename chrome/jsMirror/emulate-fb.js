@@ -6,9 +6,6 @@ else
 		return function bound() fn.apply(object, arguments);
 	}
 FBL.extend = function (l, r) {
-    if (!l || !r) {
-        throw new Error("FBL.extend on undefined object");
-    }
     var newOb = {};
     for (var n in l) {
         newOb[n] = l[n];
@@ -18,6 +15,11 @@ FBL.extend = function (l, r) {
     }
     return newOb;
 }
+FBL.eraseNode = function (node) {
+    while (node.lastChild)
+        node.removeChild(node.lastChild);
+}
+FBL.createMenuItem = MenuUtils.createMenuItem
 Firebug = {Ace: {}}
 var Cc = Components.classes;
 var Ci = Components.interfaces;

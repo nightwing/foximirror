@@ -1,115 +1,104 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="css.css" type="text/css"?>  
-<?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>  
+<?xml-stylesheet href="css.css" type="text/css"?>
+<?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>
 
 
-<window
-    id="executeJSWindow"
-    title="JSMirror"
-    orient="horizontal"
-    width="800"
-    height="550"
-    persist="screenX screenY width height sizemode"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    onload="doOnload()"
-    onunload="doOnUnload()"
-	windowtype='shadia:jsMirror'
-    >
-	
-	<script type="application/javascript" src="../shadia.js"/>
-    <script type="application/x-javascript" src="jsMirror.js"/>
-	
+<window id="jsMirror" title="JSMirror" windowtype='shadia:jsMirror'
+		width="800" height="550" persist="screenX screenY width height sizemode"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml"
+		onload="doOnload()" onunload="doOnUnload()">
 
-	<keyset>
-		<key keycode="VK_F5" oncommand="ReopenWin()"/>
-	</keyset>
-	
-    <popupset>
-        <menupopup id="pupCommandAbbr" position="after_end" ignorekeys="false"/>
-        <menupopup id="pupCodeCompletion" position="after_end" ignorekeys="false"/>
-		
-
-		<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
-		<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
-			<hbox>
-				<toolbarbutton label='qi'  accesskey='q' onclick='jsExplore.qi()'/>
-				<toolbarbutton label='all' accesskey='a' onclick='jsExplore.all()'/>
-				<toolbarbutton label='_p'  accesskey='p' onclick='jsExplore._p()'/>
-				<toolbarbutton label='si'  accesskey='s' onclick='jsExplore.si()'/>
-				<toolbarbutton label='gs'  accesskey='g' onclick='jsExplore.gs()'/>
-				<spacer flex='1'/>
-				<toolbarbutton label='ev'  accesskey='e' onclick='jsExplore.eval()'/>
-				<toolbarbutton label='&#8251;'  accesskey='' onclick='jsExplore.reveal()'/>
-				<label/>
-			</hbox>
-			<stack id='autocomplatePanelStack' flex='1'>
-				<hbox>
-					<tree id="window-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
-							hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
-						<treechildren id="inspector-tree-body"/>
-
-						<treecols>
-							<treecol id="name" hideheader="true" primary="true" flex="1" />
-							<splitter class="tree-splitter"/>
-							<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
-							<splitter class="tree-splitter"/>
-							<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
-						</treecols>
-					</tree> 
-					<splitter/>
-					<textbox multiline='true' id='autocomplate-bubble' flex='1' wrap='off' width='200' />
-				</hbox>
-				<resizer element='autocomplatePanel' dir="bottomleft" left="0" bottom="0" width="16" height="16"/>
-				<resizer element='autocomplatePanel' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
-			</stack>
-		</panel>
-    </popupset>
-
-
-   <vbox flex="1">
-<toolbar id='actionsp'>	
-	<toolbarbutton label="//" oncommand="commentLine();" tabindex="8"/>
-	<toolbarbutton label="/*" oncommand="commentBlock();"/>
-	<toolbarbutton label="\t" oncommand="codebox.value=codebox.value.replace('\t','  ','g');"/>
-	<hbox width="10px"/>
-	<toolbar align="center">
-		<menulist id="targetWin" oncommand="targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
-			<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
-				<template>
-					<rule>
-						<menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-					</rule>
-				</template>
-			</menupopup>
-		</menulist>
-		<checkbox id="contentWinCB" persist="checked" disabled="false" label="Content Window" oncommand="targetWinChanged()" tabindex="2"/>
-	</toolbar>
-	<spacer flex='1'/>
-	<shadiaglue/>		
-</toolbar>
-<vbox flex="10">
-	<textbox id="jsCode" multiline="true" flex="1"  wrap='off'
-		style="overflow:hidden;word-wrap:  normal | break-word;font-family:monospace;font-size:9.5pt;-moz-tab-size:4" persist='height' />
-
-		<browser id="jsCode" context='main-context'
-				type='content' persist='height' src='chrome://shadia/content/ace++/simple-editor.html'/>
-	<splitter>
-		<hbox flex="1">
-			<toolbarbutton label="Clear"      oncommand="clearResult()" />
-			<hbox style='border:solid gray 1px'/>
-			<toolbarbutton label="run"  	onclick="executeJS('',     event.button==2)" style='color:darkblue' />
-			<toolbarbutton label="dir" 		onclick="executeJS('sel',  event.button==2)" style='color:green'/>
-			<toolbarbutton label="line"    	onclick="executeJS('line', event.button==2)"  />
+<popupset>
+	<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
+	<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
+		<hbox>
+			<toolbarbutton label='qi'  accesskey='q' onclick='jsExplore.qi()'/>
+			<toolbarbutton label='all' accesskey='a' onclick='jsExplore.all()'/>
+			<toolbarbutton label='_p'  accesskey='p' onclick='jsExplore._p()'/>
+			<toolbarbutton label='si'  accesskey='s' onclick='jsExplore.si()'/>
+			<toolbarbutton label='gs'  accesskey='g' onclick='jsExplore.gs()'/>
 			<spacer flex='1'/>
-			<toolbarbutton label="wrap"     onclick="toggleWrap(event.button==2?resultbox:codebox)"/>
-			<toolbarbutton label="timer"    oncommand="insertTimer()"  />
+			<toolbarbutton label='ev'  accesskey='e' onclick='jsExplore.eval()'/>
+			<toolbarbutton label='&#8251;'  accesskey='' onclick='jsExplore.reveal()'/>
+			<label/>
 		</hbox>
-	</splitter>
-	<textbox id="result" multiline="true" flex="1" wrap='on'  persist='height'
-			style="-moz-tab-size:4"	/>
+		<stack id='autocomplatePanelStack' flex='1'>
+			<hbox>
+				<tree id="window-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
+						hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
+					<treechildren id="inspector-tree-body"/>
+
+					<treecols>
+						<treecol id="name" hideheader="true" primary="true" flex="1" />
+						<splitter class="tree-splitter"/>
+						<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
+						<splitter class="tree-splitter"/>
+						<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
+					</treecols>
+				</tree>
+				<splitter/>
+				<textbox multiline='true' id='autocomplate-bubble' flex='1' wrap='off' width='200' />
+			</hbox>
+			<resizer element='autocomplatePanel' dir="bottomleft" left="0" bottom="0" width="16" height="16"/>
+			<resizer element='autocomplatePanel' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
+		</stack>
+	</panel>
+
+	<menupopup id='main-context' onpopupshowing='MenuUtils.onContextShowing(event)'/>
+</popupset>
+
+<vbox flex="1">
+	<toolbar id='actionsp'>
+		<toolbarbutton label="//" oncommand="commentLine();" tabindex="8"/>
+		<toolbarbutton label="/*" oncommand="commentBlock();"/>
+		<toolbarbutton label="\t" oncommand="codebox.value=codebox.value.replace('\t','  ','g');"/>
+		<hbox width="10px"/>
+		<toolbar align="center">
+			<menulist id="targetWin" oncommand="targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
+				<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+					<template>
+						<rule>
+							<menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+						</rule>
+					</template>
+				</menupopup>
+			</menulist>
+			<checkbox id="contentWinCB" persist="checked" disabled="false" label="Content Window" oncommand="targetWinChanged()" tabindex="2"/>
+		</toolbar>
+		<spacer flex='1'/>
+		<shadiaglue/>
+	</toolbar>
+	<vbox flex="10">
+		<browser id="jsCode" context='main-context'
+					type='content' persist='height' src='chrome://shadia/content/ace++/simple-editor.html'/>
+		<splitter>
+			<hbox flex="1">
+				<toolbarbutton label="Clear"      oncommand="clearResult()" />
+				<hbox style='border:solid gray 1px'/>
+				<toolbarbutton label="run"  	onclick="executeJS('',     event.button==2)" style='color:darkblue' />
+				<toolbarbutton label="dir" 		onclick="executeJS('sel',  event.button==2)" style='color:green'/>
+				<toolbarbutton label="line"    	onclick="executeJS('line', event.button==2)"  />
+				<spacer flex='1'/>
+				<toolbarbutton label="wrap"     onclick="toggleWrap(event.button==2?resultbox:codebox)"/>
+				<toolbarbutton label="timer"    oncommand="insertTimer()"  />
+			</hbox>
+		</splitter>
+		<browser id="result"  context='main-context' flex='1'
+				type='content' src='chrome://shadia/content/ace++/simple-editor.html'/>
+	</vbox>
 </vbox>
-    </vbox>
+
+
+<script type="application/javascript" src="../shadia.js"/>
+
+<script type="application/javascript" src="../utils/prefUtils.js"/>
+<script type="application/javascript" src="../utils/fileUtils.js"/>
+<script type="application/x-javascript" src="menuUtils.js"/>
+<script type="application/x-javascript" src="emulate-fb.js"/>
+
+<script type="application/x-javascript" src="jsMirror.js"/>
+<script type="application/x-javascript" src="autocompleter.js"/>
+
 
 </window>

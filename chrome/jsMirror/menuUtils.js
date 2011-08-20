@@ -115,14 +115,15 @@ MenuUtils.onContextShowing = function(event){
 		return;
 
 	var target = document.popupNode;
-	var p=target
-	while(p&&!p.repObject)
-		p=p.parentNode
+	var p = target
+	while(p && !p.ownerPanel)
+		p = p.parentNode
 
 	removeAllChildren(popup);
-p=this
+	
+	p = (p && p.ownerPanel)||this
 	if (p){
-		var items = p.getContextMenuItems(target);
+		var items = p.getContextMenuItems(null, target);
 		if (items) {
 			for (var i = 0; i < items.length; ++i)
 				MenuUtils.createMenuItem(popup, items[i]);
@@ -133,7 +134,7 @@ p=this
 		return false;
 }
 
-MenuUtils.getContextMenuItems = function(target) {
+MenuUtils.getContextMenuItems = function(_, target) {
 	var env = target.ownerDocument.defaultView.wrappedJSObject;
 dump(target)
 	var items = [],
@@ -185,32 +186,5 @@ dump(target)
 
 
 /***********************************************************/
-var gClipboardHelper = {
-    cbHelperService: Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper),
-
-    copyString: function(str) {
-        if (str)
-            this.cbHelperService.copyString(str);
-    },
-
-    getData: function() {
-        try{
-            var pastetext,
-                clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard),
-                trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable),
-                str={},
-                strLength={};
-
-            trans.addDataFlavor("text/unicode");
-            clip.getData(trans,1);
-            trans.getTransferData("text/unicode",str,strLength);
-            str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
-            pastetext = str.data.substring(0, strLength.value/2) || "";
-            return pastetext;
-        } catch(e) {
-            Components.utils.reportError(e);
-            return "";
-        }
-    }
-};
+var gClipboardHelper = $shadia.clipboardHelper
 /***********************************************************/
