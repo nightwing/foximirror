@@ -5922,7 +5922,7 @@ canon.addCommand({
     name: "replace",
     bindKey: bindKey("Ctrl-R", "Command-Option-F"),
     exec: function(env, args, request) {
-        var needle = prompt("Find:");
+        var needle = prompt("Find:", env.editor.getCopyText());
         if (!needle)
             return;
         var replacement = prompt("Replacement:");
@@ -5935,10 +5935,10 @@ canon.addCommand({
     name: "replaceall",
     bindKey: bindKey("Ctrl-Shift-R", "Command-Shift-Option-F"),
     exec: function(env, args, request) {
-        var needle = prompt("Find:");
+        var needle = prompt("Find:", env.editor.getCopyText());
         if (!needle)
             return;
-        var replacement = prompt("Replacement:");
+        var replacement = prompt("Replacement:", needle);
         if (!replacement)
             return;
         env.editor.replaceAll(replacement, {needle: needle});

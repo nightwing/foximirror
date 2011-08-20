@@ -46,15 +46,44 @@ req.onload = function(){
 	var val = req.responseText;
 	var uri = req.channel.name
 	var mime = req.getResponseHeader('Content-Type')
-	if(uri[uri.length-1]=='/' && uri.search(/^(file|jar):/)==0){//directory listing
-		val = decodeURIComponent(val.replace(' ','\t','g'))
+	if(uri[uri.length-1]=='/' && uri.search(/^(file|jar):/)==0){
+		// directory listing =============================================================================
+		var a = val.split('\n')
+		var dmax=0,d=[]
+		for(var i = 0; i < a.length; i++){
+			var str = a[i]
+			if(!str){
+				d[i]=0        
+				continue
+			}
+			str = str.trim().replace(' ','\t','g')
+			var b = a[i] = decodeURIComponent(str).split('\t')
+			if(!b[2]) {
+				d[i]=0        
+				continue
+			}
+			d[i] = b[1].length + b[2].length
+			if (d[i] > dmax)
+				dmax = d[i]
+		}
+		//special row
+		a[1][3] += Array(17).join(' ')
+		for(i=0;i<a.length;i++){
+			if(!a[i])
+				continue
+			if(a[i][2])
+				a[i][1] += Array(dmax-d[i]+4).join('\xA0')
+			a[i]=a[i].join('\xA0\xA0\xA0\xA0')
+		}
+		val = a.join('\n')
+
+		//directory listing =============================================================================
 		var s = createSession(val, uri, mime)
 		s.mimeType = 'file-listing'
 	}else
 		var s=createSession(val, uri, mime)
 	editor.setSession(s)
 	doURICommand(gCommand)
-
 }
 function stopReq(noAbort) {
 	noAbort || req.abort()
@@ -225,7 +254,7 @@ getContextMenuItems = function() {
 					newUri += editorText
 				else {
 					var row = editor.selection.getCursor().row
-					var match = editor.session.getLine(row).match(/201\:\t*([^\t]*)/)
+					var match = editor.session.getLine(row).match(/201\:\xA0*([^\xA0]*)/)
 					if(match){
 						newUri = newUri+match[1]
 					}else

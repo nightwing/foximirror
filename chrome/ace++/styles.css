@@ -123,6 +123,7 @@ separator{
     z-index: 1000;
     -moz-border-radius-bottomright: 20px;
     border-bottom-right-radius: 20px;
+	border-radius: 20px;
 }
 
 #toggleWrap:hover{
