@@ -6,6 +6,7 @@ OnExit GuiClose
 
   zoom = 9                ; initial magnification, 1..32
   halfside = 128          ; circa halfside of the magnifier
+  oldcolor = 0
   part := halfside/zoom
   Rz := Round(part)
   R := Rz*zoom
@@ -67,12 +68,15 @@ Loop{
     DrawCross(LineMargin, R, zoom, hdc_frame)                        
     
     color:=DllCall("GetPixel", UInt, hdd_frame, Int, x, Int, y)
-	colorR:=color & 0xff
-	colorG:=(color>>8) & 0xff
-	colorB:=(color>>16) & 0xff
-	color=% "rgb(" colorR "," colorG "," colorB ")"
-    TrayTip,,% color 
-;WinSetTitle ,ahk_id %MagnifierID%,, %color%
+	if (color != oldcolor){
+		oldcolor = %color%
+		colorR:=color & 0xff
+		colorG:=(color>>8) & 0xff
+		colorB:=(color>>16) & 0xff
+		colorStr=% "rgb(" colorR "," colorG "," colorB ")"
+		
+		WinSetTitle ,ahk_id %MagnifierID%,, %colorStr% "press ctrl+shift+c"
+	}
 	If GetKeyState("Esc")
 		Break
 }
@@ -117,6 +121,16 @@ setZoom:
    ; Gui 2:Show, % "w" 2*R+zoom+3 " h" 2*R+zoom+3 " x0 y0", Magnifier
    ; TrayTip,,% "Zoom = " Round(100*zoom) "%"
 return
+F1::
+	MouseGetPos, x, y
+	color:=DllCall("GetPixel", UInt, hdd_frame, Int, x, Int, y)
+	colorR:=color & 0xff
+	colorG:=(color>>8) & 0xff
+	colorB:=(color>>16) & 0xff
+	colorStr=% "rgb(" colorR "," colorG "," colorB ")"
+  	clipboard:=colorStr
+	WinSetTitle ,ahk_id %MagnifierID%,, %colorStr% "was copied"
+return
 
 #c::
 ^+c::
@@ -126,8 +140,9 @@ CopyColor:
 	colorR:=color & 0xff
 	colorG:=(color>>8) & 0xff
 	colorB:=(color>>16) & 0xff
-	color=% "rgb(" colorR "," colorG "," colorB ")"
-  	clipboard:=color
+	colorStr=% "rgb(" colorR "," colorG "," colorB ")"
+  	clipboard:=colorStr
+	WinSetTitle ,ahk_id %MagnifierID%,, %colorStr% "was copied"
 return
 
 
