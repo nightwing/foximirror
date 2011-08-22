@@ -295,7 +295,7 @@ jn.bait= modernFox?(function(a){
 
 
 function getClass(x) {
-	if(x == null) return String(x);
+	/* if(x == null) return String(x); */
     return Object.prototype.toString.call(x).slice(8,-1)
 }
 function supportedInterfaces(element){

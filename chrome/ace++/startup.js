@@ -455,7 +455,7 @@ exports.launch = function(env, options) {
     Renderer.prototype.moveTextAreaToCursor =
 	require("ace/layer/text").Text.prototype.$pollSizeChanges=function(){}
 	Editor.prototype.setFontSize= function(size){
-		this.container.fontSize = size
+		this.container.style.fontSize = size
 		this.renderer.$textLayer.checkForSizeChanges()
 	}
 	// selection on first/last lines

@@ -5435,7 +5435,6 @@ define('ace/mouse_handler', ['require', 'exports', 'module' , 'pilot/event', 'pi
 
 var event = require("pilot/event");
 var dom = require("pilot/dom");
-var BrowserFocus = require("pilot/browser_focus").BrowserFocus;
 
 var STATE_UNKNOWN = 0;
 var STATE_SELECT = 1;
@@ -5447,7 +5446,6 @@ var DRAG_OFFSET = 5; // pixels
 var MouseHandler = function(editor) {
     this.editor = editor;
     
-    this.browserFocus = new BrowserFocus();
     event.addListener(editor.container, "mousedown", function(e) {
         editor.focus();
         return event.preventDefault(e);
@@ -5502,20 +5500,7 @@ var MouseHandler = function(editor) {
             && selectionRange.contains(pos.row, pos.column);
         
         var state = STATE_UNKNOWN;
-        
-        // if this click caused the editor to be focused should not clear the
-        // selection
-        if (
-            inSelection && (
-                !this.browserFocus.isFocused()
-                || new Date().getTime() - this.browserFocus.lastFocus < 20
-                || !this.editor.isFocused()
-            )
-        ) {
-            this.editor.focus();
-            return;
-        }
-
+                
         var button = event.getButton(e);
         if (button !== 0) {
             if (selectionEmpty) {
@@ -5712,70 +5697,6 @@ var MouseHandler = function(editor) {
 exports.MouseHandler = MouseHandler;
 });
 
-define('pilot/browser_focus', ['require', 'exports', 'module' , 'pilot/oop', 'pilot/event', 'pilot/event_emitter'], function(require, exports, module) {
-
-var oop = require("pilot/oop");
-var event = require("pilot/event");
-var EventEmitter = require("pilot/event_emitter").EventEmitter;
-
-/**
- * This class keeps track of the focus state of the given window.
- * Focus changes for example when the user switches a browser tab,
- * goes to the location bar or switches to another application.
- */ 
-var BrowserFocus = function(win) {
-    win = win || window;
-    
-    this.lastFocus = new Date().getTime();
-    this._isFocused = true;
-    
-    var _self = this;
-
-    // IE < 9 supports focusin and focusout events
-    if ("onfocusin" in win.document) {
-        event.addListener(win.document, "focusin", function(e) {
-            _self._setFocused(true);
-        });
-
-        event.addListener(win.document, "focusout", function(e) {
-            _self._setFocused(!!e.toElement);
-        });
-    }
-    else {
-        event.addListener(win, "blur", function(e) {
-            _self._setFocused(false);
-        });
-
-        event.addListener(win, "focus", function(e) {
-            _self._setFocused(true);
-        });
-    }
-};
-
-(function(){
-
-    oop.implement(this, EventEmitter);
-    
-    this.isFocused = function() {
-        return this._isFocused;
-    };
-    
-    this._setFocused = function(isFocused) {
-        if (this._isFocused == isFocused)
-            return;
-            
-        if (isFocused)
-            this.lastFocus = new Date().getTime();
-            
-        this._isFocused = isFocused;
-        this._emit("changeFocus");
-    };
-
-}).call(BrowserFocus.prototype);
-
-
-exports.BrowserFocus = BrowserFocus;
-});
 
 define('ace/keyboard/keybinding', ['require', 'exports', 'module' , 'pilot/useragent', 'pilot/keys', 'pilot/event', 'pilot/settings', 'pilot/canon', 'ace/commands/default_commands'], function(require, exports, module) {
 

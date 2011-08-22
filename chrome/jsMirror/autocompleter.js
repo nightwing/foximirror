@@ -59,8 +59,8 @@ Firebug.Ace.BaseAutocompleter = {
 
         this.bubble = document.getElementById("autocomplate-info-bubble");
         //set handlers
-        this.panel.setAttribute('onpopupshown', 'Firebug.Ace.autocompleter.setView(0)');
-        this.panel.setAttribute('onpopuphidden', 'Firebug.Ace.autocompleter.finish()');
+        this.panel.setAttribute('onpopupshown', 'if(event.target==this)Firebug.Ace.autocompleter.setView(0)');
+        this.panel.setAttribute('onpopuphidden', 'if(event.target==this)Firebug.Ace.autocompleter.finish()');
         this.tree.setAttribute('ondblclick', 'Firebug.Ace.autocompleter.insertSuggestedText();Firebug.Ace.autocompleter.finish()');
         this.tree.setAttribute('onclick', 'Firebug.Ace.autocompleter.editor.focus()');
         this.tree.setAttribute('onselect', 'Firebug.Ace.autocompleter.onSelect()');
@@ -120,6 +120,9 @@ Firebug.Ace.BaseAutocompleter = {
         };
         //this.bubble.height = this.bubblePos.h;
         //this.bubble.width = this.bubblePos.w;
+		
+		// make global
+		autocompleter = this
     },
 
     $selectionListener: function(e) {
@@ -188,15 +191,17 @@ Firebug.Ace.BaseAutocompleter = {
         /**     doOnselect  **/
         this.onSelectTimeOut = null;
 
-
-            try {
-                var index = this.tree.currentIndex;
-				if(!this.sortedArray)
-					return
-                this.number.value = index + ':' +this.sortedArray.length + "/" + this.unfilteredArray.length;
-                var hint = this.getHint(index);
-                this.sayInBubble(hint);
-            } catch(e) {Cu.reportError(e)}
+		try {
+			var index = this.tree.currentIndex;
+			if(!this.sortedArray)
+				return this.selectedObject = null
+				
+			this.selectedObject = this.sortedArray[index]
+			
+			var hint = this.getHint(index);
+			this.sayInBubble(hint);
+			this.number.value = index + ':' +this.sortedArray.length + "/" + this.unfilteredArray.length;
+		} catch(e) {Cu.reportError(e)}
 
     },
 
@@ -429,16 +434,16 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
 
     // *****************
     getHint: function(index) {
-        var o = this.sortedArray[index], longDescriptor;
+        var o = this.selectedObject, longDescriptor;
         if (o) {
             if (o.isSpecial) {
                 longDescriptor = o.name + '\n' + o.description;
             } else {
-                longDescriptor = jn.inspect(o.object, "long");
+                longDescriptor = jn.inspect2(o.object, "long");
                 longDescriptor += '\n' + jn.lookupSetter(this.object, o.name);
             }
         } else
-            longDescriptor = jn.inspect(this.object);
+            longDescriptor = jn.inspect2(this.object);
 
         return longDescriptor;
     },
@@ -1276,7 +1281,7 @@ var eventNames = [
 /**======================-==-======================*/
 var jn = jn || {};
 
-jn.inspect = function(x, isLong) {
+jn.inspect2 = function(x, isLong) {
     if (x == null)
         return String(x);
 
@@ -1394,17 +1399,6 @@ jn.inspect = function(x, isLong) {
     return nameList.join("");
 };
 
-var InspectHandlers = {
-    CSSStyleSheet: function(x) {
-        return '~' + x.cssRules.length + ' ->' + x.href;
-    },
-    CSSNameSpaceRule: function(x) {
-        return x.cssText;
-    },
-    CSSStyleRule: function(x) {
-        return x.cssText;
-    }
-};
 
 jn.getClass = function(x) {
     return Object.prototype.toString.call(x).slice(8,-1);
