@@ -42,7 +42,7 @@ loadScripts = function(deps, callback, lastUrl) {
     if (!url)
         return callback && callback(_require(lastUrl));
 
-    var script = document.createElement("script");
+    var script = document.createElementNS('http://www.w3.org/1999/xhtml', "script")
     script.type = "text/javascript;version=1.8";
     script.onload = function() {
         this.onload = null;
@@ -156,7 +156,8 @@ var startAce = function(callback, options, deps) {
 	require(rootDeps, function() {
         require("fbace/startup").launch({}, options);
 		launched = true
-		onLaunch(window)
+		
+		onLaunch.call && onLaunch(window)
 		onLaunch = true
     });
 };

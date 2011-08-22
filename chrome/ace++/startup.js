@@ -178,7 +178,7 @@ var Gutter = function(parentEl) {
 
             var wrappedRowLength = this.session.getRowLength(i) - 1;
             while (wrappedRowLength--) {
-                html.push("</div><div class='ace_gutter-cell' style='height:", config.lineHeight, "px'>&brvbar;</div>");
+                html.push("</div><div class='ace_gutter-cell' style='height:", config.lineHeight, "px'>&#166;");
             }
 
             html.push("</div>");
@@ -468,9 +468,12 @@ exports.launch = function(env, options) {
                 / this.lineHeight);
 		if(row<0)
 			row=0
-		else if(row>this.session.getLength()-1)
-			row = this.session.getLength()-1
-
+		else {
+			var maxRow = this.layerConfig.maxHeight/this.layerConfig.lineHeight-1
+			if(row> maxRow)
+				row = maxRow
+		}
+		
         return this.session.screenToDocumentPosition(row, Math.max(col, 0));
     };
 

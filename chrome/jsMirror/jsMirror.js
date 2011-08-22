@@ -1,4 +1,4 @@
-//*****************************************//
+﻿//*****************************************//
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 
@@ -125,7 +125,7 @@ jn.inspect=function(x,long){
 		nameList.push('`'+Class+'` ~'+l)
 		l=Math.min(long?100:10,l)
 		for(var i=0;i<l;i++){
-			nameList.push(x[i])
+			nameList.push(x[i].toString())
 		}
 		return nameList.join(',\n   ');
 	}
@@ -1202,3 +1202,5 @@ cleardump = function(){
 	consoleService.logStringMessage(""); //new Date() + ":  "
     //Components.utils.reportError(e); // report the error and continue execution
 }
+
+/*⨭⨮⫷⫸✓✑✎ ✏ ✐✘✳✯❖➺⟳⟲Ͼ ✓Ͽ߷௵෴༒ↂ⊰ ⊱▒▢ ⚶▣⚜*/
