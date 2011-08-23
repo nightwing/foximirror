@@ -11477,9 +11477,9 @@ var VirtualRenderer = function(container, theme) {
         this.content.style.height = minHeight + "px";
 
         // scroller.scrollWidth was smaller than scrollLeft we needed
-        if (this.$desiredScrollLeft) {
+        if (this.$desiredScrollLeft != null) {
             this.scrollToX(this.$desiredScrollLeft);
-            this.$desiredScrollLeft = 0;
+            this.$desiredScrollLeft = null;
         }
 
         // Horizontal scrollbar visibility may have changed, which changes

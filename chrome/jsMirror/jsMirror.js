@@ -89,9 +89,21 @@ else//4.0b2+
 /**======================-==-======================*/
 
 jn={};
+jn.resultBuffer = []
 jn.say=function(a){
-	appendToConsole(a?a.toString():a)
+	if(!jn.$useResultBuffer)
+		appendToConsole(jn.inspect(a))
+	else
+		jn.resultBuffer.push(a)
 }
+jn.__defineGetter__('safeLoop', function(){
+	if(!jn.safeLoopCounter){
+		e = new Error('>-possibly infinite loop-<')
+		e.lineNumber = Components.stack.caller.lineNumber
+		throw e
+	}
+	return jn.safeLoopCounter--
+})
 
 jn.inspect=function(x,long){	
 	if(x == null) return String(x);
@@ -130,7 +142,7 @@ jn.inspect=function(x,long){
 		nameList.push('`'+Class+'` ~'+l)
 		l=Math.min(long?100:10,l)
 		for(var i=0;i<l;i++){
-			nameList.push(x[i].toString())
+			nameList.push(x[i])
 		}
 		return nameList.join(',\n   ');
 	}
@@ -189,8 +201,8 @@ jn.inspect=function(x,long){
 					nameList.push(',')
 					break
 				}
-				var s = x[i]
-				if(typeof s!='object')
+				var s = x[i], t=typeof s
+				if(typeof s != 'object' && typeof s != 'function')
 					nameList.push(i+':'+x[i],',')
 				else
 					nameList.push(i,',')
@@ -318,7 +330,7 @@ function supportedInterfaces(element){
 		try{
 			if(element instanceof i)
 				ans.push(i)
-		}catch(e){Components.utils.reportError(e)}
+		}catch(e){}
 	}
 	return ans;
 }
@@ -383,7 +395,13 @@ jn.getSourceLink = function(fn){
 }
 /******************/
 jn.unwrap = function(o){
-	return o.wrappedJSObject||o
+	try{
+		return XPCNativeWrapper.unwrap(o)
+	}catch(e){
+		if(o && 'wrappedJSObject' in o)
+			return o.wrappedJSObject||o
+	}
+	return o
 };
 jn.cloneArray = function(o){
 	var ans=[]
@@ -479,58 +497,6 @@ function evalStringOnTarget(string){
 		
 	return ans	
 }
-
-function consoleSummary(x){
-  if(x == null) return String(x);
-  var name,t = typeof x;
-  switch(t){
-    case 'object': break;
-    case 'string': return x;
-    case 'function':
-      name=x.toString()
-      var i=name.indexOf("{")
-      return name.substring(0,i)+x.length;
-    case 'xml': x = x.toXMLString();
-    default: return x +'  '+ t;
-  }
-//  var O2S = Object.prototype.toString;
-
-  var name =x.toString() //O2S.call(x);
-  //for dom nodes
-  var l=x.length
-  if(typeof l==='number')
-     name+='\u2022'+l
-  if(x.nodeName)
-    name+=x.nodeName
-  if(x.id)
-    name+="#"+x.id
-  if(x.className)
-    name+="."+x.className.toString().replace(" ",".",'g')
-  if(x.value)
-    name+="="+x.value
-        if(x.nodeValue)
-    name+="@"+x.nodeValue
-
-
-  return name
-
-}
-function printPropertiesForTarget(target){
-  var result = new Array();
-  if(target.wrappedJSObject!=null){
-    target = target.wrappedJSObject;
-  }
-  var index = 0;
-
-  for(var i in target){
-    try{
-        result[index++] = i + ": " +consoleSummary( target[i]);
-    }catch(e){
-		result[index++] = i + ": " +consoleSummary( e)
-    }
-  }
-  appendToConsole(index+'\n'+result.join("\n"));
-}
   /**/
  /** end of tral **/
 /********************************************************/
@@ -584,16 +550,14 @@ function doOnload(){
 	initGlobals();
 	Firebug.Ace.initialize()
 	
-	initTargetWindow()
-	
 	codebox.focus();
-
 }
 function doOnUnload(){
-	if(!$shadia.jsMirror)
-		$shadia.jsMirror = {}
-	$shadia.jsMirror.value = codebox.session.getValue()
-	$shadia.jsMirror.targetWindowId = targetWindowId
+	var data = $shadia.$jsMirrorData
+	if(!data.newTarget)
+		data.newTarget = {}
+	data.newTarget.code = codebox.session.getValue()
+	data.newTarget.winRef = Cu.getWeakReference(getTargetWindow())
 	
 	var maxHistSize = 100
 	var startIndex = Math.max(0, commandHistory.length-maxHistSize)
@@ -614,19 +578,19 @@ function initGlobals(){
 	currentCommandHistoryPos = commandHistory.length
 }
 
-initTargetWindow = function(){
-	if(window.opener){
-		targetWindowId = getOuterWindowID(shadowInspector.getTopWindow(window.opener))
-		var opener=window.opener
-		var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
-		var resources = cntTargetWinML.menupopup.childNodes//[6].id
-		for(var i=0;i<resources.length;i++)
-			if(mediator.getWindowForResource(resources[i].id)==opener){
-				cntTargetWinML.selectedIndex = i;
-				var found=true
-				break
-			}
-	}
+initTargetWindow = function(window){
+
+	targetWindowId = getOuterWindowID(shadowInspector.getTopWindow(window))
+	var opener=window
+	var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
+	var resources = cntTargetWinML.menupopup.childNodes//[6].id
+	for(var i=0;i<resources.length;i++)
+		if(mediator.getWindowForResource(resources[i].id)==opener){
+			cntTargetWinML.selectedIndex = i;
+			var found=true
+			break
+		}
+	
 	found||(cntTargetWinML.selectedIndex=1);
 
 	targetWinChanged();
@@ -659,6 +623,14 @@ function insertTimer(){
 function appendToConsole(string){
 	insertTextAtEnd(string+'\n', resultbox)
 }
+function appendToConsole2(string){
+	var editor = resultbox
+	editor.clearSelection()	
+	var a = editor.selection.getCursor()
+	var f = editor.session.insert(a, string+'\n')
+	// todo: fix ace
+	editor.renderer.$desiredScrollLeft=0
+}
 function clearResult(){
 	resultbox.value="";
     codebox.focus();
@@ -674,6 +646,7 @@ function insertTextAtEnd(iText, editor){
 	var a = editor.selection.getCursor()
 	var f = editor.session.insert(a, iText)
 	editor.selection.selectTo(a.row, a.column)
+	editor.renderer.$desiredScrollLeft=0
 }
 
 function nextCommandFromHistory(){
@@ -738,6 +711,13 @@ jsExplore.eval=function(){
 	var f = autocompleter.selectedObject.object
 	if(typeof f == 'function')
 		autocompleter.sayInBubble(jn.inspect(f()), true)
+	else
+		autocompleter.sayInBubble('not a function', true)
+}
+
+jsExplore.getParent=function(){
+	var p=jn.getParent(autocompleter.selectedObject.object)
+	autocompleter.sayInBubble(jn.inspect2(p, 'long'), true)
 }
 /*****************
  *  end of code completion utils
@@ -745,29 +725,31 @@ jsExplore.eval=function(){
 
 Firebug.evaluate = function(code, onSuccess, onerror){
 	try{
-		var win = getTargetWindow()	
 		//unwrap
-		try{
-			win = XPCNativeWrapper.unwrap(win)
-		}catch(e){
-			if('wrappedJSObject' in win)
-				win = win.wrappedJSObject||win
-		}
-			
+		var win = jn.unwrap(getTargetWindow())
+					
 		//add jn
 		win.jn=jn
+		jn.$useResultBuffer = true
+		jn.safeLoopCounter = 100000;
 		//evaluate
 		stackStartLineNumber=Components.stack.lineNumber
 		var ans=win.eval(code)
 		dump(ans)
-		//remove jn
-		if(win.location.href!=window.location.href)
-			win.jn=''
 
 		onSuccess(ans, Firebug.currentContext)
 	}catch(e){
 		dump(e)
 		onerror(e, Firebug.currentContext)
+	}finally{
+		//remove jn
+		jn.$useResultBuffer = false
+		if(win.location.href!=window.location.href)
+			win.jn=''
+		if(jn.resultBuffer.length){
+			appendToConsole2(jn.resultBuffer.map(jn.inspect).join('\n'))
+		}
+		jn.resultBuffer = []
 	}
 	return ans	
 
@@ -1060,8 +1042,11 @@ Firebug.largeCommandLineEditor = {
 		// fixme
 		codebox = Firebug.Ace.win2.editor
 		resultbox = Firebug.Ace.win1.editor
-		if($shadia.jsMirror && $shadia.jsMirror.value){
-			codebox.session.doc.setValue($shadia.jsMirror.value)
+		var data = $shadia.$jsMirrorData
+		if(data && data.newTarget){
+			initTargetWindow(data.newTarget.winRef.get())
+			codebox.session.doc.setValue(data.newTarget.code)
+			data.newTarget = null
 			codebox.selectAll();		
 		}
 		codebox.focus()
@@ -1183,14 +1168,19 @@ Firebug.largeCommandLineEditor = {
         var loc = Firebug.currentContext.errorLocation
         var self = Firebug.largeCommandLineEditor;
 
-        if(loc.fileName == error.fileName) {
+		dump(loc.fileName, error.fileName, error.filename)
+        if(self.$useConsoleDir)
+			Firebug.dir(error)
+		else if(loc.fileName == error.fileName || loc.fileName == error.filename) {
+		dump(error.source,'*************')
 			var source = error.source || self.lastEvaledCode//.slice(loc.before, loc.after);
             var cellStart = self.cell.bodyStart;
             var lineNumber = error.lineNumber - loc.lineNumber;
             var lines = source.split('\n');
             var line = lines[lineNumber]||lines[lineNumber-1];
-            Firebug.log(error.toString() + ' `' + line + '` @'+(lineNumber+cellStart));
-        } else
+			var message = error.message||error.toString()
+            Firebug.log(message + ' `' + line + '` @'+(lineNumber+cellStart));
+        } else 
             Firebug.log(jn.inspect(error));
     },
     logCoffeeError: function(error) {

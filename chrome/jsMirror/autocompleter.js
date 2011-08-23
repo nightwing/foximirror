@@ -193,10 +193,8 @@ Firebug.Ace.BaseAutocompleter = {
 
 		try {
 			var index = this.tree.currentIndex;
-			if(!this.sortedArray)
-				return this.selectedObject = null
-				
-			this.selectedObject = this.sortedArray[index]
+							
+			this.selectedObject = (this.sortedArray&&this.sortedArray[index])||{object:this.object}
 			
 			var hint = this.getHint(index);
 			this.sayInBubble(hint);
@@ -378,7 +376,18 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
     },
 
     onEvalFail: function(result, context) {
-        alert(result);
+        this.object = result;
+
+        if (this.$q.functionName) {
+            this.unfilteredArray = getProps(context.global);
+            this.appendSpecialEntries();
+            this.object = context.global;
+        } else {
+            this.unfilteredArray = getProps(result);
+        }
+
+        this.filter(this.unfilteredArray, this.text);
+        this.showPanel();
     },
 
     eval: function(string, context) {
@@ -1473,28 +1482,7 @@ var compareWithPrototype = {
     }
 };
 
-function supportedInterfaces(element) {
-    var ans = [];
-    for each(var i in Ci) {
-        try{
-            if (element instanceof i)
-                ans.push(i);
-        } catch(e) {
-            Components.utils.reportError(e);
-        }
-    }
-    return ans;
-}
-function supportedgetInterfaces(element) {
-    var ans = [];
-    var req = element.QueryInterface(Ci.nsIInterfaceRequestor);
-    for each(var i in Ci) {
-        try{if (req.getInterface(i))
-            ans.push(i);
-        } catch(e) {}
-    }
-    return ans;
-}
+
 
 // ************************************************************************************************
 function makeReq(href) {

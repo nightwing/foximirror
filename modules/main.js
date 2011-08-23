@@ -83,19 +83,17 @@ var addDevelopmentUtils = function(window){
 /** **************************************************************
  *    exported functions
  ** ********************** **/
-toOpenWindowByURI = function (uri, features) {
+getWindowByURI = function (uri, exclude) {
     var winEnum = Services.wm.getEnumerator("");
     while (winEnum.hasMoreElements()) {
         let win = winEnum.getNext();
-        if (win.closed || win == window) {
+        if (win.closed || exclude.indexOf(win)!=-1) {
             continue;
         }
         if (win.location.href == uri) {
-            win.focus();
-            return true;
+            return win;
         }
     }
-	openWindow(uri, features).focus();
 }
 openWindow = function (uri, features){
     var array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
@@ -529,13 +527,14 @@ reloadModule = function(href){
 	Services.scriptloader.loadSubScript(href+'?'+Date.now(), bp);
 	return bp
 }
-reloadModule = function(href){
+reload= function(){
 	try{
 		this.shutdown()
 	}catch(e){
 		Cu.reportError(e)
 	}
 
+	var href = this.$shadia.__URI__
 	var bp = Cu.import(href)
 	// query needed to confuse startupcache in ff 8.0+
 	Services.scriptloader.loadSubScript(href+'?'+Date.now(), bp);
@@ -617,4 +616,23 @@ function shutdown(aData, aReason) {
 	}
 	Services.obs.removeObserver(windowObserver, 'chrome-document-global-created')
 }
+
+
+// jsMirror glue
+$jsMirrorData = {}
+function openJSMirrorFor(window, forceNewInstance, code){
+	let url = "chrome://shadia/content/jsMirror/jsMirror.xul"
+	let jsWin = getWindowByURI(url, [window])
+	if(!forceNewInstance && jsWin){
+		jsWin.initTargetWindow(window)
+		jsWin.focus()
+		return
+	}	
+	
+	$jsMirrorData.newTarget = {winRef: Cu.getWeakReference(window), code: code}
+	openWindow(url)
+
+}
+
+
 

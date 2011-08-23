@@ -19,6 +19,7 @@
 			<toolbarbutton label='si'  accesskey='s' onclick='jsExplore.si()'/>
 			<toolbarbutton label='gs'  accesskey='g' onclick='jsExplore.gs()'/>
 			<spacer flex='1'/>
+			<toolbarbutton label='gp'  accesskey='e' onclick='jsExplore.getParent()'/>
 			<toolbarbutton label='ev'  accesskey='e' onclick='jsExplore.eval()'/>
 			<toolbarbutton label='&#8251;'  accesskey='' onclick='jsExplore.reveal()'/>
 			<label/>

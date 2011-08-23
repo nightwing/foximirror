@@ -67,7 +67,7 @@ this.actions={//external
 			null).focus();		
 		return;
 	}
-	,jsMirror:function(){toOpenWindowByType('shadia:jsMirror', "chrome://shadia/content/jsMirror/jsMirror.xul")}
+	,jsMirror:function()	{$shadia.openJSMirrorFor(window)}
 	,inspector:function()   {toOpenWindowByType('shadia:inspector', "chrome://shadia/content/domMirror/domMirror.xul")}
 	,chromeMirror:function(){toOpenWindowByType('shadia:chromeMirror', "chrome://shadia/content/chromeMirror/chromeMirror.xul")}
 	,cssMirror:function()   {toOpenWindowByType('shadia:cssMirror', "chrome://shadia/content/cssMirror/cssMirror.xul")}
