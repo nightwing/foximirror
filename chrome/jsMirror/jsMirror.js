@@ -104,21 +104,26 @@ jn.inspect=function(x,long){
 	Class=Class.slice(8,-1)
 	
 	if(Class=='Function'){
-		var isNative=/\[native code\]\s*}$/.test(string)//is native function		
-		if(!long){
-			var i=string.indexOf("{")
-			t=isNative?'function[n]': 'function'
-			return t+string.substring(string.indexOf(" "),i-1)+'~'+x.length		
-		}
-		if(isNative){
-			return string+'~'+x.length
-		}		
-		return	string		
+		var isNative = /\[native code\]\s*}$/.test(string); //is native function
+        if(!long){
+            i = string.indexOf("{");
+            if (isNative)
+                t = 'function[n]';
+            else
+                t = 'function';
+
+            return t + string.substring(string.indexOf(" "), i - 1) + "~" + x.length;
+        }
+        if(isNative){
+            var funcName = string.match(/ ([^\(]*)/)[1];
+            return string.replace("()", "(~" + x.length + ")");
+        }
+        return string;	
 	}
 	if(Class=='XML')
-		return Class+'` '+x.toXMLString();
+		return '`'+Class+'` '+x.toXMLString();
 	if(t!='object')
-		return Class+'` '+string
+		return '`'+Class+'` '+string
 	
 	if(Class=='Array'){
 		var l=x.length
@@ -178,11 +183,20 @@ jn.inspect=function(x,long){
 
 	if(nameList.length<6){
 		nameList.push('{')
-		for(var i in x){
-			if(nameList.length>12)
-				break
-			nameList.push(i,',')
-		}
+		try{		
+			for(var i in x){
+				if(nameList.length>12){
+					nameList.push(',')
+					break
+				}
+				var s = x[i]
+				if(typeof s!='object')
+					nameList.push(i+':'+x[i],',')
+				else
+					nameList.push(i,',')
+			}
+			nameList.pop()//last ,
+		}catch(e){}
 		nameList.push('}')
 	}
 
@@ -655,8 +669,11 @@ function insertText(iText,editor){
 	editor.session.insert(editor.selection.getCursor(), iText)
 }
 function insertTextAtEnd(iText, editor){
+	editor.clearSelection()
 	editor.selection.moveCursorFileEnd()
-	editor.session.insert(editor.selection.getCursor(), iText)
+	var a = editor.selection.getCursor()
+	var f = editor.session.insert(a, iText)
+	editor.selection.selectTo(a.row, a.column)
 }
 
 function nextCommandFromHistory(){
@@ -742,12 +759,14 @@ Firebug.evaluate = function(code, onSuccess, onerror){
 		//evaluate
 		stackStartLineNumber=Components.stack.lineNumber
 		var ans=win.eval(code)
+		dump(ans)
 		//remove jn
 		if(win.location.href!=window.location.href)
 			win.jn=''
 
 		onSuccess(ans, Firebug.currentContext)
 	}catch(e){
+		dump(e)
 		onerror(e, Firebug.currentContext)
 	}
 	return ans	
@@ -755,9 +774,20 @@ Firebug.evaluate = function(code, onSuccess, onerror){
 }
 Firebug.dir = function(obj){
 	appendToConsole("Properties for object:");
-	appendToConsole(jn.inspect(obj, 'long'));
-	appendToConsole(jn.inspect(obj, 'long'));
-	
+	var n = 0
+	var ans=''
+	for(var i in obj){
+		ans+=i+': '
+		try{
+			ans+=jn.inspect(obj[i])
+		}catch(e){
+			ans+=jn.inspect(e)
+		}
+		ans+='\n'
+		n++
+	}
+	appendToConsole(jn.inspect(obj)+' ~'+n)	
+	appendToConsole(ans)
 }
 Firebug.log = function(obj){
 	appendToConsole(obj)
@@ -1137,8 +1167,8 @@ Firebug.largeCommandLineEditor = {
 
        // Firebug.log("in:" + (inputNumber++) + ">>> " + cell.sourceLang);
 
-        code = this.setThisValue(code, this.cell);
         this.lastEvaledCode = code;
+        code = this.setThisValue(code, this.cell);
         Firebug.evaluate(code,
             Firebug.largeCommandLineEditor.logSuccess,
             Firebug.largeCommandLineEditor.logError
@@ -1147,14 +1177,14 @@ Firebug.largeCommandLineEditor = {
     logSuccess: function(e){
         Firebug.largeCommandLineEditor.$useConsoleDir?
             Firebug.dir(e):
-            Firebug.log(jn.inspect(e));
+            Firebug.log(jn.inspect(e, 'long'));
     },
     logError: function(error) {
         var loc = Firebug.currentContext.errorLocation
         var self = Firebug.largeCommandLineEditor;
-		error.source=self.lastEvaledCode
-        var source = error.source.slice(loc.before, loc.after);
-        if(loc.fileName == error.fileName && source == self.lastEvaledCode) {
+
+        if(loc.fileName == error.fileName) {
+			var source = error.source || self.lastEvaledCode//.slice(loc.before, loc.after);
             var cellStart = self.cell.bodyStart;
             var lineNumber = error.lineNumber - loc.lineNumber;
             var lines = source.split('\n');

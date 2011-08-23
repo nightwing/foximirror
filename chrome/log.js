@@ -1,10 +1,24 @@
+cropString = function(text, limit){
+    // Make sure it's a string.
+    text = text + "";
+
+    // Use default limit if necessary.
+    if (!limit)
+        limit = 55;
+    if (text.length > limit){
+    	var halfLimit = (limit / 2)-1;
+		return text.substr(0, halfLimit) + '\u22EF' + text.substr(text.length-halfLimit);
+	}
+    return text;
+}
+
 var nsiError = Ci.nsIScriptError
 var nsiError2 = Ci.nsIScriptError2
 var nsiMessage = Ci.nsIConsoleMessage
 var chromeRe = /http/i
 
 parseError = function(w) {
-	var p = {}
+    var p = {}
 	var f = e.flags
 	p.class = (f & 1) ? (f == 9 ? 'dump': 'warn') : 'error'
 	p.code = e.sourceLine
@@ -14,80 +28,78 @@ parseError = function(w) {
 	p.col = e.columnNumber
 	p.row = e.lineNumber
 	p.category = e.category
-	p.isChrome = !p.src.test(chromeRe)
+	p.count = 1
+	p.isChrome = !chromeRe.test(p.src)
 
 	var c = p.category
 	if(c == 'HTML' || c == 'malformed-xml' || c == 'SVG')
 		p.lang = 'xml'
-	if(c == 'CSS Parser' || c == 'CSS Loader')
+	else if(c == 'CSS Parser' || c == 'CSS Loader')
 		p.lang = 'css'
+    else
+		p.lang = 'js'
 	return p	
 }
-
-var errorList = []
-if(e instanceof nsiError){
-	e.QueryInterface(nsiError)
-	errorList.push(parseError(e))
-}else if(e instanceof nsiMessage){
-	errorList.push({class:'log', text: e.message, isChrome:true})
+isSameError = function(a,b){
+	return a.code==b.code
+		&& a.fullText==b.fullText
+		&& a.text==b.text
+		&& a.src==b.src
+		&& a.row==b.row
+		&& a.col==b.col
+		&& a.category==b.category
+		&& a.lang==b.lang
 }
 
 function addHTML(e){
-	'<div class="'+e.class+'">'+
-	
+	return '<div class="'+e.class+'">'+
+		'<span>'+e.lang+'</span>'+
+		'<div>'+escapeHTML(cropString(e.text,355))+'</div>'+
+		'<div>'+escapeHTML(cropString(e.code,355))+'</div>'+
+		'<div>'+escapeHTML(cropString(e.src,30))+'#@'+e.row+':'+e.col+'</div>'+
 	'</div>'
 }
 function escapeHTML(str) str.replace(/[&"<>]/g, function(m)"&"+escapeMap[m]+";");
 var escapeMap = { "&": "amp", '"': "quot", "<": "lt", ">": "gt" }
 
 
-cropString = function(text, limit){
-    // Make sure it's a string.
-    text = text + "";
-
-    // Use default limit if necessary.
-    if (!limit)
-        limit = 55;
-    if (text.length > limit){
-		var halfLimit = (limit / 2)-1;
-		return text.substr(0, halfLimit) + '\u22EF' + text.substr(text.length-halfLimit);
-	}
-    return text;
-}
 
 
-sayError = function(e){
-	
-	p=
-	
-	['<em>flags:</em> '+e.
-	,'<em>message:</em> '+e.message
-	,'<em>errorMessage:</em> '+e.errorMessage
-	,'<em>sourceName:</em> '+
-	,'<em>sourceLine:</em> '+e.sourceLine
-	,'<em>lineNumber:</em> '+e.
-	,'<em>columnNumber:</em> '+
-	,'<em>category:</em> '+e.
-	,'<em>outerWindowID:</em> '+e.outerWindowID
-	]
-
-	return '<pre>'+p.join('\n')+'</pre>'
+sayError = function(e){	
+	return '<pre>'+addHTML(e)+'</pre>'
 }
 var a={},n={}
 Services.console.getMessageArray(a, n)
 n=n.value
 a=a.value
 var ans=[]
+
+var errorList = []
 for(i=0;i<n;i++){
 	var e = a[i]
 	if(e instanceof nsiError)
 		e.QueryInterface(nsiError)
-	if(e instanceof nsiError2)
-		e.QueryInterface(nsiError2)
+
+        
+    if(e instanceof nsiError){
+        e.QueryInterface(nsiError)
+
+        if(e instanceof nsiError2)
+		    e.QueryInterface(nsiError2)
+
+    	errorList.push(parseError(e))
+    }else if(e instanceof nsiMessage){
+    	errorList.push({class:'log', text: e.message, isChrome:true})
+    }
+
 	
-	ans.push(sayError(e))
 }
-content.wrappedJSObject.document.body.innerHTML=ans.join()
+for(i=0;i<2;i++){
+	ans.push(sayError(errorList[i]))
+}
+content.wrappedJSObject.document.body.innerHTML=ans.join('')
+
+1
 
 var isWarning = aMessage.flags & Components.interfaces.nsIScriptError.warningFlag;
 if (/^(uncaught exception: )?\[Exception... /.test(aMessage.errorMessage)){

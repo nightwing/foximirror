@@ -361,7 +361,8 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
         this.text = '';
         this.onEvalSuccess(o);
     },
-    onEvalSuccess: function(result, context) {
+	
+	onEvalSuccess: function(result, context) {
         this.object = result;
 
         if (this.$q.functionName) {
@@ -384,7 +385,12 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
         context = context || Firebug.currentContext;
         if (!string)
             this.onEvalSuccess(context.global, context);
-        else
+        else if(this.$q.functionName)
+            Firebug.evaluate(string,
+                FBL.bind(this.onEvalSuccess, this),
+                FBL.bind(this.onEvalSuccess, this)
+            );
+		else
             Firebug.evaluate(string,
                 FBL.bind(this.onEvalSuccess, this),
                 FBL.bind(this.onEvalFail, this)
