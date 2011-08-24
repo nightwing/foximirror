@@ -110,7 +110,7 @@ openWindow = function (uri, features){
 }
 /***loging**/
 dump = function(){
-	var aMessage="#>: ";
+	var aMessage=": ";
     for(var i=0,l=arguments.length; i<l; ++i){
 		var a=arguments[i]
         aMessage += (a&&!a.toString?'[object call]':a) + " , ";
@@ -132,7 +132,7 @@ dump.trace = function dumpComponentsStack(from){
     var msg = [];
     for (var frame = Components.stack; frame; frame = frame.caller)
         msg.push(frame.filename + "#@" + frame.lineNumber +": "+frame.sourceLine  );
-    dump(from+" has stack size:" +msg.length, msg.join('\n'));
+    dump(from+"\n has stack size:" +msg.length+'\n', msg.join('\n'));
 }
 dump.clear = function(){
 	Services.console.reset()
@@ -310,13 +310,16 @@ var externalEditors = {
 
 		// check for archives
 		if(uri.schemeIs('jar')){
-			file = extractRelative(uri, false)
-			if(!file.exists()){
-				var proceed = this.archivePrompt(uri, line, column)
-				if(!proceed)
+			var result = extractRelative(uri, false)
+			dump(4,result.modified,result.file)
+			if(result.modified||!result.exists){
+				var proceed = this.archivePrompt(uri, line, column, result.modified)
+				if(proceed == 'stop')
 					return;
-				file = extractRelative(uri, true)
-			}
+				if(proceed == 'extract')
+					file = extractRelative(uri, true).file
+			}else
+				file = result.file
 		}
 
 		if(!file || !file.exists())
@@ -337,22 +340,36 @@ var externalEditors = {
 		process.init(file);
 		process.run(false, args, args.length);
 	},
-	archivePrompt: function(uri, line, column){
+	archivePrompt: function(uri, line, column, isFileModified){
 		var arr=['extract file and edit', 'show archive', 'open with view-source:', 'open with edit:']
+		var q = 'this file is in archive'
+		if(isFileModified){
+			arr.unshift('edit existing file')
+			q = 'extracted file exists'
+		}
 		var sel={}
-		var proceed = Services.prompt.select(null, 'file is in archive', 'this file is in archive,\n what do you want to do?',
+		var proceed = Services.prompt.select(null, 'file is in archive', q + ',\n what do you want to do?',
 			arr.length, arr,
 			sel
 		)
 		if(!proceed)
-			return false
-		if(sel.value==0){
-			return true
-		}else if(sel.value==1){
+			return 'stop'
+		
+		var result = sel.value
+		if(isFileModified)
+			result--
+			
+		if(result==0)
+			return 'extract'		
+		if(result==-1)
+			return 'proceed'
+		
+		
+		if(result==1){
 			getLocalFile(uri.spec).reveal()
-		}else if(sel.value==2){
+		}else if(result==2){
 			viewFileURI(uri.spec, line)
-		}else if(sel.value==3){
+		}else if(result==3){
 			openWindow('edit:#'+uri.spec + '##'+line+':'+column)
 		}
 	},
@@ -419,6 +436,7 @@ extractRelative = function(uri, doExtract){
 			//	continue;
 			zipReader.extract(entryName, target); 
 			target.permissions |= PERMS_FILE;
+			target.lastModifiedTime = jar.lastModifiedTime
 		} finally {
 			zipReader.close();
 		}
@@ -436,7 +454,12 @@ extractRelative = function(uri, doExtract){
 	jarLevels.forEach(function(name){
 		jar = extract(jar, name)
 	})
-	return jar
+	if(doExtract)
+		return {file: jar, modified: false, exists: true}
+	if(!jar.exists())
+		return {file: jar, modified: false, exists: false}
+	var modified = jar.lastModifiedTime != uri.QueryInterface(Ci.nsIFileURL).file.lastModifiedTime
+	return {file: jar, modified: modified, exists: true}
 }
 
 

@@ -99,9 +99,11 @@ this.actions={//external
 }
 var activeactions=this.hasAttribute('buttons')?this.getAttribute('buttons').split(/ *, */):['reload','reopen','log','jsMirror']
 var actionNames={
-	 reload:'reload'
-	,reopen:':)'
-	,restartApp:'restart firefox'
+	 restartApp:'restart firefox'
+	,reopen:'open new:)'
+}
+var shortNames={
+	 reopen:':)'
 	//,jsMirror:'js'
 	,inspector:'dom'
 	,chromeMirror:'chrome'
@@ -148,7 +150,7 @@ for(var i in actions){
 		newEl.style.color='green'
 		var newEl=document.createElement('toolbarbutton')
 		newEl.setAttribute('aID',i);
-		newEl.setAttribute('label', actionNames[i]||i);
+		newEl.setAttribute('label', shortNames[i]||actionNames[i]||i);
 		actionbar.appendChild(newEl)
 	}
 }

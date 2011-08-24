@@ -13,15 +13,14 @@
 	<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
 	<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
 		<hbox>
-			<toolbarbutton label='qi'  accesskey='q' onclick='jsExplore.qi()'/>
-			<toolbarbutton label='all' accesskey='a' onclick='jsExplore.all()'/>
-			<toolbarbutton label='_p'  accesskey='p' onclick='jsExplore._p()'/>
-			<toolbarbutton label='si'  accesskey='s' onclick='jsExplore.si()'/>
-			<toolbarbutton label='gs'  accesskey='g' onclick='jsExplore.gs()'/>
+			<toolbarbutton label='qi'  tooltiptext="query all interfaces" accesskey='q' onclick='jsExplore.qi()'/>
+			<toolbarbutton label='si'  tooltiptext="list supported interfaces" accesskey='s' onclick='jsExplore.si()'/>
+			<toolbarbutton label='_p'  tooltiptext="list prototypes" accesskey='p' onclick='jsExplore._p()'/>
+			<toolbarbutton label='gs'  tooltiptext="" accesskey='g' onclick='jsExplore.gs()'/>
 			<spacer flex='1'/>
-			<toolbarbutton label='gp'  accesskey='e' onclick='jsExplore.getParent()'/>
-			<toolbarbutton label='ev'  accesskey='e' onclick='jsExplore.eval()'/>
-			<toolbarbutton label='&#8251;'  accesskey='' onclick='jsExplore.reveal()'/>
+			<toolbarbutton label='gp'  tooltiptext="getparent" accesskey='g' onclick='jsExplore.getParent()'/>
+			<toolbarbutton label='ev'  tooltiptext="eval" accesskey='e' onclick='jsExplore.eval()'/>
+			<toolbarbutton label='lo' tooltiptext="locate" accesskey='' onclick='jsExplore.reveal()'/>
 			<label/>
 		</hbox>
 		<stack id='autocomplatePanelStack' flex='1'>

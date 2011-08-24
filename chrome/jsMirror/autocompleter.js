@@ -58,12 +58,15 @@ Firebug.Ace.BaseAutocompleter = {
         this.number = this.panel.querySelector('label');
 
         this.bubble = document.getElementById("autocomplate-info-bubble");
-        //set handlers
+        this.bubble.width = 1.7*panelW;
+		//set handlers
         this.panel.setAttribute('onpopupshown', 'if(event.target==this)Firebug.Ace.autocompleter.setView(0)');
         this.panel.setAttribute('onpopuphidden', 'if(event.target==this)Firebug.Ace.autocompleter.finish()');
         this.tree.setAttribute('ondblclick', 'Firebug.Ace.autocompleter.insertSuggestedText();Firebug.Ace.autocompleter.finish()');
         this.tree.setAttribute('onclick', 'Firebug.Ace.autocompleter.editor.focus()');
         this.tree.setAttribute('onselect', 'Firebug.Ace.autocompleter.onSelect()');
+
+
         //this.panel.getElementsByTagName('toolbarbutton')[0].setAttribute('oncommand', 'Firebug.Ace.autocompleter.compare()');
     },
 
@@ -113,7 +116,7 @@ Firebug.Ace.BaseAutocompleter = {
 
         var bubbleX = posX - minX > maxX - posX -panelW ? minX + 10 : maxX - panelW * 1.5 - 10;
         this.bubblePos = {
-            w: panelW * 1.7,
+            w: panelW * 2.7,
             h: panelH * 1.5,
             l: bubbleX,
             t: posY
@@ -193,12 +196,18 @@ Firebug.Ace.BaseAutocompleter = {
 
 		try {
 			var index = this.tree.currentIndex;
-							
-			this.selectedObject = (this.sortedArray&&this.sortedArray[index])||{object:this.object}
+
+			if(this.sortedArray){
+				this.selectedObject = this.sortedArray[index]
+				this.number.value = index + ':' +this.sortedArray.length + "/" + this.unfilteredArray.length;
+			}else{
+				this.selectedObject = {object:this.object}
+				this.number.value = ''
+			}
 			
 			var hint = this.getHint(index);
 			this.sayInBubble(hint);
-			this.number.value = index + ':' +this.sortedArray.length + "/" + this.unfilteredArray.length;
+			
 		} catch(e) {Cu.reportError(e)}
 
     },
@@ -373,21 +382,25 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
 
         this.filter(this.unfilteredArray, this.text);
         this.showPanel();
+		this.bubble.className = ''
     },
 
     onEvalFail: function(result, context) {
-        this.object = result;
+		var error = true
+		this.object = result;
 
         if (this.$q.functionName) {
             this.unfilteredArray = getProps(context.global);
             this.appendSpecialEntries();
             this.object = context.global;
+			error = false
         } else {
             this.unfilteredArray = getProps(result);
         }
 
         this.filter(this.unfilteredArray, this.text);
         this.showPanel();
+		this.bubble.className = error?'error':''
     },
 
     eval: function(string, context) {
@@ -534,7 +547,11 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
                 descr = "interface"
                 pre = '\u2555Ci.'
                 post = ')'
-                supportedInterfaces(this.object).forEach(createItem);
+				;(
+				fu == "QueryInterface"
+					? supportedInterfaces(this.object)
+					: supportedInterfaces(getserviceOrCreateInstance(this.object))
+				).forEach(createItem);
             } else if (fu == "getInterface") {
                 descr = "interface"
                 pre = '\u2555Ci.'

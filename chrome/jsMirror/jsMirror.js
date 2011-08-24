@@ -324,6 +324,7 @@ function getClass(x) {
 	/* if(x == null) return String(x); */
     return Object.prototype.toString.call(x).slice(8,-1)
 }
+/*** XPCOM ********************************************************************************************/
 function supportedInterfaces(element){
 	var ans=[]
 	for each(var i in Ci){
@@ -344,6 +345,24 @@ function supportedgetInterfaces(element){
 	}
 	return ans;
 }
+// These are needed because some Component access crash FF window.dump("get service "+this.nsIJSCID.name+"\n");
+ComponentClassCrashers = ["@mozilla.org/generic-factory;1", "QueryInterface", "@mozilla.org/dom/storage;2"];
+ComponentInterfaceCrashers = ["IDispatch"];
+function getserviceOrCreateInstance(p){
+	if(ComponentClassCrashers.indexOf(p.name) != -1)
+		return "crasher";
+	try{
+		var obj = Cc[p.name].getService(Ci.nsISupports);
+	}catch(e){
+		try{
+			obj = Cc[p.name].createInstance(Ci.nsISupports);
+		}catch(e){
+			return "not a service or object";
+		}
+	}
+    return obj;
+}
+/***********************************************************************************************/
 function setget(object,prop){
 	object=object.wrappedJSObject||object
 	var ans='',s
@@ -687,17 +706,10 @@ jsExplore.si=function(){
 	autocompleter.sayInBubble(
 		'interfaces supported by\n'+
 		autocompleter.object+'\n'+
-		supportedInterfaces(autocompleter.object).join('\n')
-	
-	
+		supportedInterfaces(autocompleter.object).join('\n')	
 	)
 }
-jsExplore.gs=function(){
-	jn.say(setget(autocompleter.object,autocompleter.selectedText()))
-}
-jsExplore.all=function(){
-	autocompleter.toggleMode()
-}
+
 jsExplore.reveal=function(){
 	if(!Services.jsd.isOn){
 		Services.jsd.asyncOn(jsExplore.reveal)
@@ -705,7 +717,12 @@ jsExplore.reveal=function(){
 	}
 	let script = Services.jsd.wrapValue(autocompleter.selectedObject.object).script
 	if(script)
+		return $shadia.externalEditors.edit(script.fileName, script.baseLineNumber)
+	let script = Services.jsd.wrapValue(autocompleter.selectedObject.object.constructor).script
+	if(script)
 		$shadia.externalEditors.edit(script.fileName, script.baseLineNumber)
+	
+	alert('unable to find script:(')
 }
 jsExplore.eval=function(){
 	var f = autocompleter.selectedObject.object
@@ -1182,6 +1199,7 @@ Firebug.largeCommandLineEditor = {
             Firebug.log(message + ' `' + line + '` @'+(lineNumber+cellStart));
         } else 
             Firebug.log(jn.inspect(error));
+		Components.utils.reportError(error)
     },
     logCoffeeError: function(error) {
         Firebug.log(error.text + ' `' + error.source + '` @'+(error.row+this.cell.bodyStart));

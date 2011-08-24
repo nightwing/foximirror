@@ -1,3 +1,23 @@
+kCM_SRV = Components.classes["@mozilla.org/categorymanager;1"].
+    		getService(Components.interfaces.nsICategoryManager);
+            
+f=kCM_SRV.enumerateCategories()
+
+f.getNext().QueryInterface(Ci.nsISupportsCString).data
+f.getNext().QueryInterface(Ci.nsISupportsCString).data
+f.getNext().QueryInterface(Ci.nsISupportsCString).data
+f.getNext().QueryInterface(Ci.nsISupportsCString).data
+f.getNext().QueryInterface(Ci.nsISupportsCString).data
+
+f=kCM_SRV.enumerateCategory('agent-style-sheets')
+
+f.getNext().QueryInterface(Ci.nsISupportsCString).data
+f.getNext().QueryInterface(Ci.nsISupportsCString).data
+
+kCM_SRV.getCategoryEntry('agent-style-sheets', 'pluginGlue-pluginFinder')
+kCM_SRV.getCategoryEntry('command-line-handler', 'b-jsconsole')
+kCM_SRV.getCategoryEntry('command-line-handler', 'b-jsconsole')
+
 // classInfo obj.QueryInterface(Ci.nsIClassInfo)
 var cii=[]
 cii.splice(cii.indexOf(Ci.nsISupports),1)
