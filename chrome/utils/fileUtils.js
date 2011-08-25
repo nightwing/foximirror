@@ -24,7 +24,6 @@ var PR_SYNC        = 0x40;
 var PR_EXCL        = 0x80;
 
 
-
 function flushJarCache(aJarFile) {
 	//Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
 	//Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
@@ -32,60 +31,45 @@ function flushJarCache(aJarFile) {
 	Services.obs.notifyObservers(null, "chrome-flush-caches", null);
 }
 
-/***
-function unlockJarFile(jarfile){
-	var JARCache = jarProtocolHandler.JARCache
-	var reader = JARCache.getZip(jarfile)
-	var entries = reader.findEntries('*.jar')
-	while(entries.hasMore()){
-		var subPath = entries.getNext()
-		closeInner(subPath)	
-	}	
-	reader.close()
-	function closeInner(innerPath){
-		var reader=JARCache.getInnerZip(jarfile,innerPath)
-		reader.close()
-		return function reopen(){
-			reader.openInner(JARCache.getZip(jarfile),innerPath)
-		}
-	}
+function flushStartupCache() {
+  // Init this, so it will get the notification.
+  Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
+  Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 }
-*/
+
 /**doesn't work for archives with opened archives inside*/
 function syncWriteToJar(jarFile, entryPath, writer, data, compression){
-    var jarCache = jarProtocolHandler.JARCache;
-    var reader = jarCache.getZip(jarFile);
-    reader.close();
+	flushJarCache(jarFile)
 	try{
 		var zipW = new zipWriter();
 		zipW.open(jarFile, PR_RDWR); // | PR_APPEND
 		try{
 			// remove entry
 			if (zipW.hasEntry(entryPath)){
-				if(typeof compression!='number')
-					var compression=zipW.getEntry(entryPath).compression			
+				if(typeof compression != 'number')
+					var compression = zipW.getEntry(entryPath).compression			
 				zipW.removeEntry(entryPath, false);	
 			}
 			//
 			if(typeof compression!='number')
-				compression=Ci.nsIZipWriter.COMPRESSION_DEFAULT//_NONE
+				compression = Ci.nsIZipWriter.COMPRESSION_DEFAULT//_NONE
+				
 			writer(zipW, entryPath, data, compression)
 		}catch(e){
-			var err=e.toString();
+			var err = e.toString();
 			Cu.reportError(e)
 		}
 	}catch(e){
-		var err=e.toString();
+		var err = e.toString();
 		Cu.reportError(e)
-	}finally{
+	} finally {
 		zipW.close();
-		reader.open(jarFile);
 	}
 	
 	return err
 }
 
-function writeFileToJar(zipW, entryPath, data, compression){    
+function writeFileToJar(zipW, entryPath, filePath, compression){    
     zipW.addEntryFile(entryPath, compression, filePath, false);       
 }
 function writeStringToJar(zipW, entryPath, data, compression){    
@@ -97,9 +81,6 @@ function writeStringToJar(zipW, entryPath, data, compression){
 function removeEntryFromJar(){}
 
 
-function readDataFromJar(jarFilePath,entryPath){	
-	//????
-}
 
 
 function extractFiles(aZipFile, aDir) {

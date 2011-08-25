@@ -92,8 +92,13 @@ this.actions={//external
 			$shadia.setPref("nglayout.debug.disable_xul_fastload", p, 'bool')
 		} else
 			item = document.getAnonymousElementByAttribute(item, "aID", "noCache");
+		
 		if (item) {
 			item.setAttribute("checked", p);
+			if(p){
+				Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+				Services.obs.notifyObservers(null, "chrome-flush-caches", null);
+			}
 		}
 	}
 }
@@ -105,8 +110,8 @@ var actionNames={
 var shortNames={
 	 reopen:':)'
 	//,jsMirror:'js'
-	,inspector:'dom'
-	,chromeMirror:'chrome'
+	,inspector:'domMirror'
+	,chromeMirror:'chromeMirror'
 	,cssMirror:'css'
 }
 var actionsColors = {restartApp:'red',reloadChrome:'orange',reload:'orange',magnifier:'blue'}    

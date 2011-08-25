@@ -853,9 +853,11 @@ exports.launch = function(env, options) {
 
 	function onGutterClick(e) {
 		var editor = env.editor, s = editor.session, row = e.row;
-		if (e.htmlEvent.target.className.indexOf('ace_fold-widget') < 0)
-			s[s.$breakpoints[e.row]?'clearBreakpoint':'setBreakpoint'](row);
-		else {
+		var className =  e.htmlEvent.target.className
+		if (className.indexOf('ace_fold-widget') < 0) {
+			if(className.indexOf("ace_gutter-cell") > 0 && editor.isFocused())
+				s[s.$breakpoints[e.row]?'clearBreakpoint':'setBreakpoint'](row);
+		} else {
 			var line = s.getLine(row)
 			var match = line.match(/(\{|\[)\s*(\/\/.*)?$/)
 			if (match) {

@@ -417,6 +417,13 @@ extractRelative = function(uri, doExtract){
 	function extract(jar, entryName){
 		var name = jar.leafName.replace(/\.\w*$/, '')
 		var dir = jar.parent
+
+		// do not add junk into extensions folder firefox doesn't like it
+		if(dir.leafName == 'extensions'){
+			dir = dir.parent
+			dir.append('extensions.unjarred')
+		}
+
 		dir.append(name)
 		if(dir.exists()&&!dir.isDirectory)
 			dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY)
@@ -450,6 +457,7 @@ extractRelative = function(uri, doExtract){
 	}
 
 	var jar = uri.QueryInterface(Ci.nsIFileURL).file
+	var topJar = jar
 
 	jarLevels.forEach(function(name){
 		jar = extract(jar, name)
@@ -458,8 +466,8 @@ extractRelative = function(uri, doExtract){
 		return {file: jar, modified: false, exists: true}
 	if(!jar.exists())
 		return {file: jar, modified: false, exists: false}
-	var modified = jar.lastModifiedTime != uri.QueryInterface(Ci.nsIFileURL).file.lastModifiedTime
-	return {file: jar, modified: modified, exists: true}
+
+	return {file: jar, modified: jar.lastModifiedTime != topJar.lastModifiedTime, exists: true}
 }
 
 

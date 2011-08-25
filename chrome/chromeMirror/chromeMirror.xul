@@ -6,7 +6,7 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	xmlns:h="http://www.w3.org/1999/xhtml"
 	id="shadia1" width="800" height="500"
-	windowtype='shadia:chrome'
+	windowtype='shadia:chromeMirror'
 	persist="screenX screenY width height sizemode"
 	onload="initAll()"
 	onunload='unload()'>
