@@ -23,20 +23,16 @@ var PR_TRUNCATE    = 0x20;
 var PR_SYNC        = 0x40;
 var PR_EXCL        = 0x80;
 
-/***
-var jarfile=getCurrentFile()
-JARCache=jarProtocolHandler.JARCache
-a=rd.findEntries('*.jar').getNext()
-rd=JARCache.getZip(jarfile)
 
-function closeInner(innerPath){
-	var reader=JARCache.getInnerZip(jarfile,innerPath)
-	reader.close()
-	return function reopen(){
-		reader.openInner(JARCache.getZip(jarfile),innerPath)
-	}
+
+function flushJarCache(aJarFile) {
+	//Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
+	//Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
+	//flush entire cache since "flush-cache-entry" doesn't work with inner jars
+	Services.obs.notifyObservers(null, "chrome-flush-caches", null);
 }
-*/
+
+/***
 function unlockJarFile(jarfile){
 	var JARCache = jarProtocolHandler.JARCache
 	var reader = JARCache.getZip(jarfile)
@@ -54,7 +50,7 @@ function unlockJarFile(jarfile){
 		}
 	}
 }
-
+*/
 /**doesn't work for archives with opened archives inside*/
 function syncWriteToJar(jarFile, entryPath, writer, data, compression){
     var jarCache = jarProtocolHandler.JARCache;
@@ -74,10 +70,18 @@ function syncWriteToJar(jarFile, entryPath, writer, data, compression){
 			if(typeof compression!='number')
 				compression=Ci.nsIZipWriter.COMPRESSION_DEFAULT//_NONE
 			writer(zipW, entryPath, data, compression)
-		}catch(e){var err=e.toString();Cu.reportError(e)}
+		}catch(e){
+			var err=e.toString();
+			Cu.reportError(e)
+		}
+	}catch(e){
+		var err=e.toString();
+		Cu.reportError(e)
+	}finally{
 		zipW.close();
-	}catch(e){var err=e.toString();Cu.reportError(e)}	
-    reader.open(jarFile);
+		reader.open(jarFile);
+	}
+	
 	return err
 }
 
@@ -340,3 +344,4 @@ function AddJarManifestLocation(path) {
 		libxul.close();
 	}
 }
+

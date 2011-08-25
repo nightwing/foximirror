@@ -2,7 +2,7 @@ FBL = {}
 if(Function.bind)
 	FBL.bind = function (x, y) x.bind(y)
 else
-	FBL.bind = function () {
+	FBL.bind = function (fn, object) {
 		return function bound() fn.apply(object, arguments);
 	}
 FBL.extend = function (l, r) {

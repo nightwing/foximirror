@@ -1,3 +1,6 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+
 shadiaglue{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")}
 
 
@@ -43,4 +46,28 @@ treechildren::-moz-tree-cell-text(d4){
 
 .error{
 	box-shadow: 0pt 0pt 1.5px 1px red;
+}
+
+
+
+
+
+
+scrollbar, thumb,scrollbarbutton{
+-moz-appearance:none!important
+}
+
+
+scrollbar {
+  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAHCAIAAABPxRC5AAAAPElEQVQImVWLwRGAMBCElou5/vuLtQQfPoz8GAbutWb3Ncacs7tLTaJSpVaSJIB7AwXkoE5Rv//X3wt4ACQ3F9lopNWrAAAAAElFTkSuQmCC) transparent 50% 0 repeat-x;
+  -moz-border-radius:5px;
+}
+
+thumb,scrollbarbutton{
+  background:#c5c5c4!important;
+  background: -moz-linear-gradient(left top 0grad, #f9f9f9, #e6e6e6)!important;
+  -moz-border-radius:4px!important;
+  border:1px solid #d3d2d2!important;
+  -moz-box-shadow:0 1px 1px rgba(0,0,0,0.1)!important;
+height:5px!important;
 }

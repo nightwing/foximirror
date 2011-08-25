@@ -218,6 +218,8 @@ var InspectHandlers={
 	 CSSStyleSheet:function(x)'~'+x.cssRules.length+' ->'+x.href
 	,CSSNameSpaceRule:function(x)x.cssText
 	,CSSStyleRule:function(x)x.cssText
+	,ChromeWindow:function(x)'->'+x.location
+	,Window:function(x)'->'+x.location
 }
 
 jn.getParent=function(a){
@@ -706,7 +708,7 @@ jsExplore.si=function(){
 	autocompleter.sayInBubble(
 		'interfaces supported by\n'+
 		autocompleter.object+'\n'+
-		supportedInterfaces(autocompleter.object).join('\n')	
+		supportedInterfaces(autocompleter.object).join('\n')
 	)
 }
 
@@ -1061,10 +1063,11 @@ Firebug.largeCommandLineEditor = {
 		resultbox = Firebug.Ace.win1.editor
 		var data = $shadia.$jsMirrorData
 		if(data && data.newTarget){
+		dump(data.newTarget.winRef.get().location)
 			initTargetWindow(data.newTarget.winRef.get())
-			codebox.session.doc.setValue(data.newTarget.code)
+			codebox.session.doc.setValue(data.newTarget.code||'')
 			data.newTarget = null
-			codebox.selectAll();		
+			codebox.selectAll();
 		}
 		codebox.focus()
     },
@@ -1199,7 +1202,7 @@ Firebug.largeCommandLineEditor = {
             Firebug.log(message + ' `' + line + '` @'+(lineNumber+cellStart));
         } else 
             Firebug.log(jn.inspect(error));
-		Components.utils.reportError(error)
+			Components.utils.reportError(error)
     },
     logCoffeeError: function(error) {
         Firebug.log(error.text + ' `' + error.source + '` @'+(error.row+this.cell.bodyStart));
