@@ -201,6 +201,7 @@ Firebug.Ace.BaseAutocompleter = {
 				this.selectedObject = this.sortedArray[index]
 				this.number.value = index + ':' +this.sortedArray.length + "/" + this.unfilteredArray.length;
 			}else{
+				index = -1
 				this.selectedObject = {object:this.object}
 				this.number.value = ''
 			}
@@ -468,7 +469,8 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
                 longDescriptor = o.name + '\n' + o.description;
             } else {
                 longDescriptor = jn.inspect2(o.object, "long");
-                longDescriptor += '\n' + jn.lookupSetter(this.object, o.name);
+				if(index != -1)
+					longDescriptor += '\n' + jn.lookupSetter(this.object, o.name);
             }
         } else
             longDescriptor = jn.inspect2(this.object);

@@ -311,8 +311,7 @@ var externalEditors = {
 		// check for archives
 		if(uri.schemeIs('jar')){
 			var result = extractRelative(uri, false)
-			dump(4,result.modified,result.file)
-			if(result.modified||!result.exists){
+			if(result.modified || !result.exists){
 				var proceed = this.archivePrompt(uri, line, column, result.modified)
 				if(proceed == 'stop')
 					return;
@@ -345,7 +344,7 @@ var externalEditors = {
 		var q = 'this file is in archive'
 		if(isFileModified){
 			arr.unshift('edit existing file')
-			q = 'extracted file exists'
+			q = 'extracted file exists'+',but is '+ (isFileModified < 0 ? 'older':'newer')
 		}
 		var sel={}
 		var proceed = Services.prompt.select(null, 'file is in archive', q + ',\n what do you want to do?',
@@ -463,11 +462,11 @@ extractRelative = function(uri, doExtract){
 		jar = extract(jar, name)
 	})
 	if(doExtract)
-		return {file: jar, modified: false, exists: true}
+		return {file: jar, modified: 0, exists: true}
 	if(!jar.exists())
-		return {file: jar, modified: false, exists: false}
-
-	return {file: jar, modified: jar.lastModifiedTime != topJar.lastModifiedTime, exists: true}
+		return {file: jar, modified: 0, exists: false}
+dump(jar.lastModifiedTime - topJar.lastModifiedTime,'--------------')
+	return {file: jar, modified: jar.lastModifiedTime - topJar.lastModifiedTime, exists: true}
 }
 
 
@@ -660,6 +659,7 @@ function openJSMirrorFor(window, forceNewInstance, code){
 		return
 	}	
 	
+	$jsMirrorData.newTarget3 =
 	$jsMirrorData.newTarget = {winRef: Cu.getWeakReference(window), code: code}
 	openWindow(url)
 

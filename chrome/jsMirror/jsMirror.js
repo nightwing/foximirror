@@ -602,7 +602,7 @@ function initGlobals(){
 initTargetWindow = function(window){
 
 	targetWindowId = getOuterWindowID(shadowInspector.getTopWindow(window))
-	var opener=window
+	var opener=window.window//strange bug with weakref and mediator
 	var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
 	var resources = cntTargetWinML.menupopup.childNodes//[6].id
 	for(var i=0;i<resources.length;i++)
@@ -1021,7 +1021,7 @@ aceManager = Firebug.Ace = {
         e.$search.set({
             needle: text,
             backwards: reverse,
-            caseSensitive: Firebug.searchCaseSensitive,
+            caseSensitive: false,
             //regExp: Firebug.searchUseRegularExpression,
         });
 
@@ -1063,7 +1063,8 @@ Firebug.largeCommandLineEditor = {
 		resultbox = Firebug.Ace.win1.editor
 		var data = $shadia.$jsMirrorData
 		if(data && data.newTarget){
-		dump(data.newTarget.winRef.get().location)
+dump(data.newTarget.winRef.get().location)
+
 			initTargetWindow(data.newTarget.winRef.get())
 			codebox.session.doc.setValue(data.newTarget.code||'')
 			data.newTarget = null
