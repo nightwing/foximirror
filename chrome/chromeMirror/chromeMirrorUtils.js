@@ -1,10 +1,6 @@
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-//Cu.import('resource://xqjs/Services.jsm');
-//Cu.import('resource://xqjs/Preferences.jsm');
+
 initServices=function(){
-	domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-	winService = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-	//ww = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
 	ios= Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
 	sss= Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService)
 	atomService=Cc["@mozilla.org/atom-service;1"].getService(Ci.nsIAtomService);
@@ -12,13 +8,97 @@ initServices=function(){
 }
 
 /*********************************//**************************
- * pref utils
+ * addon utils
  ***//**************/
+if (Cc["@mozilla.org/extensions/manager;1"]){//3.6-
+	var extMan = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager)
+	getAddonFileByID = function(id){
+		return extMan.getInstallLocation(id).getItemLocation(id)
+	}
+	isDisabledAddonID = function(){
+
+	}
+}
+else{ // dealing with 4+ is more work apearantly
+	this.__defineGetter__('installLocations', function(){$getAddonData(); return installLocations})
+	this.__defineGetter__('inactiveAddonIDs', function(){$getAddonData(); return inactiveAddonIDs})
+
+	$getAddonData = function (){
+		var bap = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
+		var installLocations = []
+		var inactiveAddonIDs = []
+		var providers = bap.AddonManagerInternal.providers
+		providers.forEach(function(x){
+			if(x.installLocations)
+				installLocations.push.apply(installLocations, x.installLocations)
+			if(x.inactiveAddonIDs)
+				inactiveAddonIDs.push(x.inactiveAddonIDs)
+		})
+
+		delete this.installLocations
+		delete this.inactiveAddonIDs
+
+		this.installLocations = installLocations
+		this.inactiveAddonIDs = inactiveAddonIDs
+	}
+
+	getAddonFileByID = function(id){
+		var found
+		for(var i in installLocations){
+			found=(installLocations[i]._IDToFileMap||installLocations[i]._IDToDirMap)[id]
+			if(found){
+				return found.clone()
+			}
+		}
+	}
+
+	isDisabledAddonID = function(){
+		var found
+		for(var i in installLocations){
+			if(inactiveAddonIDs.indexOf(id) != -1){
+				return true
+			}
+		}
+		return false
+	}
+
+	getAddonsAsync = function(){
+
+
+	}
+
+}
+/*	/** code that doesn't use addonManager
+	var   extensionDirs=[], extd, extLocations=["ProfD", "XCurProcD"]
+	for each(var name in extLocations){
+		extd=Services.dirsvc.get(name, Ci.nsIFile)
+		extd.append('extensions')
+		extd.exists()&&extensionDirs.push(extd)
+	}
+
+	function getAddonInstallLocation(id){try{
+		var found
+		for(var i in extensionDirs){
+			var extd=extensionDirs[i].clone()
+			extd.append(id+'.xpi');if(extd.exists()){found=true;break}
+			extd=extensionDirs[i].clone()
+			extd.append(id);if(extd.exists()){found=true;break}
+		}
+		if(!found){dump(extd.path);return extensionDirs[0].clone()}
+		if(extd.isDirectory())return extd
+		if(extd.fileSize<1000)
+			var extd1=extd.clone()
+			var path=makeReq(getURLSpecFromFile(extd))
+			extd.QueryInterface(Ci.nsILocalFile).initWithPath(path)
+			if(extd.exists())return extd
+		}catch(e){Cu.reportError(e);return extd1}
+	}*/
+
 
 //get addons
 function addSpecialDirs(addonList){
-	var info = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);  
-    
+	var info = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
+
 	var appdir=Services.dirsvc.get("XCurProcD", Ci.nsIFile)
 	item={id:      info.ID
 		 ,file:    appdir
@@ -26,7 +106,7 @@ function addSpecialDirs(addonList){
 		 ,iconURL: 'chrome://branding/content/icon48.png'
 		 }
 	addonList.unshift(item)
-	
+
 	var profdir=Services.dirsvc.get('ProfD', Ci.nsIFile);
 	item={id:      info.ID
 		 ,file:    profdir
@@ -37,13 +117,12 @@ function addSpecialDirs(addonList){
 }
 //*** retrieve data for 3.6-
 function getAddonsOld(){
-	extMan=Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager)
 	addonListTemp=extMan.getItemList(14,{})
 	addonList=[]
 	var enabledItems=getPref('extensions.enabledItems')
 	var enabledSkinName=getPref('general.skins.selectedSkin')
 	for each(var addon in addonListTemp){
-		var id=addon.id,file=extMan.getInstallLocation(id).getItemLocation(id),name=addon.name
+		var id=addon.id,file=getAddonFileByID(id),name=addon.name
 		var item={id:id
 				 ,file:file
 				 ,name:name
@@ -56,63 +135,27 @@ function getAddonsOld(){
 	}
 	//profd and appdir
 	addSpecialDirs(addonList)
-	
+
 }
 
 function getAddonsNew(callback, addonListTemp){
 	// AddonManager gives addons only assynchronously
 	if(!addonListTemp&& typeof callback=='function'){
 		Components.utils.import("resource://gre/modules/AddonManager.jsm")
-		AddonManager.getAllAddons(function(a){getAddonsNew(false,a);callback()})
+		AddonManager.getAllAddons(function(a){
+			getAddonsNew(false,a);
+			callback()
+		})
 		return
 	}
-	//********************	
-	addonList=[]
-	//
+	//********************
+	addonList = []
 
-	/*/** code that doesn't* use addonManager
-	var   extensionDirs=[], extd, extLocations=["ProfD","XCurProcD"]
-	for each(var name in extLocations){
-		extd=Services.dirsvc.get(name, Ci.nsIFile)
-		extd.append('extensions')
-		extd.exists()&&extensionDirs.push(extd)
-	}
-	
-	function getAddonInstallLocation(id){try{
-		var found
-		for(var i in extensionDirs){
-			var extd=extensionDirs[i].clone()
-			extd.append(id+'.xpi');if(extd.exists()){found=true;break}	
-			extd=extensionDirs[i].clone()
-			extd.append(id);if(extd.exists()){found=true;break}
-		}
-		if(!found){dump(extd.path);return extensionDirs[0].clone()}
-		if(extd.isDirectory())return extd
-		if(extd.fileSize<1000)
-			var extd1=extd.clone()
-			var path=makeReq(getURLSpecFromFile(extd))
-			extd.QueryInterface(Ci.nsILocalFile).initWithPath(path)			
-			if(extd.exists())return extd
-		}catch(e){Cu.reportError(e);return extd1}
-	}*/
-	var bap = Components.utils.import("resource://gre/modules/AddonManager.jsm")
-	var installLocations=[], providers = bap.AddonManagerInternal.providers
-	// 
-	providers.forEach(function(x){x.installLocations&&installLocations.push.apply(installLocations, x.installLocations)})
-	function getAddonInstallLocation(id){
-		var found
-		for(var i in installLocations){
-			found=(installLocations[i]._IDToFileMap||installLocations[i]._IDToDirMap)[id]
-			if(found){
-				return found.clone()
-			}
-		}
-	}
 	//filter out plugins
 	addonListTemp = addonListTemp.filter(function(a){return 'theme,extension'.indexOf(a.type)>-1})
 	//
-	for each(var addon in addonListTemp){
-		var id=addon.id, file=getAddonInstallLocation(id),name=addon.name;
+	for each(var addon in addonListTemp) {
+		var id = addon.id, file = getAddonFileByID(id), name = addon.name;
 		var item={id:        id
 				 ,file:      file
 				 ,name:      name
@@ -122,164 +165,330 @@ function getAddonsNew(callback, addonListTemp){
 				}
 		if(item.disabled)
 			item.cellProp='disabled'
+
 		addonList.push(item)
 	}
-	
+
 	//profd and appdir
 	addSpecialDirs(addonList)
 }
 
-	
-/******************************* 
+
+/*******************************
  * manifest parser
  */
-function parseManifest(file,addon,cs){
+function parseManifest(href, addon, cs, manifest){
     var line, params, flags;
-	// var uriForManifest = iosvc.newURI(getURLSpecFromFile(path), null, null);
-	var path=uriFromFile(file)
-	var manifestUri=ios.newURI(path,null,null)
+	if (typeof href == 'string')
+		var manifestUri = ios.newURI(href, null, null)
+	else{
+		manifestUri = href
+		href = manifestUri.spec
+	}
 
-	var manifest=makeReq(path)
+	// check if we have already parsed this
+	if(cs.parsedManifests[href])
+		return
+	cs.parsedManifests[href] = true
+
+	// get manifest Text
+	if(!manifest)
+		manifest = makeReq(href)
+
     // Pick apart the manifest line by line.
-	var aliasRoots=[]
+	var aliasRoots = [];
     var lines = manifest.split("\n");
+
     for(var i = 0; i < lines.length; i++){
         line = lines[i].trim();
         params = line.split(/\s+/);
-        switch (params[0]){
-            case "content":
-            case "skin":
-			case "resource":
-			// case "locale":
-				if(params[0]=="skin"){
-					flags = params[2]+params.slice(4).join(" ");
+        switch (params[0]) {
+            case "skin": case "content": case "resource": // case "locale":
+				if (params[0]=="skin") {
+					flags = params[2] + params.slice(4).join(" ");
 					var aliasPath=params[3]
-				}else{
+				} else {
 					flags = params.slice(3).join(" ");
 					var aliasPath=params[2]
 				}
-				var realPath=ios.newURI(aliasPath,null,manifestUri).spec
-				var id=aliasPath+'->'+realPath
-				if(aliasRoots.indexOf(id)>-1)continue
+				if (params[0]=="resource")
+					var chromePath = "resource://" + params[1] + "/"
+				else
+					var chromePath = "chrome://" + params[1] + "/" + params[0] + "/"
+
+				var realPath = ios.newURI(aliasPath, null, manifestUri).spec
+				var id = aliasPath + '->' + realPath
+				if(aliasRoots.indexOf(id)>-1)
+					continue
 				aliasRoots.push(id)
 				cs.chromeMap.push({
-						 alias:      params[1]
-						,subAlias:   params[0]
-						,chromePath: "chrome://" + params[1] + "/" + params[0]
-						,realPath:   realPath
-						,disabled:   addon.disabled
-						,addon:      addon
-						,flags:      flags
-						,aliasPath:  aliasPath
-					})
-				//dump()
-                break;
-			case "manifest":break
-            case "override":               
+					 alias:      params[1]
+					,subAlias:   params[0]
+					,chromePath: chromePath
+					,realPath:   realPath
+					,disabled:   addon.disabled
+					,addon:      addon
+					,flags:      flags
+					,aliasPath:  aliasPath
+					,manifestUri:href
+					,line:       i
+				})
+            break;
+			case "manifest":
+				var aliasPath=params[1]
+				parseManifest(ios.newURI(aliasPath, null, manifestUri).spec, addon, cs)
+			break
+            case "override":
         }
     }
 }
 
-
 function doParseManifests(){
-	timerStart=Date.now()
-	cs={chromeMap:[],rv:[],path2alias:{},alias2path:{},}
-	var cd=addonList[0].file.clone()//chrome directory
-	cd.append('chrome');//cd='resource://chrome'
-	var mList=getManifestsInDir(cd)
-	for each(var j in mList)
-		parseManifest(j,addonList[0],cs)
-
-	for each(var i in addonList){
-		var mList=getManifestsInDir(i.file)
-		for each(var j in mList)
-			parseManifest(j,i,cs)
+	// chrome structure
+	cs = chromeStructure = {
+		chromeMap: [],
+		rv: [],
+		path2alias: {},
+		alias2path: {},
+		parsedManifests: {}
 	}
-	chromePaths=[];chromeRegistry=[]
-	timerStart-Date.now()
+
+	// special handling for application itself (a big addon)
+	var app = addonList[0]
+	var cd = app.file.clone()//chrome directory
+	cd.append('chrome');
+	var mList = getManifestsInDir(cd)
+	if(mList){
+		for each(var j in mList)
+			parseManifest(j, app, chromeStructure)
+	}else{
+		var uri = $shadia.getLocalURI("resource:///chrome.manifest")
+		if(uri)
+			parseManifest(uri.spec, app, chromeStructure)
+	}
+	var uri = $shadia.getLocalURI("resource://gre/")
+	if(uri){
+		parseManifest(uri, app, chromeStructure, 'resource gre ' + uri.spec)
+	}
+
+	// all other addons
+	for each(var addon in addonList){
+		var mList = getManifestsInDir(addon.file)
+		for each(var j in mList)
+			parseManifest(j, addon, chromeStructure)
+		// add addon
+
+	}
+
+	//
+	chromePaths=[];
+	chromeRegistry=[]
+
 	for each(i in cs.chromeMap){
-		var f=getLocalFile(i.realPath)
-		if(f.exists()){
+		var f = getLocalFile(i.realPath)
+		if (f.exists()){
 			var item={
 				 name:       i.alias+'/'+i.subAlias+'\n\u2690'+i.flags+'\n'+i.aliasPath+'\n'+i.realPath
 				,file:       f
 				,spec:       i.realPath
 				,obj:        i
-				,cellProp:   i.disabled?'disabled':''}
+				,cellProp:   i.disabled?'disabled':''
+			}
 			chromeRegistry.push(item);
 			chromePaths.push(item)
-		}else dump(i[0],f.spec,i.realPath)
+		}
+		else
+			dump(i.realPath)
 	}
-	chromePaths.sort(dirSort)
+
+
+	chromeMap = cs.chromeMap = cs.chromeMap.sort(dirSort)
 }
 
-function dirSort(a, b){// make '/' less than everything (except null)
-    var tempA = a.obj.realPath.toLowerCase();
-    var tempB = b.obj.realPath.toLowerCase();
-    if(tempA<tempB)return -1;
-    if(tempA>tempB)return 1;
+function getManifestsInDir(dir){
+	var manifests=[], mfRe = /\.manifest$/i
+	function addFile(file){
+		if (!mfRe.test(file.path))
+			return false
+		manifests.push(getURLSpecFromFile(file));
+		return true
+	}
+
+	try{
+		dir.QueryInterface(Ci.nsIFile);
+	}catch (e){
+		return
+	}
+
+	if(!dir.exists())
+		return
+	// xpi or manifest itself
+	if(!dir.isDirectory()){
+		if(addFile(dir))
+			return manifests
+
+		var uri = getURLSpecFromFile(dir)
+		uri = 'jar:'+uri+'!/'
+		return [uri+'chrome.manifest']
+	}
+	// unpacked addons
+	var dirEntries = dir.directoryEntries;
+	while (dirEntries.hasMoreElements()){
+		addFile(dirEntries.getNext().QueryInterface(Ci.nsIFile));
+	}
+    return manifests;
+}
+
+function dirSort(a, b){
+	// make '/' less than everything (except null)
+    var tempA = a.realPath.toLowerCase();
+    var tempB = b.realPath.toLowerCase();
+    if(tempA < tempB)
+		return -1;
+    if(tempA > tempB)
+		return 1;
     return 0;
 }
 
-function indexOfURL(href){// binary search to find an url in the chromeDirTree
-    var left=0, right=chromePaths.length-1;
-    href = href.toLowerCase();// make '/' less than everything (except null)
-    var n=0
-    while(right-left>1&&n<100){n++
-        var mid=Math.floor((left+right)/2);
-        var dataHref=chromePaths[mid].spec.toLowerCase()//.replace(/\x2f/g, "\x01").toLowerCase();
-		if(href<dataHref){
+function indexOfURL(href){
+	// binary search to find an url in the chromeDirTree
+	// make '/' less than everything (except null)
+	//.replace(/\x2f/g, "\x01").toLowerCase();
+	
+    var left = 0, right = chromeMap.length - 1;
+    href = href.toLowerCase();
+    var n = 0
+    while(right-left > 1 && n < 10000){
+		n++
+        var mid = Math.floor((left + right)/2);
+        var dataHref = chromeMap[left].realPath.toLowerCase()
+		if (href < dataHref) {
 			right = mid;
-        }else if(href>dataHref){
+        } else if (href>dataHref) {
 			left = mid;
-		}else{
+		} else {
 			left = mid
 			break
-		}		
+		}
     }
-
-	if(href.indexOf(dataHref)!=0){
-		dataHref=chromePaths[left].spec.toLowerCase()
-		if(href.indexOf(dataHref)!=0){
-            mid=right
-            dataHref=chromePaths[right].spec.toLowerCase()
-		    if(href.indexOf(dataHref)!=0){
-            	return [href,-1]
-            }
-        }		
-	}
 	
-	return [chromePaths[left].obj.chromePath+'/'+href.substr(dataHref.length),mid]
-}
+	dump(href)
 
-
-
-
-
-function getManifestsInDir(dir){
-	var manifests=[]
-	try{
-		dir.QueryInterface(Ci.nsIFile);
-	}catch (ex){return}
-	if(!dir.exists())
-		return	
-	if(!dir.isDirectory()){
-		manifests.push(dir);
-		return manifests
+	if(href.indexOf(dataHref) != 0){
+		dataHref = chromeMap[left].realPath.toLowerCase()
+		if(href.indexOf(dataHref)!=0){
+            mid = right
+            dataHref = chromeMap[right].realPath.toLowerCase()
+		    if(href.indexOf(dataHref) != 0){
+            	return [href, -1]
+            }
+        }
 	}
-	var dirEntries = dir.directoryEntries;
-	while (dirEntries.hasMoreElements()){
-		var file = dirEntries.getNext().QueryInterface(Ci.nsIFile);
-		if ((/\.manifest$/i).test(file.path))
-			manifests.push(file);
-	}
-    return manifests;
+
+	return [chromeMap[left].chromePath + href.substr(dataHref.length), mid]
 }
 
 uriFromFile=function(file){
 	return 'file:///'+(typeof file=='string'?file:file.path).replace(/\\/g, '\/').replace(/^\s*\/?/, '')//.replace(/\ /g, '%20');
 }
+
+
+//********************************
+
+function fileMap() {
+	this.aliasList = []
+}
+
+fileMap.prototype = {
+	normalizeUri: function(a){
+		return decodeURIComponent(a.toLowerCase())
+	},
+	
+	addAlias: function(a){
+		a._rPath = this.normalizeUri(a.localPath)
+		this.aliasList.push(a)
+		this.aliasList.sort(this.compare)
+	},
+	
+	compare: function(a, b){
+		var tempA = a.realPath.toLowerCase();
+		var tempB = b.realPath.toLowerCase();
+		if(tempA < tempB)
+			return -1;
+		if(tempA > tempB)
+			return 1;
+		return 0;
+	},
+	
+	debug: function(){
+		return this.aliasList.map(function(x, i){
+			i + x._rPath + x.aliasPath
+		}).join('\n')
+	},
+	
+	getAlias: function(href){
+		
+		var _r = this.normalizeUri(href)
+		
+		var ans = []
+		for each(var x in this.aliasList){
+			if (href.indexOf(x._rPath)==0)
+				ans.push(x)
+		}
+		
+		return ans			
+	}
+
+
+}
+
+
+
+
+
 //****** process data
+
+function createFile(href){
+	var f = new fileEntry
+
+	return f
+}
+
+function fileEntry(){
+
+}
+
+fileEntry.prototype = {
+	localPath: '', // jar: or file:
+	get children (){
+		this.children = {}
+		return this.children
+	},
+
+	get icon (){
+		this.children = {}
+		return this.children
+	},
+	
+	isDirectory: false,
+	
+	get extension (){
+		if(this.isDirectory)
+			this.extension = '/'
+		else{
+			var m = this.localPath.match(/\.[\w-]+$/)
+			this.extension = m ? m[0].substr(1) : ''
+		}
+		return this.extension
+	},
+	
+	getMimeType: function(){
+		
+	},
+	
+	size: 0,
+	lastModified: 0
+}
 
   //*****-----------**-------------------------*******
  //***-----*** dir data
@@ -292,20 +501,21 @@ getURLSpecFromFile=function (file){
     return fileHandler.getURLSpecFromFile(file);
 }
 
-navigate = function(url){	
+navigate = function(url){
 	var fu = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup).createFixupURI(url, null)
 	if(!fu || /^http/i.test(fu.spec))
 		return
-	
+
 	dirViewer.setDir(fu.spec)
 }
 
 
 function getExtension(f){
-    if (f.lastIndexOf(".") != -1)return f.substring(f.lastIndexOf(".") + 1, f.length).toLowerCase();
+    if (f.lastIndexOf(".") != -1)
+		return f.substring(f.lastIndexOf(".") + 1, f.length).toLowerCase();
     return "";
 }
-function fileIconURL(isDir,name,ext,spec){
+function fileIconURL(isDir, name, ext, spec){
 	if(isDir)      return "chrome://global/skin/dirListing/folder.png"
 	if(!ext)       return "moz-icon://"+'.broken'+"?size=16"
 	if(ext=='exe') return "moz-icon://"+spec+"?size=16"
@@ -314,11 +524,11 @@ function fileIconURL(isDir,name,ext,spec){
 }
 
 const jarExtensions='jar,xpi,zip,docx'
-dirObjFromSpec=function(spec){	
+dirObjFromSpec=function(spec){
 	var l=spec.length-1
 	var isDir=spec.charAt(l)=='/'
 	var l1=spec.lastIndexOf('/',isDir?l-1:l)+1
-	name=spec.substring(l1,l)		
+	name=spec.substring(l1,l)
 	var ext = isDir?'/':getExtension(spec)
 	if (ext && jarExtensions.indexOf(ext) > -1){
 		ext!='docx'&&(ext='zip');
@@ -342,12 +552,11 @@ getDirEntries=function(obj){
 			obj=dirObjFromSpec(uri)
 	}else if(obj.spec)
 		uri=obj.spec
-	
+
 	var dt=obj.dirType
 	if(dt && dt==1)
 		uri='jar:'+uri+'!/'
-	
-	dump(obj.dirType,uri)
+
 
 	var a=makeReq(uri).split('\n201: ')
 	var ans=[]
@@ -355,7 +564,6 @@ getDirEntries=function(obj){
 		var line=a[i].split(' ')
 		var isDir=line[3].indexOf('DIRECTORY')>-1
 		var name=line[0]
-		//dump(line,line[3],isDir,line[0].charCodeAt(0))
 		if(isDir){
 			if(name.slice(-1)=='/')
 				name=name.slice(0,-1)
@@ -379,7 +587,7 @@ getDirEntries=function(obj){
 			extension:    ext,
 			spec:         auri,
 			dirType:      dt
-		})		
+		})
 	}
 	ans.sort(compareFile)
 
@@ -410,7 +618,7 @@ simpleView.prototype = {
 	setTree:     function(treeBox)     { this.treeBox = treeBox; },
 	getCellText: function(row, col)    { return this.data[row].name },
 	isContainer: function(row)         { return false; },
-	
+
 	isContainerOpen:  function(row)    { return true },
 	isContainerEmpty: function(row)    { return false; },
 	isSeparator: function(row)         { return false; },
@@ -451,7 +659,7 @@ function treeView(table){
 	this.getCellValue = function(row, col){}
 	this.setTree = function(treebox){this.treebox = treebox}
 	this.isEditable = function(row, col){return false}
-	
+
 	this.isContainer = function(row){return false}
 	this.isContainerOpen = function(row){return false}
 	this.isContainerEmpty = function(row){return false }
@@ -462,7 +670,7 @@ function treeView(table){
 	this.isSeparator = function(row){return false}
 	this.isSorted = function(){ return false}
 	this.getImageSrc = function(row,col){return ''}// return "chrome://global/skin/checkbox/cbox-check.gif"; };
-	this.getRowProperties = function(row,props){		
+	this.getRowProperties = function(row,props){
 	};
 	this.getCellProperties = function(row,col,props){};
 	this.getColumnProperties = function(colid,col,props){}
@@ -517,18 +725,17 @@ function springyIndex(val,filterText){
  /**************************/
  selectObjectInTreeTimeOuts={}
 function selectObjectInTree(treeID,immediate){
-//dump('selectObjectInTree',immediate)
 	if(!immediate){
 		if(selectObjectInTreeTimeOuts[treeID]){
 			clearTimeout(selectObjectInTreeTimeOuts[treeID])
 		}
-		selectObjectInTreeTimeOuts[treeID]=setTimeout(function(){selectObjectInTree(treeID,true)},10)
+		selectObjectInTreeTimeOuts[treeID]=setTimeout(function(){selectObjectInTree(treeID, true)},10)
 		return
 	}
 	window[treeID].onSelect()
 }
    //**************************
-  //* 
+  //*
  //******/
 function getId(el){
 	var elId
@@ -547,7 +754,7 @@ function getAttr(el,attr){
 	return [null,null]
 }
 
- 
+
 /**-----------//////**************************/
 
   //***********************************************************

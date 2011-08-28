@@ -26,7 +26,7 @@ var PR_EXCL        = 0x80;
 
 function flushJarCache(aJarFile) {
 	//Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
-	//Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
+	Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
 	//flush entire cache since "flush-cache-entry" doesn't work with inner jars
 	Services.obs.notifyObservers(null, "chrome-flush-caches", null);
 }
@@ -37,10 +37,97 @@ function flushStartupCache() {
   Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 }
 
+function saveTextToLocaleUri(href, text){
+	var uri = $shadia.getLocalURI(href)
+	if(!uri)
+		return false
+	
+	if(uri.scheme == 'file') {
+		let file = uri.QueryInterface(Ci.nsIFileURL).file
+		writeToFile(file, text)
+		return true
+	}
+		
+	if(uri.scheme == 'jar') {
+		//uri.QueryInterface(Ci.nsINestedURI).innermostURI
+		var jar = uri.QueryInterface(Ci.nsIJARURI).JARFile
+		if(jar.scheme != 'file'){
+			return false
+		}
+		if(uri.JAREntry.slice(-1)=='/'){
+			Components.utils.reportError('attempt to override directory')
+			return false
+		}
+		var jarFile = jar.QueryInterface(Ci.nsIFileURL).file
+		syncWriteToJar(jarFile, uri.JAREntry, writeStringToJar, text)
+		return true
+	}
+}
+function saveFileToLocaleUri(href, origFile){
+	var uri = $shadia.getLocalURI(href)
+	if(!uri)
+		return false
+	
+	if(uri.scheme == 'file') {
+		let file = uri.QueryInterface(Ci.nsIFileURL).file
+		if (file.exists())
+			file.remove
+		origFile.copyTo(file.parent, file.leafName)
+		return true
+	}
+		
+	if(uri.scheme == 'jar') {
+		//uri.QueryInterface(Ci.nsINestedURI).innermostURI
+		var jar = uri.QueryInterface(Ci.nsIJARURI).JARFile
+		if(jar.scheme != 'file'){
+			Components.utils.reportError("please don't use nested jars!")
+			return false
+		}
+		if(uri.JAREntry.slice(-1)=='/'){
+			Components.utils.reportError('attempt to override directory')
+			return false
+		}
+		var jarFile = jar.QueryInterface(Ci.nsIFileURL).file
+		syncWriteToJar(jarFile, uri.JAREntry, writeFileToJar, origFile)
+		return true
+	}
+}
+function deleteLocaleUri(href){
+	var uri = $shadia.getLocalURI(href)
+	if(!uri)
+		return false
+	
+	if(uri.scheme == 'file') {
+		let file = uri.QueryInterface(Ci.nsIFileURL).file
+		writeToFile(file, text)
+		return true
+	}
+		
+	if(uri.scheme == 'jar') {
+		//uri.QueryInterface(Ci.nsINestedURI).innermostURI
+		var jar = uri.QueryInterface(Ci.nsIJARURI).JARFile
+		if(jar.scheme != 'file'){
+			return false
+		}
+		if(uri.JAREntry.slice(-1)=='/'){
+			Components.utils.reportError('attempt to override directory')
+			return false
+		}
+		var jarFile = jar.QueryInterface(Ci.nsIFileURL).file
+		syncWriteToJar(jarFile, uri.JAREntry, writeStringToJar, text)
+		return true
+	}
+}
+
+
+
+
+
 /**doesn't work for archives with opened archives inside*/
 function syncWriteToJar(jarFile, entryPath, writer, data, compression){
 	flushJarCache(jarFile)
 	try{
+		dump(jarFile.spec)
 		var zipW = new zipWriter();
 		zipW.open(jarFile, PR_RDWR); // | PR_APPEND
 		try{

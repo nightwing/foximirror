@@ -167,7 +167,20 @@ dump.clear = function(){
     DOM Worker javascript
 
 /***loging**/
+// get rid of strang
+getLocalURI=function getLocalFile(mPath){
+	var uri = Services.io.newURI(mPath, null, null), file;
+	if (uri.schemeIs('resource')) {//about?
+		var ph = Services.io.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)
+		abspath = ph.getSubstitution(uri.host)
+		uri = Services.io.newURI(uri.path.substr(1), null, abspath)
+	}
+	while(uri.schemeIs('chrome'))
+		uri=Services.chromeReg.convertChromeURL(uri);
 
+	if(uri.schemeIs('file')||uri.schemeIs('jar'))
+		return uri
+}
 getLocalFile=function getLocalFile(mPath){
 	var uri = Services.io.newURI(mPath, null, null),file;
 	if(uri.schemeIs('resource')){//about?
@@ -465,7 +478,6 @@ extractRelative = function(uri, doExtract){
 		return {file: jar, modified: 0, exists: true}
 	if(!jar.exists())
 		return {file: jar, modified: 0, exists: false}
-dump(jar.lastModifiedTime - topJar.lastModifiedTime,'--------------')
 	return {file: jar, modified: jar.lastModifiedTime - topJar.lastModifiedTime, exists: true}
 }
 
@@ -582,7 +594,7 @@ lightStarter ={
 	handleEvent: function(e){	
 		if(e.keyCode==this.startKey1||e.keyCode==this.startKey2){
 			var win = this.getTopWindow(e.view)
-			dump(win.location, ('shadia' in win))
+			//dump(win.location, ('shadia' in win))
 			if(!('shadia' in win))
 				this.loadScript(win)
 			win.shadia.toggle()
@@ -615,8 +627,8 @@ lightStarter ={
 
 windowObserver = {
 	observe: function(domWindow, topic){
-		dump(domWindow.location, topic)
-		dump(Services.domUtils.getParentForNode(domWindow.document,false));
+		//dump(domWindow.location, topic)
+		//dump(Services.domUtils.getParentForNode(domWindow.document,false));
 		lightStarter.init(domWindow)
 	},
 	QueryInterface: function() this

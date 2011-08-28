@@ -29,7 +29,6 @@
 		for(var i=0;i<e.length;i++)
 			e[i].view=null
 		//windowViewer.deactivate()
-		domUtils = winService=null
 	}
 	}]]></script>
 
