@@ -105,7 +105,7 @@ jn.__defineGetter__('safeLoop', function(){
 	return jn.safeLoopCounter--
 })
 
-jn.inspect=function(x,long){	
+jn.inspect=function(x,long){
 	if(x == null) return String(x);
 	var c, nameList=[], t = typeof x, 
 		Class=Object.prototype.toString.call(x),
@@ -194,7 +194,7 @@ jn.inspect=function(x,long){
 	}catch(e){}
 
 	if(nameList.length<6){
-		nameList.push('{')
+		nameList.push(' ={')
 		try{		
 			for(var i in x){
 				if(nameList.length>12){
@@ -207,8 +207,11 @@ jn.inspect=function(x,long){
 				else
 					nameList.push(i,',')
 			}
-			nameList.pop()//last ,
-		}catch(e){}
+			if(nameList[nameList.length-1] == ',')
+				nameList.pop()//last ,
+		}catch(e){
+			Cu.reportError(e)
+		}
 		nameList.push('}')
 	}
 
@@ -320,7 +323,20 @@ jn.bait= modernFox?(function(a){
 	return Proxy.create(pr)
 })():dump;
 
+jn.getScripts = function(window){
+    var document = window.document
+    var bu = Services.io.newURI(document.baseURI, null, null)
+    var s = document.querySelectorAll('script')
+    s = Array.prototype.slice.call(s).map(function(x){
+        return Services.io.newURI(x.getAttribute("src"),null,bu).spec
+    })
+    return s
+}
+//sr=jn.getScripts(window)[4];jn.loadScript(sr, window)
 
+jn.loadScript = function(src, window){
+   return Services.scriptloader.loadSubScript(src+'?'+Date.now(), window, 'UTF-8')
+}
 
 function getClass(x) {
 	/* if(x == null) return String(x); */

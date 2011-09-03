@@ -120,6 +120,11 @@ dump = function(){
 	consoleMessage.init(aMessage, stack.filename, null, stack.lineNumber, 0, 9, "component javascript");
 	Services.console.logMessage(consoleMessage);
 }
+dump.reportLine = function(aMessage, filename, lineNumber){
+	var consoleMessage = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+	consoleMessage.init(aMessage, filename, null, lineNumber, 0, 9, "component javascript");
+	Services.console.logMessage(consoleMessage);
+}
 dump.log = function(){
     var aMessage="aMessage: ";
     for(var i=0,l=arguments.length; i<l; ++i){
@@ -133,6 +138,12 @@ dump.trace = function dumpComponentsStack(from){
     for (var frame = Components.stack; frame; frame = frame.caller)
         msg.push(frame.filename + "#@" + frame.lineNumber +": "+frame.sourceLine  );
     dump(from+"\n has stack size:" +msg.length+'\n', msg.join('\n'));
+}
+dump.trace = function dumpComponentsStack(from){
+    var i = 0;
+    for (var frame = Components.stack.caller; frame; frame = frame.caller)
+        dump.reportLine(i++, frame.filename + "#@", frame.lineNumber);
+    
 }
 dump.clear = function(){
 	Services.console.reset()

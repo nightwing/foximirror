@@ -1727,13 +1727,13 @@ cropString = function(text, limit){
 }
 /**-----------//////**************************/
 function sayInlineCSS(mNode){
-	stateButtons='<sp1><sp>hover</sp><sp>focus</sp><sp>active</sp></sp1>'
+	stateButtons='<sp1><sp>hover</sp></sp1>'
 	if(mNode.style&&mNode.style.cssText){
 		var t="<div id='InlineCSS-slate'><div><span class='selector'>"+'element.style</span>{</div>'
 			 +breakRule2(mNode.style.cssText)+'</div><div class="end">}'+stateButtons+'</div></div>'
 		return t
 	}else{
-		var t="<div id='InlineCSS-slate' class='gray'><span class='selector'>element.style</span><span>{}</span>"+stateButtons+"</div>"
+		var t="<div id='InlineCSS-slate' class='gray'><span class='selector'>element.style</span><span>{<span class='prop'></span>}</span>"+stateButtons+"</div>"
 		return t
 	}
 }
@@ -1932,10 +1932,18 @@ initializeables.push(computedStyleViwer)
 contentStates={active: 0x01,focus: 0x02, hover: 0x04,l:0x08,k:0x10}
 
 setContentState=function(state){
+	var mWindow = mNode.ownerDocument.defaultView
+	var utils = mWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
+
 	var st=domUtils.getContentState(mNode)
-	st^=contentStates[state]
-	domUtils.setContentState(mNode.ownerDocument.documentElement,0x07)//
-	domUtils.setContentState(mNode,st)
+	//st^=contentStates[state]
+	st = st & contentStates.hover ? 0 : 4
+	utils.redraw(true)
+	domUtils.setContentState(mNode.ownerDocument.documentElement, 4)//
+	utils.redraw(true)
+	domUtils.setContentState(mNode, st)
+	utils.redraw(true) 
+	
 	insertAddrs(mNode)
 }
 /**-----------//////**************************/
@@ -1961,6 +1969,8 @@ slateViewer={
 		var b=createElement('tab',{label:'xbl',id:'xbl'})
 		a.appendChild(b)
 		a.selectedIndex=0
+		
+		content.InfoTip.initialize()
 	},
 	setSlateFromTab: function(mode){
 		if(this.mode=='domedit'){
@@ -1971,19 +1981,60 @@ slateViewer={
 	},
 	slates:[attributeViewer,'xbl'],
 
-	mouseover:function(event){
+	mouseover:function(e){
 		clearTimeout(this.mouseoverTimeout)
-		this.mouseoverTimeout=setTimeout(function(){
-			slateViewer.overNode(event)
-		},100)
+		this.mouseoverTimeout=setTimeout(slateViewer.overNode,100, e.target, e.rangeParent, e.rangeParent)
 	},
-	overNode:function(event){
-		var node=event.target
+	overNode:function(target, rangeOffset, rangeParent){
+		var node=target
 		if(node.nodeName){
 			var i=getSlatePosition(node)
-			if(i)
-				dump('infotip', i.id, i.slateId,
-					currentRules[i.slateId]&&currentRules[i.slateId].parentStyleSheet.href)
+			
+			if(i){
+				//dump('infotip', i.id, i.slateId, currentRules[i.slateId]&&currentRules[i.slateId].parentStyleSheet.href)
+				
+
+				//content.InfoTip.populateImageInfoTip("https://ftp.mozilla.org/favicon.ico")
+
+				var InfoTip = content.InfoTip
+				//var propValue = content.Dom.getAncestorByClass(target, "val");
+				//dump(propValue)
+				//if (!propValue) 
+				//	return 
+				var text = node.textContent;
+				var cssValue = content.parseCSSValue(text, rangeOffset);
+				if (!cssValue || cssValue.value == this.infoTipValue)
+					return true;
+
+				this.infoTipValue = cssValue.value;
+
+				if (cssValue.type == "rgb" || cssValue.type == "hsl" || cssValue.type == "gradient" ||
+					(!cssValue.type && content.Css.isColorKeyword(cssValue.value)))
+				{
+					this.infoTipType = "color";
+					this.infoTipObject = cssValue.value;
+
+					InfoTip.populateColorInfoTip(cssValue.value);
+					InfoTip.show()
+				} else if (cssValue.type == "url") {
+					var propNameNode = target.parentNode.getElementsByClassName("name").item(0);
+					if (propNameNode && propNameNode.textContent) {
+						/*var rule = currentRules[i.slateId]
+						var baseURL = this.getStylesheetURL(rule, true);*/
+						var relURL = content.parseURLValue(cssValue.value);
+						/*var absURL = Url.isDataURL(relURL) ? relURL : Url.absoluteURL(relURL, baseURL);
+						var repeat = parseRepeatValue(text);
+
+						this.infoTipType = "image";
+						this.infoTipObject = absURL;*/
+dump(cssValue.value)
+						InfoTip.populateImageInfoTip(relURL, true);
+					}
+				}
+				InfoTip.show()
+				return 
+			}
+			content.InfoTip.hide()
 		}
 	},
 	click:function(event){
@@ -2562,7 +2613,8 @@ browserFind={
 
 
 		this.selCon=this.editor.selectionController
-		this.seltype=Ci.nsISelectionController.SELECTION_IME_RAWINPUT
+		// this.seltype=Ci.nsISelectionController.SELECTION_IME_RAWINPUT
+		this.seltype=Ci.nsISelectionController.SELECTION_FIND
 		this.findSelection = this.selCon.getSelection(this.seltype);
 
 		this.selCon.setDisplaySelection(Ci.nsISelectionController.SELECTION_ON);
@@ -2664,6 +2716,10 @@ browserFind={
 	selectionReallyChanged:function(){
 
 			var text=this.selCon.getSelection(1).toString()
+			
+			if(!text.trim())
+				return
+		
 			if(text!==this.text){
 				if(this.timeout){
 					clearTimeout(this.timeout)
@@ -2671,7 +2727,8 @@ browserFind={
 				if(this.active)
 					this.findSelection.removeAllRanges()
 				this.text=text
-				if(text)this.addRanges(text)
+				if(text)
+					this.addRanges(text)
 					//this.timeout=setTimeout(function()self.addRanges(text), text.length<3?300:100)
 			}
 /* 		if(viewDoc.hasFocus()){}else{

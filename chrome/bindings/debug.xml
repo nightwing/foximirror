@@ -109,10 +109,6 @@ var actionNames={
 }
 var shortNames={
 	 reopen:':)'
-	//,jsMirror:'js'
-	,inspector:'domMirror'
-	,chromeMirror:'chromeMirror'
-	,cssMirror:'css'
 }
 var actionsColors = {restartApp:'red',reloadChrome:'orange',reload:'orange',magnifier:'blue'}    
 function toOpenWindowByType(inType, uri, features) {

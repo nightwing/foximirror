@@ -195,6 +195,9 @@ tr:hover{
         #FFFFFF 10px
     );
 }
+.infoTip[active]{
+	display: block;
+}
 
 div[closed='true']>.closable{
 	display:none

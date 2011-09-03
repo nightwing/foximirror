@@ -111,7 +111,7 @@ window.setLoacation = function(spec){
 	if(!spec)
 		return false
 	var fu = Cc["@mozilla.org/docshell/urifixup;1"]
-		.getService(Ci.nsIURIFixup).createFixupURI(spec,null)
+		.getService(Ci.nsIURIFixup).createFixupURI(spec, null)
 	if(fu.spec==gFixupURI.spec)//already loaded
 		return false
 	gFixupURI = fu

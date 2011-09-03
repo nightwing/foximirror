@@ -206,30 +206,29 @@ function parseManifest(href, addon, cs, manifest){
             case "skin": case "content": case "resource": // case "locale":
 				if (params[0]=="skin") {
 					flags = params[2] + params.slice(4).join(" ");
-					var aliasPath=params[3]
+					var relPath = params[3]
 				} else {
 					flags = params.slice(3).join(" ");
-					var aliasPath=params[2]
+					var relPath = params[2]
 				}
 				if (params[0]=="resource")
-					var chromePath = "resource://" + params[1] + "/"
+					var aliasPath = "resource://" + params[1] + "/"
 				else
-					var chromePath = "chrome://" + params[1] + "/" + params[0] + "/"
+					var aliasPath = "chrome://" + params[1] + "/" + params[0] + "/"
 
-				var realPath = ios.newURI(aliasPath, null, manifestUri).spec
-				var id = aliasPath + '->' + realPath
+				var realPath = ios.newURI(relPath, null, manifestUri).spec
+				var id = relPath + '->' + realPath
 				if(aliasRoots.indexOf(id)>-1)
 					continue
 				aliasRoots.push(id)
 				cs.chromeMap.push({
 					 alias:      params[1]
 					,subAlias:   params[0]
-					,chromePath: chromePath
+					,aliasPath:  aliasPath
 					,realPath:   realPath
 					,disabled:   addon.disabled
 					,addon:      addon
 					,flags:      flags
-					,aliasPath:  aliasPath
 					,manifestUri:href
 					,line:       i
 				})
@@ -361,7 +360,7 @@ function indexOfURL(href){
     while(right-left > 1 && n < 10000){
 		n++
         var mid = Math.floor((left + right)/2);
-        var dataHref = chromeMap[left].realPath.toLowerCase()
+        var dataHref = chromeMap[mid].realPath.toLowerCase()
 		if (href < dataHref) {
 			right = mid;
         } else if (href>dataHref) {
@@ -371,8 +370,6 @@ function indexOfURL(href){
 			break
 		}
     }
-	
-	dump(href)
 
 	if(href.indexOf(dataHref) != 0){
 		dataHref = chromeMap[left].realPath.toLowerCase()
@@ -385,7 +382,7 @@ function indexOfURL(href){
         }
 	}
 
-	return [chromeMap[left].chromePath + href.substr(dataHref.length), mid]
+	return [chromeMap[left].aliasPath + href.substr(dataHref.length), mid]
 }
 
 uriFromFile=function(file){
@@ -393,26 +390,49 @@ uriFromFile=function(file){
 }
 
 
+//
+/* a=new fileMap(addonList)
+a.debug()
+
+a.getAliasList('file:///e:/program files/mozilla firefox/chrome/') */
 //********************************
 
-function fileMap() {
+function fileMap(a) {
 	this.aliasList = []
+	this.addAlias(a)
 }
 
 fileMap.prototype = {
 	normalizeUri: function(a){
 		return decodeURIComponent(a.toLowerCase())
 	},
-	
+	$addSingleItem: function(a){
+		if(!a._rPath){
+			var p = a.localPath || a.realPath || (a.file && fileHandler.getURLSpecFromFile(a.file))
+			if(!p)
+				return false		
+			a._rPath = this.normalizeUri(p)
+		}
+		if(this.aliasList.indexOf(a) == -1)
+			this.aliasList.push(a)
+		return true
+	},
 	addAlias: function(a){
-		a._rPath = this.normalizeUri(a.localPath)
-		this.aliasList.push(a)
+		if('forEach' in a){
+			for each(var i in a)
+				this.$addSingleItem(i)
+		}else{
+			a = this.$addSingleItem(a)
+			if(!a)
+				return false
+		}
 		this.aliasList.sort(this.compare)
+		return true
 	},
 	
 	compare: function(a, b){
-		var tempA = a.realPath.toLowerCase();
-		var tempB = b.realPath.toLowerCase();
+		var tempA = a._rPath
+		var tempB = b._rPath
 		if(tempA < tempB)
 			return -1;
 		if(tempA > tempB)
@@ -422,12 +442,11 @@ fileMap.prototype = {
 	
 	debug: function(){
 		return this.aliasList.map(function(x, i){
-			i + x._rPath + x.aliasPath
+			return i + ': ' + x._rPath + '   -->  ' + (x.aliasPath || '```'+x.name+'```')
 		}).join('\n')
 	},
 	
-	getAlias: function(href){
-		
+	getAliasListSlow: function(href){		
 		var _r = this.normalizeUri(href)
 		
 		var ans = []
@@ -436,24 +455,77 @@ fileMap.prototype = {
 				ans.push(x)
 		}
 		
-		return ans			
+		return ans
+	},
+	getAliasList: function(href){
+		var _r = this.normalizeUri(href)
+		
+		var ans = [], list = this.aliasList
+		var left = 0, right = chromeMap.length - 1;
+		
+		var n = 0
+		while(right-left > 1 && n < 10000){
+			n++
+			var mid = Math.floor((left + right)/2);
+			var pivot = list[mid]._rPath
+			if (_r < pivot) {
+				right = mid;
+			} else if (_r > pivot) {
+				left = mid;
+			} else {
+				left = mid
+				break
+			}
+		}
+		
+		if(_r.indexOf(pivot) != 0){
+			pivot = list[left]._rPath
+			if(_r.indexOf(pivot) != 0){
+				mid = right
+				pivot = list[right]._rPath
+				if(_r.indexOf(pivot) != 0){
+					return [href, -1]
+				}
+			}
+		}
+		
+		return [this.resolveAlias(href, list[left]), mid]
+	},
+	
+	// todo: doesn't belong here
+	resolveAlias: function(href, alias){
+		let p = alias.aliasPath || ('```'+alias.name+'```')
+		return p + href.substr(alias._rPath.length)
+	},
+	
+	getAliasPathList: function(href){
+		
 	}
-
-
 }
 
-
-
-
-
 //****** process data
-
+var uriFixup
+var gFileRegistry = {}
 function createFile(href){
-	var f = new fileEntry
+	var fileEntry = gFileRegistry[href]
+	if(fileEntry)
+		return fileEntry
+
+	if(!uriFixup)
+		uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup)
+
+	var fu = uriFixup.createFixupURI(href, null)	
+	href = fu.spec
+	
+	var fileEntry = gFileRegistry[href]
+	if(fileEntry)
+		return fileEntry
+
+	var f = new fileEntry(href)
 
 	return f
 }
-
+// const
 function fileEntry(){
 
 }

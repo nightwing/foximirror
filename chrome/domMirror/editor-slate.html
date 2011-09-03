@@ -67,8 +67,32 @@ initAll=function(){
 }
 keyListener={
 	keypress:function(event){
-		if(!lt)
+		if(!lt){
+			if(event.keyCode == KeyEvent.DOM_VK_RETURN || event.keyCode == KeyEvent.DOM_VK_ESCAPE){
+				var sel = getSelection()
+				var a = sel.anchorNode
+				if(!a){
+					function gi(object,iface){
+						return object.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(iface)
+					}
+					this.selCon=[
+						content,//window,
+						Ci.nsIWebNavigation,
+						Ci.nsIDocShell,
+						Ci.nsISelectionDisplay
+					].reduce(gi).QueryInterface(Ci.nsISelectionController)
+					selCon.wordMove(1,1)				
+				}
+				var sel = getSelection()
+				var a = sel.anchorNode
+				if(!a){
+					return
+				}
+				startEditingElement(a.parentNode)
+				return
+			}
 			return;
+		}
 		sel=window.getSelection()
 		if(sel.rangeCount)
 			var range=sel.getRangeAt(0)
@@ -91,6 +115,9 @@ keyListener={
 
 
 		switch(event.keyCode){
+			case KeyEvent.DOM_VK_ESCAPE:
+				finishEditing();
+				break
 			case KeyEvent.DOM_VK_UP:
 				event.preventDefault();event.stopPropagation();
 				break
@@ -292,7 +319,7 @@ function startEditing(e){
 	if(downPos[0]==e.screenX&&downPos[1]==e.screenY)
 		select()
 }
-function finishEditing(e){
+function finishEditing(){
 	if(lt&&lt.className){
 		lt.blur()
 		lt.className=lt.className.replace(' editing','','g')
@@ -345,7 +372,7 @@ function autocomlete(){
 }
 
 
-gCSSProperties
+
 
 
 	filter=function(){
