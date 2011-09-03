@@ -41,7 +41,7 @@
 	<spacer flex='1'/>
 	
 	<toolbarbutton id="install" oncommand="installUnpacked()" label='installUnpacked'></toolbarbutton>
-	<toolbarbutton id="make-xpi" oncommand="makeXPI()" label='make.xpi' />
+	<toolbarbutton id="make-xpi" oncommand="makeXPI(getCurrentFile())" label='make.xpi' />
 	<toolbarbutton id="restart" oncommand="document.querySelector('shadiaglue').actions.restartApp()" label='restart' hidden='true'/>
 	<!-- <toolbarbutton id="makeAllCompatible" oncommand="compatibleForever.removeAllMinMax()" label='makeAllCompatible' /> -->
 </toolbar>
@@ -167,6 +167,7 @@
 <script type="application/javascript" src="chromeMirrorUtils.js"/>
 <script type="application/javascript" src="chromeMirror.js"/>
 <script type="application/javascript" src="addonManager.js"/>
+<script type="application/javascript" src="build.xpi.js"/>
 <script type="application/javascript" src="chrome://shadia/content/utils/prefUtils.js"/>
 <script type="application/javascript" src="chrome://shadia/content/utils/fileUtils.js"/>
 

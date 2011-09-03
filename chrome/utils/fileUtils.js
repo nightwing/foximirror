@@ -119,7 +119,10 @@ function deleteLocaleUri(href){
 	}
 }
 
-
+function renameFile(file, newName){
+	//f=getLocalFile('file:///d:/ffaddons/acebug/ - copy.gitignore')
+	file.moveTo(file.parent, newName)
+}
 
 
 

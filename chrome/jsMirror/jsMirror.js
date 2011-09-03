@@ -201,8 +201,8 @@ jn.inspect=function(x,long){
 					nameList.push(',')
 					break
 				}
-				var s = x[i], t=typeof s
-				if(typeof s != 'object' && typeof s != 'function')
+				var s = x[i], t = typeof s
+				if(t != 'object' && t != 'function')
 					nameList.push(i+':'+x[i],',')
 				else
 					nameList.push(i,',')
