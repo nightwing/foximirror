@@ -135,7 +135,7 @@ window.onhashchange()
 
 // context menu
 var contextMenuActions = {}
-window.addEventListener('click', function(e){
+window.addEventListener('contextmenu', function(e){
 	if(e.button==2){
 		e.preventDefault();e.stopPropagation()
 		var cmb = $('contextMenuBack'),
@@ -174,7 +174,7 @@ window.addEventListener('click', function(e){
 		window.addEventListener('mousedown',closeContextMenu,true)
 	}
 },true)
-closeContextMenu=function(e){
+closeContextMenu = function(e){
 	var t =e.target
 	if(t.id=='contextMenu')
 		return

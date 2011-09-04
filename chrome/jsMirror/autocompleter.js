@@ -1168,10 +1168,10 @@ var getNodeNamesInDoc = function(doc) {
     return ans.concat(frequent)
 };
 
-var modernfox = !!Object.getOwnPropertyNames;
+var modernFox = !!Object.getOwnPropertyNames;
 /**============-=========-================**/
 var getProps;
-if (!modernfox) { //for old versions
+if (!modernFox) { //for old versions
     getProps = function(targetObj) { //var t=Date.now()
         var i, o, d;
 
@@ -1539,3 +1539,11 @@ s.serializeToString(doc)
 
 doc.querySelector('[name="scrollMaxX"]')
 */
+
+
+
+if(!modernFox){
+	var s = document.querySelector('#autocomplatePanel stack')
+	s.removeChild(s.lastChild)
+	s.removeChild(s.lastChild)
+}

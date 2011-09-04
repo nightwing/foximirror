@@ -8767,7 +8767,14 @@ var Tokenizer = function(rules) {
             value: ""
         };
         
-        while (match = re.exec(line)) {
+		var n = line.length;
+        if (n > 200){
+			token.type = 'text'
+			if(n > 1000)
+				token.value = line.slice(0, 1000) + '------unable-----to----display-----too-----long-----';
+			else
+				token.value = line;
+        } else while (match = re.exec(line)) {
             var type = "text";
             var rule = null;
             var value = [match[0]];
@@ -8821,7 +8828,7 @@ var Tokenizer = function(rules) {
                 }
             }
             
-            if (lastIndex == line.length)
+            if (lastIndex == n)
                 break;
             
             lastIndex = re.lastIndex;
@@ -11969,7 +11976,6 @@ var EventEmitter = require("pilot/event_emitter").EventEmitter;
 var Text = function(parentEl) {
     this.element = dom.createElement("div");
     this.element.className = "ace_layer ace_text-layer";
-    this.element.style.width = "auto";
     parentEl.appendChild(this.element);
 
     this.$characterSize = this.$measureSizes() || {width: 0, height: 0};

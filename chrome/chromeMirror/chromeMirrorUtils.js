@@ -404,7 +404,7 @@ function fileMap(a) {
 
 fileMap.prototype = {
 	normalizeUri: function(a){
-		return decodeURIComponent(a.toLowerCase())
+		return decodeURIComponent(a.toLowerCase()).replace(/^(:?file:|jar:)+/, '')
 	},
 	$addSingleItem: function(a){
 		if(!a._rPath){
@@ -493,7 +493,7 @@ fileMap.prototype = {
 	},
 	
 	// todo: doesn't belong here
-	resolveAlias: function(href, alias){
+	resolveAlias: function(href, alias, normal){
 		let p = alias.aliasPath || ('```'+alias.name+'```')
 		return p + href.substr(alias._rPath.length)
 	},

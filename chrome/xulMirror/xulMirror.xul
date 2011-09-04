@@ -4,72 +4,43 @@
 <?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>  
 
 
-<window
-    id="executeJSWindow"
-    title="XULMirror"
-    orient="horizontal"
-    width="800"
-    height="550"
-    persist="screenX screenY width height sizemode"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    onload="EJS_doOnload()"
-    onunload="EJS_doOnUnload()"
-    sizemode="maximized"
-	windowtype='shadia:xulMirror'
-    >
-	
-	<script type="application/javascript" src="../shadia.js"/>
-    <script type="application/x-javascript" src="xulMirror.js"/>
-	
-	
-    <popupset>
-        <menupopup id="pupCommandAbbr" position="after_end" ignorekeys="false"/>
-        <menupopup id="pupCodeCompletion" position="after_end" ignorekeys="false"/>
-		
-		<panel id="autocomplate" noautofocus="true" noautohide="true">
-			<vbox>
-			<tree id="window-tree" class="plain" seltype="single" treelines="false" flex="1" tabindex='-1'
-					hidecolumnpicker='true' style='-moz-user-focus:none'>
-				<treecols>
-					<treecol id="colNodeName" hideheader="true" primary="true" flex="1" />
-				</treecols>
-				<treechildren id="inspector-tree-body"/>
-			</tree>  
-			</vbox>
-		</panel>
-		<panel id="autocomplatePanel" noautofocus="true" noautohide="true" >
-			<hbox>
-				<toolbarbutton label='qi'  accesskey='q' onclick='jsExplore.qi()'/>
-				<toolbarbutton label='all' accesskey='a' onclick='jsExplore.all()'/>
-				<toolbarbutton label='_p'  accesskey='p' onclick='jsExplore._p()'/>
-				<toolbarbutton label='si'  accesskey='s' onclick='jsExplore.si()'/>
-				<spacer flex='1'/>
-				<label/>
-			</hbox>
-			<tree id="window-tree" class="plain1" seltype="single" treelines="false" flex="1" tabindex='-1'
-					hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
-				<treechildren id="inspector-tree-body"/>
+<window id="executeJSWindow" title="XULMirror" windowtype='shadia:xulMirror'
+		width="800" height="550" persist="screenX screenY width height sizemode"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml"
+		onload="doOnload()" onunload="doOnUnload()" sizemode="maximized" orient="horizontal" >
 
-				<treecols>
-					<treecol id="name" hideheader="true" primary="true" flex="2" />
-					<splitter class="tree-splitter"/>
-					<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
-					<splitter class="tree-splitter"/>
-					<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
-				</treecols>
-			</tree>  
+	<popupset>
+		<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
+		<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
+			<stack id='autocomplatePanelStack' flex='1'>
+				<hbox>
+					<tree id="window-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
+							hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
+						<treechildren id="inspector-tree-body"/>
+
+						<treecols>
+							<treecol id="name" hideheader="true" primary="true" flex="1" />
+							<splitter class="tree-splitter"/>
+							<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
+							<splitter class="tree-splitter"/>
+							<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
+						</treecols>
+					</tree>
+					<splitter/>
+					<textbox multiline='true' id='autocomplate-info-bubble' flex='1' wrap='off' width='200' hidden='true' />
+				</hbox>
+				<resizer element='autocomplatePanel' dir="bottomleft" left="0" bottom="0" width="16" height="16"/>
+				<resizer element='autocomplatePanel' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
+			</stack>
 		</panel>
-    </popupset>
+
+		<menupopup id='main-context' onpopupshowing='MenuUtils.onContextShowing(event)'/>
+	</popupset>
 
 	<vbox flex="1">
-<toolbar id='actionsp' hidden="true">	
-	<toolbarbutton label="//" oncommand="EJS_commentLine();" tabindex="8"/>
-	<toolbarbutton label="/*" oncommand="EJS_commentBlock();"/>
-	<toolbarbutton label="\t" oncommand="codebox.value=codebox.value.replace('\t','  ','g');"/>
-	<toolbarbutton label="vert" oncommand="toggleOrient()"/>
-	
-</toolbar>      
+		<toolbar id='actionsp' hidden="true">	
+			<toolbarbutton label="vert" oncommand="toggleOrient()"/>	
+		</toolbar>      
 		<menubar align="center" hidden="true">
 			<label control="targetWin" accesskey="w" value="Target window" />
 			<menulist id="targetWin" oncommand="EJS_targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
@@ -86,34 +57,32 @@
 		</menubar>
 		
 		<box id='wrap' orient='horizontal' flex="1" >
-<tabbox id='tabbox' flex="1" selectedIndex="0">
-  <tabs>
-    <tab label="xul"/>
-    <tab label="xbl"/> 
-    <tab label="overlay"/> 
-	<shadiaglue/>
-  </tabs>
-  <tabpanels flex="1">
-    <tabpanel>
-		<textbox id="xulCode" multiline="true" flex="1" wrap='off' 
-					style="overflow:hidden;font-family:monospace;font-size:9.1pt;-moz-tab-size:2" 
-					onchange='onChange("xulCode")' oninput='onChange("xulCode")'/>			
-	</tabpanel>
-    <tabpanel>
-		<textbox id="xblCode" multiline="true" flex="1" wrap='off' 
-					style="overflow:hidden;font-family:monospace;font-size:9.1pt;-moz-tab-size:2" 
-					onchange='onChange("xblCode")' oninput='onChange("xblCode")'/>
-	</tabpanel>
-    <tabpanel>
-		<textbox id="overlayCode" multiline="true" flex="1" wrap='off' 
-					style="overflow:hidden;font-family:monospace;font-size:9.1pt;-moz-tab-size:2" 
-					onchange='onChange("overlayCode")' oninput='onChange("overlayCode")'/>
-	</tabpanel>
-  </tabpanels>
-</tabbox>			
+			<vbox flex='1' id='codebox' persist='height width'>
+				<hbox>
+				  <tabs setfocus='false' oncommand="tabSelect(event.target.id)">
+					<tab label="xul" id="xul"/>
+					<tab label="xbl" id="xbl"/> 
+					<tab label="overlay" id="overlay"/> 
+				  </tabs>
+				  <spacer flex='1'/>
+					<shadiaglue/>
+				</hbox>
+				<tabpanel flex='1' >
+					<iframe flex='1' id="code" context='main-context' type='content' src='chrome://shadia/content/ace++/simple-editor.html'/>
+				</tabpanel>
+			</vbox>
 			<splitter><grippy/></splitter>
-			<browser id="result" flex='1' src='template.xul' persist='height'/>
+			<iframe id="content" flex='1' persist='height width' />
 		</box>
     </vbox>
+	
+	
+	<script type="application/x-javascript" src="../shadia.js"/>
+	<script type="application/x-javascript" src="../jsMirror/menuUtils.js"/>
+	<script type="application/x-javascript" src="../jsMirror/emulate-fb.js"/>
+
+	<script type="application/x-javascript" src="../jsMirror/autocompleter.js"/>
+    <script type="application/x-javascript" src="xulMirror.js"/>
+	
 
 </window>

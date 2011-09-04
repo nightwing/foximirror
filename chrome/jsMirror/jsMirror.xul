@@ -69,7 +69,7 @@
 		<shadiaglue/>
 	</toolbar>
 	<vbox flex="10">
-		<browser id="jsCode" context='main-context'
+		<iframe id="jsCode" context='main-context'
 					type='content' persist='height' src='chrome://shadia/content/ace++/simple-editor.html'/>
 		<splitter>
 			<hbox flex="1">
@@ -82,7 +82,7 @@
 				<toolbarbutton label="timer"    oncommand="codebox.focus();insertTimer()"  />
 			</hbox>
 		</splitter>
-		<browser id="result"  context='main-context' flex='1'
+		<iframe id="result"  context='main-context' flex='1'
 				type='content' src='chrome://shadia/content/ace++/simple-editor.html'/>
 	</vbox>
 </vbox>

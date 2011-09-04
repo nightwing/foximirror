@@ -1,9 +1,41 @@
 var Cc	= Components.classes;
 var Ci	= Components.interfaces;
-var Cu	= Components.utils;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-var ios= Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://shadia/main.js");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
+$shadia.editGlue = {
+	data: {},
+	setDataSource: function(flag, data){
+		flag = flag.toLowerCase()
+		this.data[flag] = data		
+	},
+	getData: function(flag){
+		flag = flag.toLowerCase()
+		this.contentType = ''
+		var content = this.data[flag]
+		
+		if (typeof content == 'function') {			
+			try{
+				content = content(flag, this)
+			}catch(e){
+				content = this.reloadMessage +'<br>' +e
+				this.contentType = ''
+			}
+		}
+		
+		if(typeof content != 'string' || !content){
+			content = this.reloadMessage
+			this.contentType = ''
+		}
+		return content
+	},
+	removeDataSource: function(flag){
+		flag = flag.toLowerCase()
+		delete this.data[flag]
+	},
+	reloadMessage: '<html>=== data is not avaliable yet===<br><button onclick=window.location.reload()>reload'
+}
 function editProtocolHandler(){}
 
 editProtocolHandler.prototype = {
@@ -13,49 +45,82 @@ editProtocolHandler.prototype = {
 	contractID: "@mozilla.org/network/protocol;1?name=edit",
 	editorURI: 'chrome://shadia/content/ace++/edit-protocol-editor.html',
 	defaultPort: -1,
-	protocolFlags: Ci.nsIProtocolHandler.URI_NORELATIVE | Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE,
+	
+	protocolFlags: Ci.nsIProtocolHandler.URI_NORELATIVE
+				 | Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE    //URI_DANGEROUS_TO_LOAD
+				 | Ci.nsIProtocolHandler.URI_NON_PERSISTABLE,
 	allowPort: function(port, scheme) false,
+	
 	get chromePrincipal() {
 		delete editProtocolHandler.prototype.chromePrincipal
 		return editProtocolHandler.prototype.chromePrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
 	},
+	
+	editRe: /e(dit)?:\/*#*/i,
   
 	newURI : function (spec, charset, baseURI){
-		dump('********',spec, charset, baseURI)
-		if(spec.indexOf(':')==-1&& baseURI){
-			dump(spec, charset, baseURI.spec)
-			return ios.newURI(spec, null, 
-				ios.newURI(this.editorURI ,null,null)
-			);
+		//dump('********',spec, charset, baseURI)
+		if (spec.indexOf(':') == -1 && baseURI){
+			//dump(spec, charset, baseURI.spec)
+			if (baseURI.spec[5] == '#')
+				return Services.io.newURI(spec, null, 
+					Services.io.newURI(this.editorURI ,null,null)
+				);
+			spec = baseURI.spec.replace(/#\.*$/, '') + spec
+			//spec = 'edit:@' + spec
 		}
-		//var a = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURL)
+
 		var a = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI)
-		a.spec = 'edit:#'+(spec.match(/edit:\/*#*(.*)/)||[,''])[1]
-		return a   
+		spec = spec.replace(this.editRe, '')
+		if (spec[0] == '@'){
+			spec = 'edit:@' + spec.substr(1)
+		} else {
+			spec = 'edit:#' + spec
+		}
+		
+		a.spec = spec
+		return a
 	},
   
 	newChannel : function(uri){
-		dump('---------------------',uri.spec)
+		//dump('---------------------',uri.spec)
 		try {
 			var uriString = uri.spec.toLowerCase();
-			if(uriString == 'edit:#alert'){
+			if (uriString.substring(0, 5) != 'edit:'){
+				throw Components.results.NS_ERROR_FAILURE;
+			}
+			var flag = uriString[5]
+			if (flag == '#') {           
+				var extUri = Services.io.newURI(this.editorURI, null, null);
+				var extChannel = Services.io.newChannelFromURI(extUri);
+				extChannel.originalURI = uri;
+				return extChannel;
+			}
+			uriString = uriString.substr(6)
+			//var i = uriString.indexOf('!@!')
+			
+			if (flag == '@') {
     			let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream)
-				let content = '<script>alert(Components.utils.reportError("asas"))</script>response.content'
+				var content = $shadia.editGlue.getData(uriString)
+				 
+				
 				stream.setData(content, content.length)
 				let channel = Cc["@mozilla.org/network/input-stream-channel;1"].createInstance(Ci.nsIInputStreamChannel)
+								
 				channel.contentStream = stream
 				channel.QueryInterface(Ci.nsIChannel)
 				channel.setURI(uri)
 				channel.originalURI = uri
                 channel.owner = this.chromePrincipal
+				
+				// set this at the very end otherwise error is thrown
+				let ct = $shadia.editGlue.contentType
+				if (ct)
+					channel.contentType = ct
+
                 return channel;
 			}
-			if (uriString.indexOf(this.scheme) == 0) {           
-				var extUri = ios.newURI(this.editorURI, null, null);
-				var extChannel = ios.newChannelFromURI(extUri);
-				extChannel.originalURI = uri;
-				return extChannel;
-			}
+			throw Components.results.NS_ERROR_FAILURE;
 		}catch(e){
 			throw Components.results.NS_ERROR_FAILURE;
 		}
@@ -86,29 +151,4 @@ else
 	reg.registerFactory(o.classID, o.classDescription, o.contractID, factory);
 })();*/
 
-function dump() {
-    var aMessage = "aMessage: ";
-    for (var i = 0; i < arguments.length; ++i) {
-        var a = arguments[i];
-        aMessage += (a && !a.toString ? "[object call]" : a) + " , ";
-    }
-    var consoleService = Cc['@mozilla.org/consoleservice;1'].getService(Ci.nsIConsoleService);
-    consoleService.logStringMessage("" + aMessage);
-}
-
-dump(NSGetFactory)
-
-
-/*
-
-let stream = inputStream.createInstance(Ci.nsIStringInputStream)
-    let content = '<script>alert(1)</script>response.content'
-    stream.setData(content, content.length)
-    channel = streamChannel.createInstance(Ci.nsIInputStreamChannel)
-    channel.contentStream = stream
-    channel.QueryInterface(Ci.nsIChannel)
-
-    channel.setURI(uri)
-channel.originalURI
-
-*/
+dump = $shadia.dump

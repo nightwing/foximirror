@@ -44,14 +44,14 @@ else//4.0b2+
 		var d, o, x = targetObj
 		var data = [], protoList = [], depth = 0, allProps = [];
 
-        if (typeof x !== "object" && typeof x !== "function")
-            x = x.constructor.prototype;
+		if (typeof x !== "object" && typeof x !== "function")
+			x = x.constructor.prototype;
 
-        if (typeof x === "xml")
-            return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
+		if (typeof x === "xml")
+			return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
 
-        if (typeof targetObj === "object") {
-            x = XPCNativeWrapper.unwrap(targetObj)
+		if (typeof targetObj === "object") {
+			x = XPCNativeWrapper.unwrap(targetObj)
 
 			if (targetObj != x) {
 				data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
@@ -117,20 +117,20 @@ jn.inspect=function(x,long){
 	
 	if(Class=='Function'){
 		var isNative = /\[native code\]\s*}$/.test(string); //is native function
-        if(!long){
-            i = string.indexOf("{");
-            if (isNative)
-                t = 'function[n]';
-            else
-                t = 'function';
+		if(!long){
+			i = string.indexOf("{");
+			if (isNative)
+				t = 'function[n]';
+			else
+				t = 'function';
 
-            return t + string.substring(string.indexOf(" "), i - 1) + "~" + x.length;
-        }
-        if(isNative){
-            var funcName = string.match(/ ([^\(]*)/)[1];
-            return string.replace("()", "(~" + x.length + ")");
-        }
-        return string;	
+			return t + string.substring(string.indexOf(" "), i - 1) + "~" + x.length;
+		}
+		if(isNative){
+			var funcName = string.match(/ ([^\(]*)/)[1];
+			return string.replace("()", "(~" + x.length + ")");
+		}
+		return string;	
 	}
 	if(Class=='XML')
 		return '`'+Class+'` '+x.toXMLString();
@@ -324,13 +324,13 @@ jn.bait= modernFox?(function(a){
 })():dump;
 
 jn.getScripts = function(window){
-    var document = window.document
-    var bu = Services.io.newURI(document.baseURI, null, null)
-    var s = document.querySelectorAll('script')
-    s = Array.prototype.slice.call(s).map(function(x){
-        return Services.io.newURI(x.getAttribute("src"),null,bu).spec
-    })
-    return s
+	var document = window.document
+	var bu = Services.io.newURI(document.baseURI, null, null)
+	var s = document.querySelectorAll('script')
+	s = Array.prototype.slice.call(s).map(function(x){
+		return Services.io.newURI(x.getAttribute("src"),null,bu).spec
+	})
+	return s
 }
 //sr=jn.getScripts(window)[4];jn.loadScript(sr, window)
 
@@ -340,7 +340,7 @@ jn.loadScript = function(src, window){
 
 function getClass(x) {
 	/* if(x == null) return String(x); */
-    return Object.prototype.toString.call(x).slice(8,-1)
+	return Object.prototype.toString.call(x).slice(8,-1)
 }
 /*** XPCOM ********************************************************************************************/
 function supportedInterfaces(element){
@@ -378,7 +378,7 @@ function getserviceOrCreateInstance(p){
 			return "not a service or object";
 		}
 	}
-    return obj;
+	return obj;
 }
 /***********************************************************************************************/
 function setget(object,prop){
@@ -463,7 +463,7 @@ jn.$x = function(xpath){
 var stackStartLineNumber
 function executeJS(sel, printProps){
 	/*jn.exec();return;*/
-    var code = codebox.value;
+	var code = codebox.value;
 
 	if(sel){
 		let s = codebox.selectionStart, e = codebox.selectionEnd
@@ -486,20 +486,20 @@ function executeJS(sel, printProps){
 
 	printProps&&appendToConsole("Properties for object:");
 
-    try{
-    	var result = evalStringOnTarget(code)
-    }catch(e){
+	try{
+		var result = evalStringOnTarget(code)
+	}catch(e){
 		result=LastError=e;
 		Components.utils.reportError(e)
-        appendToConsole(ejsInspectError(e));
-        codebox.focus();
-        return result;
-    }
-    appendToConsole(jn.inspect(result,'long'));
+		appendToConsole(ejsInspectError(e));
+		codebox.focus();
+		return result;
+	}
+	appendToConsole(jn.inspect(result,'long'));
 
-    codebox.focus();
+	codebox.focus();
 	printProps&&printPropertiesForTarget(result)
-    return result;
+	return result;
 }
 function ejsInspectError(e){
 	var fn=e.filename||Components.stack.fileName
@@ -641,16 +641,16 @@ initTargetWindow = function(window){
 
 function targetWinChanged(){
 	//Set current target
-  	targetWindowId = getSelectedWinID()
+	targetWindowId = getSelectedWinID()
 }
 
 function getSelectedWinID(){
 	var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
-  	var resource = cntTargetWinML.selectedItem.getAttribute('id')
+	var resource = cntTargetWinML.selectedItem.getAttribute('id')
 	var win = mediator.getWindowForResource(resource);
 	var id = getOuterWindowID(win)
 	dump(resource, id)
-  	return id
+	return id
 }
 
 /***/
@@ -676,7 +676,7 @@ function appendToConsole2(string){
 }
 function clearResult(){
 	resultbox.value="";
-    codebox.focus();
+	codebox.focus();
 }
 
 /********* textbox utils *******/
@@ -707,11 +707,6 @@ function previousCommandFromHistory(){
 /*****************************************************************
  *  code completion utils
  ****************/
-if(!modernFox){
-	var s = document.querySelector('#autocomplatePanel stack')
-	s.removeChild(s.lastChild)
-	s.removeChild(s.lastChild)
-}
 
 /**======================-==-======================*/
 jsExplore={}
@@ -834,240 +829,240 @@ $=function(x)document.getElementById(x)
 /**======================-==-======================*/
 
 aceManager = Firebug.Ace = {
-    initialize: function() {
-        var browser = $("jsCode");
-        var win2Wrapped = browser.contentWindow;
-        this.win2 = win2Wrapped.wrappedJSObject;
+	initialize: function() {
+		var browser = $("jsCode");
+		var win2Wrapped = browser.contentWindow;
+		this.win2 = win2Wrapped.wrappedJSObject;
 
-        var browser = $("result");
-        var win1Wrapped = browser.contentWindow;
-        this.win1 = win1Wrapped.wrappedJSObject;
+		var browser = $("result");
+		var win1Wrapped = browser.contentWindow;
+		this.win1 = win1Wrapped.wrappedJSObject;
 
-        this.win1.startAcebugAutocompleter =
-        this.win2.startAcebugAutocompleter = this.startAutocompleter;
+		this.win1.startAcebugAutocompleter =
+		this.win2.startAcebugAutocompleter = this.startAutocompleter;
 
-        //set Firebug.Ace on wrapped window so that Firebug.getElementPanel can access it
-        win1Wrapped.document.getElementById('editor').ownerPanel = this;
-        win2Wrapped.document.getElementById('editor').ownerPanel = this;
+		//set Firebug.Ace on wrapped window so that Firebug.getElementPanel can access it
+		win1Wrapped.document.getElementById('editor').ownerPanel = this;
+		win2Wrapped.document.getElementById('editor').ownerPanel = this;
 
-        this.win1.aceManager = this.win2.aceManager = this
-        this.win1.onclose = this.win2.onclose = FBL.bind(this.shutdown, this)
+		this.win1.aceManager = this.win2.aceManager = this
+		this.win1.onclose = this.win2.onclose = FBL.bind(this.shutdown, this)
 		
 		var starter = FBL.bind(Firebug.largeCommandLineEditor.initialize, Firebug.largeCommandLineEditor)
 
-        Firebug.Ace.win2.startAce(starter, null, ['fbace/consoleMode', "fbace/worker"]);
-        Firebug.Ace.win1.startAce(starter, null, ['fbace/consoleOutputMode']);
-    },
+		Firebug.Ace.win2.startAce(starter, null, ['fbace/consoleMode', "fbace/worker"]);
+		Firebug.Ace.win1.startAce(starter, null, ['fbace/consoleOutputMode']);
+	},
 
-    shutdown: function() {
-        if(!this.win1)
-            return
-        this.win1.aceManager = this.win2.aceManager = null
-        this.win1 = this.win2 = null
-    },
+	shutdown: function() {
+		if(!this.win1)
+			return
+		this.win1.aceManager = this.win2.aceManager = null
+		this.win1 = this.win2 = null
+	},
 
-    // context menu
-    getContextMenuItems: function(nada, target) {
-        var env = target.ownerDocument.defaultView.wrappedJSObject;
+	// context menu
+	getContextMenuItems: function(nada, target) {
+		var env = target.ownerDocument.defaultView.wrappedJSObject;
 
-        var items = [],
-            editor = env.editor,
-            clipBoardText = gClipboardHelper.getData(),
-            editorText = editor.getCopyText(),
-            self = this;
-        // important: make sure editor is focused
-        editor.focus()
+		var items = [],
+			editor = env.editor,
+			clipBoardText = gClipboardHelper.getData(),
+			editorText = editor.getCopyText(),
+			self = this;
+		// important: make sure editor is focused
+		editor.focus()
 
-        items.push(
-            {
-                label: "copy",
-                command: function() {
-                    gClipboardHelper.copyString(editorText);
-                },
-                disabled: !editorText
-            },
-            {
-                label: ("cut"),
-                command: function() {
-                    gClipboardHelper.copyString(editorText);
-                    editor.onCut();
-                },
-                disabled: !editorText
-            },
-            {
-                label: ("paste"),
-                command: function() {
-                    editor.onTextInput(clipBoardText);
-                },
-                disabled: !clipBoardText
-            },
-            "-",
-            {
-                label: "help",
-                command: function() {
-                    var mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
-                    mainWindow.gBrowser.selectedTab = mainWindow.gBrowser.addTab("https://github.com/MikeRatcliffe/Acebug/issues");
-                }
-            }
-        );
+		items.push(
+			{
+				label: "copy",
+				command: function() {
+					gClipboardHelper.copyString(editorText);
+				},
+				disabled: !editorText
+			},
+			{
+				label: ("cut"),
+				command: function() {
+					gClipboardHelper.copyString(editorText);
+					editor.onCut();
+				},
+				disabled: !editorText
+			},
+			{
+				label: ("paste"),
+				command: function() {
+					editor.onTextInput(clipBoardText);
+				},
+				disabled: !clipBoardText
+			},
+			"-",
+			{
+				label: "help",
+				command: function() {
+					var mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
+					mainWindow.gBrowser.selectedTab = mainWindow.gBrowser.addTab("https://github.com/MikeRatcliffe/Acebug/issues");
+				}
+			}
+		);
 
-        var sessionOwner;
-        switch(editor.session.owner) {
-            case 'console': sessionOwner = Firebug.largeCommandLineEditor; break;
-            case 'stylesheetEditor': sessionOwner = StyleSheetEditor.prototype; break;
-            case 'htmlEditor': sessionOwner = null; break;
-        }
-        sessionOwner && sessionOwner.addContextMenuItems(items, editor, editorText);
+		var sessionOwner;
+		switch(editor.session.owner) {
+			case 'console': sessionOwner = Firebug.largeCommandLineEditor; break;
+			case 'stylesheetEditor': sessionOwner = StyleSheetEditor.prototype; break;
+			case 'htmlEditor': sessionOwner = null; break;
+		}
+		sessionOwner && sessionOwner.addContextMenuItems(items, editor, editorText);
 
-        return items;
-    },
+		return items;
+	},
 
-    getSourceLink: function(target, object) {
-        var env = target.ownerDocument.defaultView.wrappedJSObject;
-        var session = env.editor.session;
-        if (!session.href)
-            return;
-        var cursor = Firebug.Ace.win1.editor.session.selection.selectionLead;
-        var link = new FBL.SourceLink(session.href, cursor.row);
-        link.column = cursor.column;
-        return link
-    },
+	getSourceLink: function(target, object) {
+		var env = target.ownerDocument.defaultView.wrappedJSObject;
+		var session = env.editor.session;
+		if (!session.href)
+			return;
+		var cursor = Firebug.Ace.win1.editor.session.selection.selectionLead;
+		var link = new FBL.SourceLink(session.href, cursor.row);
+		link.column = cursor.column;
+		return link
+	},
 
-    getPopupObject: function(target) {
-        return null;
-    },
+	getPopupObject: function(target) {
+		return null;
+	},
 
-    getTooltipObject: function(target) {
-        return null;
-    },
+	getTooltipObject: function(target) {
+		return null;
+	},
 
-    // save and load
-    initFilePicker: function(session, mode) {
-        var ext = session.extension,
-            fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker),
-            ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-        if (mode == 'save')
-            fp.init(window, ("saveas"), Ci.nsIFilePicker.modeSave);
-        else
-            fp.init(window, ("selectafile"), Ci.nsIFilePicker.modeOpen);
+	// save and load
+	initFilePicker: function(session, mode) {
+		var ext = session.extension,
+			fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker),
+			ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+		if (mode == 'save')
+			fp.init(window, ("saveas"), Ci.nsIFilePicker.modeSave);
+		else
+			fp.init(window, ("selectafile"), Ci.nsIFilePicker.modeOpen);
 
-        // try to set initial file
-        if (session.filePath) {
-            try{
-                var file = ios.newURI(session.filePath, null, null);
-                file = file.QueryInterface(Ci.nsIFileURL).file;
-                fp.displayDirectory = file.parent;
-                var name = file.leafName;
-                fp.defaultString = file.leafName;
-            } catch(e) {}
-        }
-        // session.extension not always is the same as real extension; for now 
-        if (name && name.slice(-ext.length) != ext)
-            fp.appendFilters(Ci.nsIFilePicker.filterAll);
+		// try to set initial file
+		if (session.filePath) {
+			try{
+				var file = ios.newURI(session.filePath, null, null);
+				file = file.QueryInterface(Ci.nsIFileURL).file;
+				fp.displayDirectory = file.parent;
+				var name = file.leafName;
+				fp.defaultString = file.leafName;
+			} catch(e) {}
+		}
+		// session.extension not always is the same as real extension; for now 
+		if (name && name.slice(-ext.length) != ext)
+			fp.appendFilters(Ci.nsIFilePicker.filterAll);
 
-        if (ext)
-            fp.appendFilter(ext, "*." + ext);
-        fp.appendFilters(Ci.nsIFilePicker.filterAll);
+		if (ext)
+			fp.appendFilter(ext, "*." + ext);
+		fp.appendFilters(Ci.nsIFilePicker.filterAll);
 
-        return fp;
-    },
+		return fp;
+	},
 
-    loadFile: function(editor) {
-        var result, name, result,
-            session = editor.session, ext = session.extension,
-            ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-        var fp = this.initFilePicker(session, 'open');
+	loadFile: function(editor) {
+		var result, name, result,
+			session = editor.session, ext = session.extension,
+			ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+		var fp = this.initFilePicker(session, 'open');
 
-        result = fp.show();
+		result = fp.show();
 
-        if (result == Ci.nsIFilePicker.returnOK) {
-            session.setValue(readEntireFile(fp.file));
-            session.setFileInfo(ios.newFileURI(fp.file).spec);
-        }
-    },
+		if (result == Ci.nsIFilePicker.returnOK) {
+			session.setValue(readEntireFile(fp.file));
+			session.setFileInfo(ios.newFileURI(fp.file).spec);
+		}
+	},
 
-    saveFile: function(editor, doNotUseFilePicker) {
-        var file, name, result, session = editor.session,
-            ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService),
-            fp = this.initFilePicker(session, 'save');
+	saveFile: function(editor, doNotUseFilePicker) {
+		var file, name, result, session = editor.session,
+			ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService),
+			fp = this.initFilePicker(session, 'save');
 
-        if (doNotUseFilePicker && session.href) {
-            try {
-                file = ios.newURI(session.href, null, null)
-                    .QueryInterface(Ci.nsIFileURL).file;
-                if (file.exists()) {
-                    result = Ci.nsIFilePicker.returnOK;
-                    fp = {file: file};
-                }
-            } catch(e){}
-        }
+		if (doNotUseFilePicker && session.href) {
+			try {
+				file = ios.newURI(session.href, null, null)
+					.QueryInterface(Ci.nsIFileURL).file;
+				if (file.exists()) {
+					result = Ci.nsIFilePicker.returnOK;
+					fp = {file: file};
+				}
+			} catch(e){}
+		}
 
-        if (!fp.file)
-            result = fp.show();
-        if (result == Ci.nsIFilePicker.returnOK) {
-            file = fp.file;
-            name = file.leafName;
+		if (!fp.file)
+			result = fp.show();
+		if (result == Ci.nsIFilePicker.returnOK) {
+			file = fp.file;
+			name = file.leafName;
 
-            if (name.indexOf('.')<0) {
-                file = file.parent;
-                file.append(name + '.' + session.extension);
-            }
+			if (name.indexOf('.')<0) {
+				file = file.parent;
+				file.append(name + '.' + session.extension);
+			}
 
-            writeFile(file, session.getValue());
-            if (!session.filePath)
-                session.setFileInfo(ios.newFileURI(file).spec);
-        }
-        else if (result == Ci.nsIFilePicker.returnReplace) {
-            writeFile(fp.file, session.getValue());
-            if (!session.filePath)
-                session.setFileInfo(ios.newFileURI(file).spec);
-        }
-    },
+			writeFile(file, session.getValue());
+			if (!session.filePath)
+				session.setFileInfo(ios.newFileURI(file).spec);
+		}
+		else if (result == Ci.nsIFilePicker.returnReplace) {
+			writeFile(fp.file, session.getValue());
+			if (!session.filePath)
+				session.setFileInfo(ios.newFileURI(file).spec);
+		}
+	},
 
-    savePopupShowing: function(popup) {
-        FBL.eraseNode(popup)
-        FBL.createMenuItem(popup, {label: 'save As', nol10n: true });
-    },
+	savePopupShowing: function(popup) {
+		FBL.eraseNode(popup)
+		FBL.createMenuItem(popup, {label: 'save As', nol10n: true });
+	},
 
-    loadPopupShowing: function(popup) {
-        FBL.eraseNode(popup)
-        FBL.createMenuItem(popup, {label: 'ace auto save', nol10n: true });
-    },
+	loadPopupShowing: function(popup) {
+		FBL.eraseNode(popup)
+		FBL.createMenuItem(popup, {label: 'ace auto save', nol10n: true });
+	},
 
-    getUserFile: function(id){
-        var file = Services.dirsvc.get(dir||"ProfD", Ci.nsIFile);
-        file.append('acebug')
-        file.append('autosave-'+id)
-        return file
-    },
+	getUserFile: function(id){
+		var file = Services.dirsvc.get(dir||"ProfD", Ci.nsIFile);
+		file.append('acebug')
+		file.append('autosave-'+id)
+		return file
+	},
 
 
-    // search
-    search: function(text, reverse) {
-        var e = this.editor;
-        e.$search.set({
-            needle: text,
-            backwards: reverse,
-            caseSensitive: false,
-            //regExp: Firebug.searchUseRegularExpression,
-        });
+	// search
+	search: function(text, reverse) {
+		var e = this.editor;
+		e.$search.set({
+			needle: text,
+			backwards: reverse,
+			caseSensitive: false,
+			//regExp: Firebug.searchUseRegularExpression,
+		});
 
-        var range = e.$search.find(e.session);
-        if (!range) {
-            range = e.selection.getRange();
-            if (!range.isEmpty()) {
-                range.end = range.start;
-                e.selection.setSelectionRange(range);
-                range = e.$search.find(e.session);
-            }
-        }
+		var range = e.$search.find(e.session);
+		if (!range) {
+			range = e.selection.getRange();
+			if (!range.isEmpty()) {
+				range.end = range.start;
+				e.selection.setSelectionRange(range);
+				range = e.$search.find(e.session);
+			}
+		}
 
-        if (range) {
-            e.gotoLine(range.end.row + 1, range.end.column);
-            e.selection.setSelectionRange(range);
-        }
-        return range&&!range.isEmpty();
-    }
+		if (range) {
+			e.gotoLine(range.end.row + 1, range.end.column);
+			e.selection.setSelectionRange(range);
+		}
+		return range&&!range.isEmpty();
+	}
 };
 function toggleEditorFocus(env){
 	if(env.editor != codebox)
@@ -1076,20 +1071,20 @@ function toggleEditorFocus(env){
 		resultbox.focus()
 }
 Firebug.largeCommandLineEditor = {
-    initialize: function(window) {       
-        var editor = window.editor;
-        editor.session.owner = 'console';
-        editor.session.href = '';
-        editor.session.autocompletionType = 'console';
+	initialize: function(window) {       
+		var editor = window.editor;
+		editor.session.owner = 'console';
+		editor.session.href = '';
+		editor.session.autocompletionType = 'console';
 
-        // set mode which allows cells and, js+coffeescript combination
-        window.initConsoleMode(editor)
+		// set mode which allows cells and, js+coffeescript combination
+		window.initConsoleMode(editor)
 
-        //add shortcuts
-        editor.addCommands({
-            execute: function()Firebug.largeCommandLineEditor.enter(true, false),
-            dirExecute: function()Firebug.largeCommandLineEditor.enter(true, true)
-        });
+		//add shortcuts
+		editor.addCommands({
+			execute: function()Firebug.largeCommandLineEditor.enter(true, false),
+			dirExecute: function()Firebug.largeCommandLineEditor.enter(true, true)
+		});
 		window.canon.addCommand({
 			name: "toggleEditorFocus",
 			bindKey: {
@@ -1115,143 +1110,143 @@ Firebug.largeCommandLineEditor = {
 			codebox.selectAll();
 		}
 		codebox.focus()
-    },
+	},
 
-    _setValue: function(text) {
-        var editor = Firebug.Ace.win2.editor;
-        editor.session.doc.setValue(text);
-        return text;
-    },
+	_setValue: function(text) {
+		var editor = Firebug.Ace.win2.editor;
+		editor.session.doc.setValue(text);
+		return text;
+	},
 
-    //* * * * * * * * * * * * * * * * * * * * * * * * *
-    set value(val) {
+	//* * * * * * * * * * * * * * * * * * * * * * * * *
+	set value(val) {
 		var mode = Firebug.Ace.win2.editor.session.getMode()
 		if (mode.setCellText)
 			return mode.setCellText(val)
 		return this.setValue(val);
-    },
+	},
 
-    addContextMenuItems: function(items, editor, editorText) {
-        items.unshift(
-            {
-                label: ("Execute selection"),
-                command: function() {
-                    Firebug.CommandLine.enter(Firebug.currentContext, editorText);
-                },
-                disabled: !editorText
-            },
-            {
-                label: ("Stream comment"),
-                command: function() {
-                    editor.execCommand('toggleStreamComment');
-                }
-            },
-            "-"
-        );
-    },
+	addContextMenuItems: function(items, editor, editorText) {
+		items.unshift(
+			{
+				label: ("Execute selection"),
+				command: function() {
+					Firebug.CommandLine.enter(Firebug.currentContext, editorText);
+				},
+				disabled: !editorText
+			},
+			{
+				label: ("Stream comment"),
+				command: function() {
+					editor.execCommand('toggleStreamComment');
+				}
+			},
+			"-"
+		);
+	},
 
-    // * * * * * * * * * * * * * * * * * * * * * *
-    enter: function(runSelection, dir) {
-        this.$useConsoleDir = dir;
-        var editor = Firebug.Ace.win2.editor;
-        var cell = editor.session.getMode().getCurrentCell();
-        this.cell = cell;
+	// * * * * * * * * * * * * * * * * * * * * * *
+	enter: function(runSelection, dir) {
+		this.$useConsoleDir = dir;
+		var editor = Firebug.Ace.win2.editor;
+		var cell = editor.session.getMode().getCurrentCell();
+		this.cell = cell;
 
-        if (runSelection)
-            var text = editor.getCopyText();
-        if (!text) {
-            //log lines with breakpoints
-            var bp = editor.session.$breakpoints;
-            if (cell.coffeeError) {
-                this.logCoffeeError(cell.coffeeError);
-                return;
-            } else if (cell.coffeeText) {
-                text = cell.coffeeText
-            } else
-                text = cell.body.map(function(x, i) {
-                    if (bp[i + cell.bodyStart]) {
-                        // strip comments and ;
-                        x = x.replace(/\/\/.*$/, '')
-                             .replace(/;\s*$/, '')
-                             .replace(/^\s*var\s+/g, '')
-                        if(x)
-                            x = 'jn.say(' + x + ')'
-                    }
-                    return x;
-                }).join('\n');
-            //Firebug.commandHistory.appendToHistory(cell.body.join('\n'));
-        }
-        text = text.replace(/\.\s*$/, '');
+		if (runSelection)
+			var text = editor.getCopyText();
+		if (!text) {
+			//log lines with breakpoints
+			var bp = editor.session.$breakpoints;
+			if (cell.coffeeError) {
+				this.logCoffeeError(cell.coffeeError);
+				return;
+			} else if (cell.coffeeText) {
+				text = cell.coffeeText
+			} else
+				text = cell.body.map(function(x, i) {
+					if (bp[i + cell.bodyStart]) {
+						// strip comments and ;
+						x = x.replace(/\/\/.*$/, '')
+							 .replace(/;\s*$/, '')
+							 .replace(/^\s*var\s+/g, '')
+						if(x)
+							x = 'jn.say(' + x + ')'
+					}
+					return x;
+				}).join('\n');
+			//Firebug.commandHistory.appendToHistory(cell.body.join('\n'));
+		}
+		text = text.replace(/\.\s*$/, '');
 
-        Firebug.largeCommandLineEditor.runUserCode(text, cell);
-    },
-    setThisValue: function(code, cell){
-        cell = cell || Firebug.Ace.win2.editor.session.getMode().getCurrentCell();
-        var thisValue = cell.headerText.match(/this\s*=(.*)/)
-        if (thisValue&&code){
-            code = '(function(){return eval(' + code.quote() + ')}).call(' + thisValue[1] + ')'
-        }
-        //dump(code)
-        return code
-    },
-    setErrorLocation: function(context){
-        Firebug.evaluate(
+		Firebug.largeCommandLineEditor.runUserCode(text, cell);
+	},
+	setThisValue: function(code, cell){
+		cell = cell || Firebug.Ace.win2.editor.session.getMode().getCurrentCell();
+		var thisValue = cell.headerText.match(/this\s*=(.*)/)
+		if (thisValue&&code){
+			code = '(function(){return eval(' + code.quote() + ')}).call(' + thisValue[1] + ')'
+		}
+		//dump(code)
+		return code
+	},
+	setErrorLocation: function(context){
+		Firebug.evaluate(
 			'++++',
-            dump,
+			dump,
 			function(error) {
-                var source = ['','']//error.source.split('++++')
-                context.errorLocation={
-                    fileName: error.fileName,
-                    lineNumber: error.lineNumber,
-                    before: source[0].length,
-                    after: -source[1].length,
-                }
-            }
-        );
-    },
+				var source = ['','']//error.source.split('++++')
+				context.errorLocation={
+					fileName: error.fileName,
+					lineNumber: error.lineNumber,
+					before: source[0].length,
+					after: -source[1].length,
+				}
+			}
+		);
+	},
 
-    runUserCode: function(code, cell) {
-        var context = Firebug.currentContext;
-        if(!context.errorLocation)
-            this.setErrorLocation(context);
+	runUserCode: function(code, cell) {
+		var context = Firebug.currentContext;
+		if(!context.errorLocation)
+			this.setErrorLocation(context);
 
-       // Firebug.log("in:" + (inputNumber++) + ">>> " + cell.sourceLang);
+	   // Firebug.log("in:" + (inputNumber++) + ">>> " + cell.sourceLang);
 
-        this.lastEvaledCode = code;
-        code = this.setThisValue(code, this.cell);
-        Firebug.evaluate(code,
-            Firebug.largeCommandLineEditor.logSuccess,
-            Firebug.largeCommandLineEditor.logError
-        );
-    },
-    logSuccess: function(e){
-        Firebug.largeCommandLineEditor.$useConsoleDir?
-            Firebug.dir(e):
-            Firebug.log(jn.inspect(e, 'long'));
-    },
-    logError: function(error) {
-        var loc = Firebug.currentContext.errorLocation
-        var self = Firebug.largeCommandLineEditor;
+		this.lastEvaledCode = code;
+		code = this.setThisValue(code, this.cell);
+		Firebug.evaluate(code,
+			Firebug.largeCommandLineEditor.logSuccess,
+			Firebug.largeCommandLineEditor.logError
+		);
+	},
+	logSuccess: function(e){
+		Firebug.largeCommandLineEditor.$useConsoleDir?
+			Firebug.dir(e):
+			Firebug.log(jn.inspect(e, 'long'));
+	},
+	logError: function(error) {
+		var loc = Firebug.currentContext.errorLocation
+		var self = Firebug.largeCommandLineEditor;
 
 		dump(loc.fileName, error.fileName, error.filename)
-        if(self.$useConsoleDir)
+		if(self.$useConsoleDir)
 			Firebug.dir(error)
 		else if(loc.fileName == error.fileName || loc.fileName == error.filename) {
 		dump(error.source,'*************')
 			var source = error.source || self.lastEvaledCode//.slice(loc.before, loc.after);
-            var cellStart = self.cell.bodyStart;
-            var lineNumber = error.lineNumber - loc.lineNumber;
-            var lines = source.split('\n');
-            var line = lines[lineNumber]||lines[lineNumber-1];
+			var cellStart = self.cell.bodyStart;
+			var lineNumber = error.lineNumber - loc.lineNumber;
+			var lines = source.split('\n');
+			var line = lines[lineNumber]||lines[lineNumber-1];
 			var message = error.message||error.toString()
-            Firebug.log(message + ' `' + line + '` @'+(lineNumber+cellStart));
-        } else 
-            Firebug.log(jn.inspect(error));
+			Firebug.log(message + ' `' + line + '` @'+(lineNumber+cellStart));
+		} else 
+			Firebug.log(jn.inspect(error));
 			Components.utils.reportError(error)
-    },
-    logCoffeeError: function(error) {
-        Firebug.log(error.text + ' `' + error.source + '` @'+(error.row+this.cell.bodyStart));
-    }
+	},
+	logCoffeeError: function(error) {
+		Firebug.log(error.text + ' `' + error.source + '` @'+(error.row+this.cell.bodyStart));
+	}
 };
 
 var inputNumber = 0;
@@ -1283,10 +1278,10 @@ var ConfigManager = {
 \**----------------------------------------**/
 
 cleardump = function(){
-    var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
-    consoleService.reset()
+	var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
+	consoleService.reset()
 	consoleService.logStringMessage(""); //new Date() + ":  "
-    //Components.utils.reportError(e); // report the error and continue execution
+	//Components.utils.reportError(e); // report the error and continue execution
 }
 
 /*⨭⨮⫷⫸✓✑✎ ✏ ✐✘✳✯❖➺⟳⟲Ͼ ✓Ͽ߷௵෴༒ↂ⊰ ⊱▒▢ ⚶▣⚜*/
@@ -1305,41 +1300,41 @@ Available under MIT license <http://mths.be/mit>
 
 ;(function(){
   var traverse = function(util, searchTerm, options) {
-    var options = options || {};
-    var obj = options.obj || window;
-    var path = options.path || ((obj==window) ? "window" : "");
-    var props = Object.keys(obj);
-    props.forEach(function(prop) {
-      if ((tests[util] || util)(searchTerm, obj, prop)){
-        jn.say([path, ".", prop].join(""), "->",["(", typeof obj[prop], ")"].join(""), obj[prop]);
-      }
-      if(Object.prototype.toString.call(obj[prop])=="[object Object]" && (obj[prop] != obj) && path.split(".").indexOf(prop) == -1) {
-        traverse(util, searchTerm, {obj: obj[prop], path: [path,prop].join(".")});
-      }
-    });
+	var options = options || {};
+	var obj = options.obj || window;
+	var path = options.path || ((obj==window) ? "window" : "");
+	var props = Object.keys(obj);
+	props.forEach(function(prop) {
+	  if ((tests[util] || util)(searchTerm, obj, prop)){
+		jn.say([path, ".", prop].join(""), "->",["(", typeof obj[prop], ")"].join(""), obj[prop]);
+	  }
+	  if(Object.prototype.toString.call(obj[prop])=="[object Object]" && (obj[prop] != obj) && path.split(".").indexOf(prop) == -1) {
+		traverse(util, searchTerm, {obj: obj[prop], path: [path,prop].join(".")});
+	  }
+	});
   }
 
   var dealWithIt = function(util, expected, searchTerm, options) {
-    (!expected || typeof searchTerm == expected) ?
-      traverse(util, searchTerm, options) :
-      jn.say([searchTerm, 'must be', expected].join(' '));
+	(!expected || typeof searchTerm == expected) ?
+	  traverse(util, searchTerm, options) :
+	  jn.say([searchTerm, 'must be', expected].join(' '));
   }
 
   var tests = {
-    'name': function(searchTerm, obj, prop) {return searchTerm == prop},
-    'nameContains': function(searchTerm, obj, prop) {return prop.indexOf(searchTerm)>-1},
-    'type': function(searchTerm, obj, prop) {return obj[prop] instanceof searchTerm},
-    'value': function(searchTerm, obj, prop) {return obj[prop] === searchTerm},
-    'valueCoerced': function(searchTerm, obj, prop) {return obj[prop] == searchTerm}
+	'name': function(searchTerm, obj, prop) {return searchTerm == prop},
+	'nameContains': function(searchTerm, obj, prop) {return prop.indexOf(searchTerm)>-1},
+	'type': function(searchTerm, obj, prop) {return obj[prop] instanceof searchTerm},
+	'value': function(searchTerm, obj, prop) {return obj[prop] === searchTerm},
+	'valueCoerced': function(searchTerm, obj, prop) {return obj[prop] == searchTerm}
   }
 
   jn.find={
-    byName: function(searchTerm, options) {dealWithIt('name', 'string', searchTerm, options);},
-    byNameContains: function(searchTerm, options) {dealWithIt('nameContains', 'string', searchTerm, options);},
-    byType: function(searchTerm, options) {dealWithIt('type', 'function', searchTerm, options);},
-    byValue: function(searchTerm, options) {dealWithIt('value', null, searchTerm, options);},
-    byValueCoerced: function(searchTerm, options) {dealWithIt('valueCoerced', null, searchTerm, options);},
-    custom: function(fn, options) {traverse(fn, null, options);}
+	byName: function(searchTerm, options) {dealWithIt('name', 'string', searchTerm, options);},
+	byNameContains: function(searchTerm, options) {dealWithIt('nameContains', 'string', searchTerm, options);},
+	byType: function(searchTerm, options) {dealWithIt('type', 'function', searchTerm, options);},
+	byValue: function(searchTerm, options) {dealWithIt('value', null, searchTerm, options);},
+	byValueCoerced: function(searchTerm, options) {dealWithIt('valueCoerced', null, searchTerm, options);},
+	custom: function(fn, options) {traverse(fn, null, options);}
   }
 })();
 
@@ -1378,94 +1373,94 @@ THE SOFTWARE.
 ;(function(window) {
 
   function dealWithIt(util, expected, searchTerm, options) {
-    // integrity check arguments
-    (!expected || typeof searchTerm == expected)
-      ? traverse(util, searchTerm, options)
-      : jn.say(searchTerm + ' must be ' + expected);
+	// integrity check arguments
+	(!expected || typeof searchTerm == expected)
+	  ? traverse(util, searchTerm, options)
+	  : jn.say(searchTerm + ' must be ' + expected);
   }
 
   function traverse(util, searchTerm, options) {
-    util = tests[util] || util;
-    options || (options = {});
+	util = tests[util] || util;
+	options || (options = {});
 
-    var data;
-    var pool;
-    var pooled;
-    var prevPath;
+	var data;
+	var pool;
+	var pooled;
+	var prevPath;
 
-    var obj = options.obj || window;
-    var ownProp = options.hasOwnProperty;
-    var path = options.path || ((obj == window) ? 'window' : '');
-    var queue = [{ 'obj': obj, 'path': path }];
+	var obj = options.obj || window;
+	var ownProp = options.hasOwnProperty;
+	var path = options.path || ((obj == window) ? 'window' : '');
+	var queue = [{ 'obj': obj, 'path': path }];
 
-    // a non-recursive solution to avoid call stack limits
-    // http://www.jslab.dk/articles/non.recursive.preorder.traversal.part4
-    while ((data = queue.pop())) {
-      obj = data.obj;
-      path = data.path;
-      pooled = false;
+	// a non-recursive solution to avoid call stack limits
+	// http://www.jslab.dk/articles/non.recursive.preorder.traversal.part4
+	while ((data = queue.pop())) {
+	  obj = data.obj;
+	  path = data.path;
+	  pooled = false;
 
-      // clear pool when switching root properties
-      path.indexOf(prevPath) && (pool = [data]);
-      prevPath = path;
+	  // clear pool when switching root properties
+	  path.indexOf(prevPath) && (pool = [data]);
+	  prevPath = path;
 
-      for (var prop in obj) {
-        // IE may throw errors when accessing/coercing some properties
-        try {
-          if (ownProp.call(obj, prop)) {
-            // inspect objects
-            if ([obj[prop]] == '[object Object]') {
-              // check if already pooled (prevents circular references)
-              for (var i = -1; pool[++i] && !(pooled = pool[i].obj == obj[prop] && pool[i]); ) { }
-              // add to stack
-              if (!pooled) {
-                data = { 'obj': obj[prop], 'path': path + '.' + prop };
-                pool.push(data);
-                queue.push(data);
-              }
-            }
-            // if match detected, log it
-            if (util(searchTerm, obj, prop)) {
-              jn.say(path + '.' + prop, '->', '(' + (pooled ? '<' + pooled.path + '>' : typeof obj[prop]) + ')', obj[prop]);
-            }
-          }
-        } catch(e) { }
-      }
-    }
+	  for (var prop in obj) {
+		// IE may throw errors when accessing/coercing some properties
+		try {
+		  if (ownProp.call(obj, prop)) {
+			// inspect objects
+			if ([obj[prop]] == '[object Object]') {
+			  // check if already pooled (prevents circular references)
+			  for (var i = -1; pool[++i] && !(pooled = pool[i].obj == obj[prop] && pool[i]); ) { }
+			  // add to stack
+			  if (!pooled) {
+				data = { 'obj': obj[prop], 'path': path + '.' + prop };
+				pool.push(data);
+				queue.push(data);
+			  }
+			}
+			// if match detected, log it
+			if (util(searchTerm, obj, prop)) {
+			  jn.say(path + '.' + prop, '->', '(' + (pooled ? '<' + pooled.path + '>' : typeof obj[prop]) + ')', obj[prop]);
+			}
+		  }
+		} catch(e) { }
+	  }
+	}
   }
 
   var tests = {
-    'propName': function(searchTerm, obj, prop) {
-      return searchTerm == prop;
-    },
-    'type': function(searchTerm, obj, prop) {
-      return obj[prop] instanceof searchTerm;
-    },
-    'value': function(searchTerm, obj, prop) {
-      return obj[prop] === searchTerm;
-    },
-    'valueCoerced': function(searchTerm, obj, prop) {
-      return obj[prop] == searchTerm;
-    }
+	'propName': function(searchTerm, obj, prop) {
+	  return searchTerm == prop;
+	},
+	'type': function(searchTerm, obj, prop) {
+	  return obj[prop] instanceof searchTerm;
+	},
+	'value': function(searchTerm, obj, prop) {
+	  return obj[prop] === searchTerm;
+	},
+	'valueCoerced': function(searchTerm, obj, prop) {
+	  return obj[prop] == searchTerm;
+	}
   };
 
   // expose
   jn.find2 = {
-    'byPropName': function(searchTerm, options) {
-      dealWithIt('propName', 'string', searchTerm, options);
-    },
-    'byType': function(searchTerm, options) {
-      dealWithIt('type', 'function', searchTerm, options);
-    },
-    'byValue': function(searchTerm, options) {
-      dealWithIt('value', null, searchTerm, options);
-    },
-    'byValueCoerced': function(searchTerm, options) {
-      dealWithIt('valueCoerced', null, searchTerm, options);
-    },
-    'custom': function(fn, options) {
-      traverse(fn, null, options);
-    }
+	'byPropName': function(searchTerm, options) {
+	  dealWithIt('propName', 'string', searchTerm, options);
+	},
+	'byType': function(searchTerm, options) {
+	  dealWithIt('type', 'function', searchTerm, options);
+	},
+	'byValue': function(searchTerm, options) {
+	  dealWithIt('value', null, searchTerm, options);
+	},
+	'byValueCoerced': function(searchTerm, options) {
+	  dealWithIt('valueCoerced', null, searchTerm, options);
+	},
+	'custom': function(fn, options) {
+	  traverse(fn, null, options);
+	}
   };
 }(this));
 
