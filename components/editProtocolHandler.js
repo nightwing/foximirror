@@ -34,7 +34,7 @@ $shadia.editGlue = {
 		flag = flag.toLowerCase()
 		delete this.data[flag]
 	},
-	reloadMessage: '<html>=== data is not avaliable yet===<br><button onclick=window.location.reload()>reload'
+	reloadMessage: '<html>=== no data is avaliable yet===<br><button onclick=window.location.reload()>reload'
 }
 function editProtocolHandler(){}
 

@@ -796,6 +796,11 @@ Firebug.evaluate = function(code, onSuccess, onerror){
 
 }
 Firebug.dir = function(obj){
+	if(typeof obj == 'string'){
+		appendToConsole("String source:");
+		appendToConsole(obj.toSource().slice(12,-2))
+		return
+	}
 	appendToConsole("Properties for object:");
 	var n = 0
 	var ans=''

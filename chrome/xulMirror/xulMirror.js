@@ -262,7 +262,7 @@ aceManager = Firebug.Ace = {
 };
 
 
-var codeCache = {}, sessions = {}
+var codeCache = {}, sessions = {}, Templates = {}, gTemplate
 var contentTypes = {
 	xul: 'application/vnd.mozilla.xul+xml',
 	overlay: 'application/vnd.mozilla.xul+xml',
@@ -280,6 +280,7 @@ var contentTypes = {
 
 xulMirrorDataSource = function(a, b){
 	a = a.slice(0, -6)
+	dump(a, contentTypes[a])
 	b.contentType = contentTypes[a]
 	return codeCache[a] || (codeCache[a] = sessions[a].getValue())
 }
@@ -290,14 +291,36 @@ xulMirror = {
 		codebox = Firebug.Ace.win2.editor
 
 
-		var baseLoc = window.location.href
-		baseLoc = baseLoc.slice(0, baseLoc.lastIndexOf('/') + 1)
+		var href = window.location.href
+		href = href.slice(0, href.lastIndexOf('/') + 1) + "templates.json"
+		var txt = makeReq(href)
+		
+		var a = txt.split(/!@!===/)
+		dump(a)
+		for(var i = 1; i < a.length; i++){
+			var s = a[i]
+			if(!s)
+				continue;
+			var i1 = s.indexOf('{')
+			var i2 = s.lastIndexOf('}')
+			
+			var body = s.substring(i1 + 1, i2).trim()
+			var name = s.substring(0, i1).trim()
+			
+			i1 = name.lastIndexOf('.')
+			var type = name.substr(i1 + 1)
+			name = s.substring(0, i1)
+			dump(name)
+			dump(type)
+			if(!Templates[name])
+				Templates[name] = {}
+			Templates[name][type] = body
+		}
+		gTemplate = Templates.template1
 
 		for each(var i in ["xbl", "xul", "overlay"]) {
-			var loc = baseLoc + "template." + i
-			codeCache[i] =  makeReq(loc)
-			dump(codeCache[i], loc )
-			sessions[i] = aceWindow.createSession(codeCache[i], loc, "text/xml")
+			codeCache[i] = gTemplate[i]
+			sessions[i] = aceWindow.createSession(codeCache[i], href, "text/xml")
 			sessions[i].autocompletionType = 'xul';
 			sessions[i].on("change", onChange)
 		}
