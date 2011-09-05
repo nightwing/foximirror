@@ -1,5 +1,5 @@
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
+qa = function(x, el)(el||document).querySelector(x)
 initServices=function(){
 	ios= Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
 	sss= Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService)

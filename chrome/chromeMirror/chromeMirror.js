@@ -45,9 +45,14 @@ addonViewer={
 		var i=this.tree.currentIndex
 		mAddonData=addonList[i]
 		
-		viewDoc.body.textContent=this.mode=='chrome'?chromePaths[i].name:''
-		dirViewer.setDir((this.mode=='chrome'?chromePaths[i].spec:mAddonData.file))
-		
+		//viewDoc.body.textContent=this.mode=='chrome'?chromePaths[i].name:''
+		if(this.mode=='chrome'){
+			dirViewer.setDir(chromePaths[i].spec)
+			dirViewer.select(-1)
+		}else{
+			dirViewer.setDir(mAddonData.file)
+			dirViewer.select('chrome.manifest')||dirViewer.select('install.rdf')||dirViewer.select(-1)
+		}
 	},
 	getDirData:function(file){
 		getDirDisplayData(getDirEntries(addonList[i].file))
@@ -59,91 +64,110 @@ addonViewer={
    //***************************************************
   //* 
  //******/
-histLog=function(){try{dump(
-	dirViewer.historyA.map(function(a){return a[0].path}).concat(['----------']).concat(
-		dirViewer.historyB.map(function(a){return a[0].path})
-		).join('\n'))}catch(e){}
-}
+
 dirViewer={
-	initialize:function(){
-		this.tree=document.getElementById('dirViewer')
-		gURLBar=this.urlbar=document.getElementById('urlbar')
-		//gURLBar.setAttribute('onkeypress','dirViewer.setDir(this.value)')
-		this.view=new simpleView()
-		var b=document.getElementById('dirViewerButtons')
-		this.backButton=b.children[1]
-		this.forwardButton=b.children[2]
+	getContextMenuItems: function(_, target){
+        var items = []
+		var self = this
+        items.push({
+                label: "copy name",
+                command: function() {
+					var i = self.getSelectedItem()
+                    gClipboardHelper.copyString(i.name||i.leafName);
+                },
+            }, {
+                label: "rename",
+                command: function() {
+					var i = self.getSelectedItem()
+					var name = i.name||i.leafName
+					var newName = prompt('enter new name', name)
+					if(!newName || newName == name)
+						return
+                    renameLocaleUri(getCurrentURI(), newName);
+					self.reload()
+                },
+            },'-',{
+                label: ("delete"),
+                command: function() {
+					var lamb4Slaughter = getCurrentURI()
+					if(Services.prompt.confirm(
+						window,
+						"deleting file can't be undone",'do you really want to permanently delete '
+						+ decodeURIComponent(lamb4Slaughter)
+					)){
+						deleteLocaleUri(lamb4Slaughter);
+						self.reload()
+					}
+                },
+            }, "-", {
+                label: ("launch"),
+                command: function() {
+                    getCurrentFile().launch()
+                },
+            },{
+                label: ("reveal"),
+                command: function() {
+                    getCurrentFile().reveal()
+                },
+            },"-",{
+                label: "edit",
+                command: function() {
+                   npp1();
+                }
+            }
+        );
+
+        return items;
 	},
-	activate:function(){		
+	
+	
+	initialize: function(){
+		this.tree=document.getElementById('dirViewer')
+		this.view=new simpleView()
+		var b = document.getElementById('dirViewerButtons')
+		this.backButton = qa('[aID=back]', b)
+		this.forwardButton = qa('[aID=forward]', b)
+		
+		this.tree.ownerPanel = this
+	},
+	activate: function(){		
 		this.view.data=this.data
 		this.tree.view=this.view
 	},
-	onSelect:function(){
-		var i=this.tree.currentIndex
-		var data=this.data[i]
+	onSelect: function(){
+		var i = this.tree.currentIndex
+		var data = this.data[i] || this.currentDir
 		slateViewer.onSelect(data)
 	},
-	ondblclick:function(event){dump(this)
+	ondblclick: function(event){dump(this)
 		if(event.button!=0)return
 		var i=this.tree.currentIndex
 		var dir=this.data[i]
 		if(dir.dirType!=2)
 			this.setDir(dir)
 	},
-	setDir:function(dir){
-		this.data&&this.historyA.push([this.currentDir,this.data,this.tree.currentIndex,this.tree.treeBoxObject.getFirstVisibleRow()])
-		this.historyA.length&&(this.backButton.disabled=false)
-		
-		if(this.historyA.length>100)
-			this.historyA.shift()
-			histLog()
+	setDir: function(dir, force){
+		if(this.data && !force)
+			this.addState()
 
 		
-		if(typeof dir=='string')
-			this.currentDir=dirObjFromSpec(dir)
-		else 
-			this.currentDir=dir
+		if(dir instanceof Ci.nsIFile)
+			dir = getURLSpecFromFile(dir)
 		
-		if(this.currentDir.dirType == 2){
+		if(typeof dir=='string')
+			this.currentDir = dirObjFromSpec(dir)
+		else 
+			this.currentDir = dir
+		
+		if (this.currentDir.dirType == 2){
 			this.up()
-		}else{
+		} else {
 			this.data = getDirEntries(this.currentDir)
 			this.activate()
 		}
-		if(this.currentDir instanceof Ci.nsIFile)
-			this.urlbar.value=this.currentDir.path
-		else
-			this.urlbar.value=decodeURIComponent(this.currentDir.spec		)
 	},
-	historyA:[],
-	historyB:[],	
-	restoreState:function(state){
-		this.currentDir=state[0]
-		this.data=state[1]
-		this.activate()
-		this.tree.view.selection.select(state[2])
-		this.tree.treeBoxObject.scrollToRow(state[3])
-	},
-	back:function(){
-		var st=this.historyA.pop()
-		;(!this.historyA.length)&&(this.backButton.disabled=true)
-		if(!st)return
-		this.historyB.push(st)
-		this.restoreState(st)
-		this.historyB.length&&(this.forwardButton.disabled=false)
-		histLog()
-	},
-	forward:function(){
-		var st=this.historyB.pop()
-		;(!this.historyB.length)&&(this.forwardButton.disabled=true)
-		if(!st)return
-		this.historyA.push(st)
-		this.restoreState(st)
-		this.historyA.length&&(this.backButton.disabled=false)
-		histLog()
-
-	},
-	up:function(){
+	
+	up: function(){
 		var obj=this.currentDir
 		if(obj instanceof Ci.nsIFile){
 			var parent=this.currentDir.parent
@@ -164,36 +188,115 @@ dirViewer={
 		}
 		this.select(curName)
 	},
-	select:function(name){
-		var obj=dirViewer.data
-		for(var i=0;i<obj.length;i++){
-			if(obj[i].name==name)
-				break			
+	select: function(selector){
+		if (typeof selector == 'nmber') {
+			var i = selector
+		} else {
+			var obj = this.data
+			for(var i = 0; i < obj.length; i++) {
+				if(obj[i].name == selector)
+					break			
+			}
+			if (i == obj.length)
+				return false
 		}
-		if(i==this.tree.currentIndex)
-			this.onselect()
+		
+		if (i == this.tree.currentIndex)
+			this.onSelect()
 		else
 			this.tree.view.selection.select(i)
-		this.tree.treeBoxObject.ensureRowIsVisible(i)
+		if (i!=-1)
+			this.tree.treeBoxObject.ensureRowIsVisible(i)
+		
+		return true //success
 	},
-	getType:function(ext){
+	getType: function(ext){
 		"xul,css,xhtml,xml,jsm,manifest,ini,ahk,locale,dtd,properties".indexOf(dirViewer.data[1].extension)>-1
 		"png,jpg,giff,jpeg,ico"
+	},
+	
+	getSelectedItem: function(){
+		var i = this.tree.currentIndex
+		return (dirViewer.data && dirViewer.data[i]) || dirViewer.currentDir
+	},
+	/*****************************************/
+	showAll: function() {
+		this.select(-1)
+	},
+	history: [],
+	index: 0,
+	addState: function() {
+		var cs = this.history[this.index-1]
+		if(cs && cs.spec == this.currentDir.spec)
+			return
+
+		this.forwardButton.disabled = true
+		this.backButton.disabled = false
+
+		var state = {
+			dir: this.currentDir,
+			childData: this.data,		
+			selectedIndex: this.tree.currentIndex,
+			topRow: this.tree.treeBoxObject.getFirstVisibleRow()
+		}
+				
+		this.history.splice(this.index, this.history.length - this.index, state)
+		this.index++;
+		
+		if(this.history.length > 100){
+			this.historyA.shift()
+			this.index--
+		}
+	},
+	back: function() {
+		this.index--;
+		var state = this.history[this.index]
+		
+		this.forwardButton.disabled = false
+		if (this.index == 0) {
+			this.backButton.disabled = true
+		}
+		this.restoreState(state)		
+	},
+	forward: function(){
+		this.index++;
+		var state = this.history[this.index]
+		this.backButton.disabled = false
+		if (this.index == this.history.length - 1) {
+			this.forwardButton.disabled = true
+		}
+		this.restoreState(state)
+	},
+	restoreState:function(state){
+		this.currentDir = state.dir
+		this.data = state.childData
+		this.activate()
+		this.tree.view.selection.select(state.selectedIndex)
+		this.tree.treeBoxObject.scrollToRow(state.topRow)
+	},
+	
+	reload: function(){
+		this.setDir(this.currentDir, true)
 	}
 }
 	initializeables.push(dirViewer)
-getCurrentURI=function(){
+
+getCurrentURI = function(){
 	var i=dirViewer.tree.currentIndex
-	return dirViewer.data[i].spec||dirViewer.currentDir.spec||getURLSpecFromFile(dirViewer.currentDir)
+	var data = (dirViewer.data && dirViewer.data[i]) || dirViewer.currentDir || addonViewer.data[0].file
+	return data.spec || getURLSpecFromFile(data)
 }
-getCurrentFile=function(){
+getCurrentFile = function(){
 	return getLocalFile(getCurrentURI())
 }
  
-getCurrentline=function(){
+getCurrentline = function(){
 	return slateViewer.getLine()
 }
 
+gModes={
+	re: 'viewSource'
+}
 gMode='viewSource'
 slateViewer={
 	initialize:function(){
@@ -220,8 +323,7 @@ slateViewer={
 	},
 	//***** //
 	setFile: function(){
-		this.deck.selectedIndex=1
-		
+		this.deck.selectedIndex=1		
 	},
 	setDir: function(text){
 		this.deck.selectedIndex=0
@@ -233,17 +335,17 @@ slateViewer={
 	onClick:function(event){	
 		var node=event.target
 		
-		var i=getAttr(node,'slateid')[0]
-		dump(i,this)
-		if(node.nodeName&&i){
-			//var i=parseInt(i)
+		var i = getAttr(node, 'slateid')[0]
+		if(node.nodeName && i){
 			if(event.button==0)
 				this.onSelect(this.data[i])
-		}	
+		}
 	},
 	onSelect:function(data){
-		var uri,ans, dataIndex=0
-		function isImage(a){return a.extension&&'gif,png,jpeg,jpg,ico'.indexOf(a.extension)>-1}
+		var uri, ans, dataIndex = 0, mode = 'view-source'
+		function isImage(a){
+			return a.extension && 'gif,png,jpeg,jpg,ico'.indexOf(a.extension) > -1
+		}
 		function getImage(a){var ans='<div class="img" slateid='+dataIndex+'>'+
 			(isImage(a)?'<img src="'+a.spec+'"/><a class=h >'+a.name
 					   :'<img src="'+a.iconURL.replace(/\d+$/,'128')+'"/><a>'+a.name
@@ -252,24 +354,26 @@ slateViewer={
 			return ans
 		}
 		
-		if(!data){//---------------------------show current dir
-			uri=dirViewer.currentDir.spec
-			this.data=dirViewer.data;
-			this.currentDir=dirViewer.currentDir
+		if (!data){//---------------------------show current dir
+			uri = dirViewer.currentDir.spec
+			this.data = dirViewer.data;
+			this.currentDir = dirViewer.currentDir
+			var a = this.data.map(getImage)
+			ans='<al>'+a.join(',')+'<al>'
+			mode = 'view-dir'
+		} else if(data.dirType < 2){//---------------------------show directory internals
+			uri='view-source:'+data.spec
+			this.data=getDirEntries(data);
+			this.currentDir=data
 			var a=this.data.map(getImage)
 			ans='<al>'+a.join(',')+'<al>'
-		}else if(!data.extension){//----------------------------------no extension
+			mode = 'view-dir'
+		} else if(!data.extension){//----------------------------------no extension
 			uri='view-source:'+data.spec
-			ans='<iframe src="'+uri+'"/>'
-		}else if('exe,dll,xpt,gz,tar,mar,lnk,msi,flv'.indexOf(data.extension)>-1){//---------------------------show exe
+		} else if('exe,dll,xpt,gz,tar,mar,lnk,msi,flv,sqlite,dmg'.indexOf(data.extension)>-1){//---------------------------show exe
 			uri='moz-icon://'+data.spec+'/?size=128'
 			ans='<div><img src="'+uri+'"></img><span>'+data.name+'</span><div>'			
-		}else if(data.dirType<2){//---------------------------show directory internals
-			uri='view-source:'+data.spec
-			this.data=getDirEntries(data);this.currentDir=data
-			var a=this.data.map(getImage)
-			ans='<al>'+a.join(',')+'<al>'
-		}else if(isImage(data)){//---------------------------show only images
+		} else if(isImage(data)){//---------------------------show only images
 			uri='view-source:'+data.spec
 			var alldata=this.data=dirViewer.data//.map(getImage)
 			var l=alldata.length	
@@ -282,7 +386,7 @@ slateViewer={
 				dataIndex++
 			}
 			ans='<al>'+ans+'</al>'
-		}else{//---------------------------show file
+		} else{//---------------------------show file
 			this.data=[data]
 			if(gMode=='viewSource'){
 				uri='view-source:'+data.spec

@@ -171,7 +171,7 @@ function addFolderContentsToZip(zipW, folder, root, pendingFolders){
 		
 		if (entry.isDirectory()) {
 			var pf2 = pendingFolders ? pendingFolders.concat() : []
-			pf2.push([jarName, entry])
+			pf2.push(jarName)
 			//var i = [jarName, entry]
 			//zipW.addEntryFile(i[0], Ci.nsIZipWriter.COMPRESSION_DEFAULT, i[1], true);
 			var added = addFolderContentsToZip(zipW, entry, jarName + "/", pf2)
@@ -187,7 +187,7 @@ function addFolderContentsToZip(zipW, folder, root, pendingFolders){
 		
 		if (pendingFolders){
 			for each(var i in pendingFolders)
-				zipW.addEntryFile(i[0], Ci.nsIZipWriter.COMPRESSION_DEFAULT, i[1], true);
+				zipW.addEntryDirectory(i, 0, true);
 			pendingFolders = null
 		}
 		

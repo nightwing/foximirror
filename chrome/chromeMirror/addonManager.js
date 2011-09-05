@@ -100,7 +100,8 @@ function installUnpacked(){
 		if(file.exists()) {
 			if(!prompt('do you want to repalce?\n'+file.path,'yes please'))
 				return
-			unlockJarFile(file)
+			//unlockJarFile(file)
+			flushJarCache(file)
 			file.remove(true)
 		}
 

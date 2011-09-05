@@ -23,6 +23,37 @@ var PR_TRUNCATE    = 0x20;
 var PR_SYNC        = 0x40;
 var PR_EXCL        = 0x80;
 
+/***
+var jarfile=getCurrentFile()
+JARCache=jarProtocolHandler.JARCache
+a=rd.findEntries('*.jar').getNext()
+rd=JARCache.getZip(jarfile)
+
+function closeInner(innerPath){
+	var reader=JARCache.getInnerZip(jarfile,innerPath)
+	reader.close()
+	return function reopen(){
+		reader.openInner(JARCache.getZip(jarfile),innerPath)
+	}
+}
+*/
+function unlockJarFile(jarfile){
+	var JARCache = jarProtocolHandler.JARCache
+	var reader = JARCache.getZip(jarfile)
+	var entries = reader.findEntries('*.jar')
+	while(entries.hasMore()){
+		var subPath = entries.getNext()
+		closeInner(subPath)	
+	}	
+	reader.close()
+	function closeInner(innerPath){
+		var reader=JARCache.getInnerZip(jarfile,innerPath)
+		reader.close()
+		return function reopen(){
+			reader.openInner(JARCache.getZip(jarfile),innerPath)
+		}
+	}
+}
 
 function flushJarCache(aJarFile) {
 	//Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
@@ -99,7 +130,12 @@ function deleteLocaleUri(href){
 	
 	if(uri.scheme == 'file') {
 		let file = uri.QueryInterface(Ci.nsIFileURL).file
-		writeToFile(file, text)
+		try{
+			file.remove(false)
+		}catch(e){
+			flushJarCache()
+			file.remove(true)
+		}
 		return true
 	}
 		
@@ -109,19 +145,48 @@ function deleteLocaleUri(href){
 		if(jar.scheme != 'file'){
 			return false
 		}
-		if(uri.JAREntry.slice(-1)=='/'){
-			Components.utils.reportError('attempt to override directory')
-			return false
-		}
+
 		var jarFile = jar.QueryInterface(Ci.nsIFileURL).file
-		syncWriteToJar(jarFile, uri.JAREntry, writeStringToJar, text)
+		syncWriteToJar(jarFile, uri.JAREntry, removeEntryFromJar, text)
 		return true
 	}
+	return false
 }
 
-function renameFile(file, newName){
-	//f=getLocalFile('file:///d:/ffaddons/acebug/ - copy.gitignore')
-	file.moveTo(file.parent, newName)
+function renameLocaleUri(href, newName){
+	if (href instanceof Ci.nsIFile){
+		let file = href
+		file.moveTo(file.parent, newName)
+	}
+	
+	var uri = $shadia.getLocalURI(href)
+	if(!uri)
+		return false
+	
+	if(uri.scheme == 'file') {
+		let file = uri.QueryInterface(Ci.nsIFileURL).file
+		file.moveTo(file.parent, newName)
+		return true
+	}
+		
+		
+	if(uri.scheme == 'jar') {
+		throw 'not implemented'
+		var url = getCurrentURI()
+		var channel = Services.io.newChannel(url, 0, null);
+		var stream = channel.open();
+
+		var bstream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
+		bstream.setInputStream(stream);
+
+		bytes = bstream.readBytes(bstream.available());  
+		bstream.close()
+		p=1
+
+
+
+	}
+	return false
 }
 
 
@@ -163,6 +228,11 @@ function writeFileToJar(zipW, entryPath, filePath, compression){
     zipW.addEntryFile(entryPath, compression, filePath, false);       
 }
 function writeStringToJar(zipW, entryPath, data, compression){    
+    var istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);	
+	istream.setData(data, data.length);
+	zipW.addEntryStream(entryPath, null, compression, istream, false)       
+}
+function writeBytesToJar(zipW, entryPath, data, compression){    
     var istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);	
 	istream.setData(data, data.length);
 	zipW.addEntryStream(entryPath, null, compression, istream, false)       

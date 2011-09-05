@@ -67,7 +67,7 @@ buildComponentMap = function(){
 	comp2iface = {}
 	intlRe = /intl\/((string)?charsetdetect|unicode)/
 	for(var i in Cc){
-		if(intlRe.test(i)'')>0 || i.indexOf('intl/stringcharsetdetect')>0)
+		if(intlRe.test(i) || i.indexOf('intl/stringcharsetdetect')>0)
 			continue
 		if(Cc[i] instanceof nsIJSCID)
 			comp2iface[i] = supportedInterfaces(getserviceOrCreateInstance(Cc[i]))
@@ -101,17 +101,27 @@ buildComponentMap = function(){
 
 iname = 'nsIUpdateChecker'
 
-navigateToMXRInterface = function(iname){
+fetchIDL = navigateToMXRInterface = function(iname){
 	if(typeof iname != 'string')
 		iname = iname.name
 
 	var t = makeReq('http://mxr.mozilla.org/mozilla-central/ident?i='+iname+'&tree=mozilla-central&filter=.idl')
-	href = t.match(/href="([^"]*.idl)"/)[1]
+	dump(t)
+	var match = t.match(/href="([^"]*.idl)"/)
+	dump(match)
+	var href = match[1]
 
-	makeReq('http://mxr.mozilla.org/'+href+'?raw=1')
+	//makeReq('http://mxr.mozilla.org/'+href+'?raw=1')
+	ace.setLoacation('http://mxr.mozilla.org/'+href+'?raw=1')
 }
 
 
+initializeables.push({
+	initialize: function(){
+		dump('------------')
+		window.ace = document.getElementById("ace").contentWindow
+	}
+})
 
   /***************************************/
  /**-----------tree views--------------**/
