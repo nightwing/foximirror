@@ -54,7 +54,7 @@
 <vbox flex="1" >
 	<hbox id='leftPane-search' class='bottomDelim'>
 		<vbox>
-			<tabs oncommand='addonViewer.activate(event.target.id)'>
+			<tabs oncommand='addonViewer.activate(event.target.id)' setfocus='false' >
 				<tab label='addons' id='addons'/>
 				<tab label='chrome' id='chrome'/>
 			</tabs>	

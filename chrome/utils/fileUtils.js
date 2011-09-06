@@ -147,7 +147,7 @@ function deleteLocaleUri(href){
 		}
 
 		var jarFile = jar.QueryInterface(Ci.nsIFileURL).file
-		syncWriteToJar(jarFile, uri.JAREntry, removeEntryFromJar, text)
+		syncWriteToJar(jarFile, uri.JAREntry, removeEntryFromJar)
 		return true
 	}
 	return false

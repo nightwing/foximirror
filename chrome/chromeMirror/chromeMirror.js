@@ -189,7 +189,7 @@ dirViewer={
 		this.select(curName)
 	},
 	select: function(selector){
-		if (typeof selector == 'nmber') {
+		if (typeof selector == 'number') {
 			var i = selector
 		} else {
 			var obj = this.data
