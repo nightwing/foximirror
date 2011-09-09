@@ -47,25 +47,30 @@ function unlockJarFile(jarfile){
 	}	
 	reader.close()
 	function closeInner(innerPath){
-		var reader=JARCache.getInnerZip(jarfile,innerPath)
+		var reader = JARCache.getInnerZip(jarfile,innerPath)
 		reader.close()
-		return function reopen(){
+		/*return function reopen(){
 			reader.openInner(JARCache.getZip(jarfile),innerPath)
-		}
+		}*/
 	}
 }
 
 function flushJarCache(aJarFile) {
-	//Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
-	Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
+	if(aJarFile){
+		try{
+			unlockJarFile()
+		}catch(e){Components.utils.reportError(e)}
+		Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
+	}
 	//flush entire cache since "flush-cache-entry" doesn't work with inner jars
 	Services.obs.notifyObservers(null, "chrome-flush-caches", null);
 }
 
 function flushStartupCache() {
-  // Init this, so it will get the notification.
-  Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
-  Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+	//Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
+	// Init this, so it will get the notification.
+	Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
+	Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 }
 
 function saveTextToLocaleUri(href, text){
@@ -155,21 +160,27 @@ function deleteLocaleUri(href){
 
 function renameLocaleUri(href, newName){
 	if (href instanceof Ci.nsIFile){
-		let file = href
-		file.moveTo(file.parent, newName)
+		var file = href
+	} else {
+		var uri = $shadia.getLocalURI(href)
+		if(!uri)
+			return false
 	}
-	
-	var uri = $shadia.getLocalURI(href)
-	if(!uri)
-		return false
 	
 	if(uri.scheme == 'file') {
-		let file = uri.QueryInterface(Ci.nsIFileURL).file
-		file.moveTo(file.parent, newName)
-		return true
+		var file = uri.QueryInterface(Ci.nsIFileURL).file
 	}
+
+	if(file){
+		let newFile = file.parent.clone()
+		newFile.append(newName)
 		
+		if(file.exists())
+			return
 		
+		file.moveTo(file.parent, newName)		
+	}
+	
 	if(uri.scheme == 'jar') {
 		throw 'not implemented'
 		var url = getCurrentURI()
@@ -182,10 +193,8 @@ function renameLocaleUri(href, newName){
 		bytes = bstream.readBytes(bstream.available());  
 		bstream.close()
 		p=1
-
-
-
 	}
+	
 	return false
 }
 

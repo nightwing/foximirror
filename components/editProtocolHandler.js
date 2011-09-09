@@ -1,3 +1,7 @@
+//  edit:@key`flag!`contentType?query#index
+//  edit:@key`flag.ext?query#index
+//  edit:anything  -> edit:#anything
+
 var Cc	= Components.classes;
 var Ci	= Components.interfaces;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -5,19 +9,64 @@ Components.utils.import("resource://shadia/main.js");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 $shadia.editGlue = {
+	// https://developer.mozilla.org/en/Sample_.htaccess_file
+	// Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService).getTypeFromExtension('xhtml')
+	contentTypes: {
+		xul: 'application/vnd.mozilla.xul+xml',
+		xhtml: 'application/xhtml+xml',
+		xslt: 'application/xml',
+		html: 'text/html',
+		htm: 'text/html',
+		xml: 'text/xml',
+		svg: 'image/svg+xml',
+		css: 'text/css',
+		js: 'text/javascript',
+	},
 	data: {},
 	setDataSource: function(flag, data){
 		flag = flag.toLowerCase()
-		this.data[flag] = data		
+		this.data[flag] = data
 	},
+	
 	getData: function(flag){
-		flag = flag.toLowerCase()
 		this.contentType = ''
-		var content = this.data[flag]
+		// remove index
+		flag = flag.toLowerCase().replace(indexRe, '')
+		// get query
+		var i = flag.indexOf('?')
+		if(i!=-1){			 
+			var query = flag.substr(i + 1)
+			flag = flag.substring(0, i)
+		}
+		// get key
+		i = flag.indexOf('`')
+		if(i != -1){
+			var key = flag.substring(0, i)
+			flag = flag.substr(i + 1)
+			
+			//get contentType
+			i = flag.lastIndexOf('!`')
+			if(i != -1){			 
+				var c = flag.substr(i + 2)
+				this.contentType = c				
+				flag = flag.substring(0, i)
+			}else{
+				// or extension
+				i = flag.lastIndexOf('.')
+				if(i != -1){
+					var c = flag.substr(i + 1)
+					this.contentType = this.contentTypes[c] || ''
+					flag = flag.substring(0, i)
+				}
+			}
+		}
+
+		
+		var content = this.data[key || flag]
 		
 		if (typeof content == 'function') {			
 			try{
-				content = content(flag, this)
+				content = content(flag, query, this)
 			}catch(e){
 				content = this.reloadMessage +'<br>' +e
 				this.contentType = ''
@@ -36,6 +85,13 @@ $shadia.editGlue = {
 	},
 	reloadMessage: '<html>=== no data is avaliable yet===<br><button onclick=window.location.reload()>reload'
 }
+
+
+indexRe = /#\.*$/
+qRe = /\?.*$/
+fRe = /[^\/`]*$/
+editRe = /e(dit)?:\/*#*/i
+
 function editProtocolHandler(){}
 
 editProtocolHandler.prototype = {
@@ -54,9 +110,7 @@ editProtocolHandler.prototype = {
 	get chromePrincipal() {
 		delete editProtocolHandler.prototype.chromePrincipal
 		return editProtocolHandler.prototype.chromePrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
-	},
-	
-	editRe: /e(dit)?:\/*#*/i,
+	},	
   
 	newURI : function (spec, charset, baseURI){
 		//dump('********',spec, charset, baseURI)
@@ -66,12 +120,16 @@ editProtocolHandler.prototype = {
 				return Services.io.newURI(spec, null, 
 					Services.io.newURI(this.editorURI ,null,null)
 				);
-			spec = baseURI.spec.replace(/#\.*$/, '') + spec
-			//spec = 'edit:@' + spec
+			if(spec[0] == '#')
+				spec = baseURI.spec.replace(indexRe, '') + spec
+			else if(spec[0] == '?')
+				spec = baseURI.spec.replace(qRe, '') + spec
+			else
+				spec = baseURI.spec.replace(qRe, '').replace(fRe, '') + spec
 		}
 
 		var a = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI)
-		spec = spec.replace(this.editRe, '')
+		spec = spec.replace(editRe, '')
 		if (spec[0] == '@'){
 			spec = 'edit:@' + spec.substr(1)
 		} else {

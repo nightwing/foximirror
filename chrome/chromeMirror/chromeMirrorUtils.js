@@ -846,7 +846,6 @@ function empty(lm){
   //**********************************************************
  //* context menu
 //****/
-const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
 
 urlOperations=function(command){
 	var path=leftPane.currentURI()

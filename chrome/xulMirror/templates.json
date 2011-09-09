@@ -1,8 +1,8 @@
-!@!===template1.xul {
+!@!===template1.main {
 
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xul-overlay href="edit:@OverlayURL"?>
+<?xul-overlay href="edit:@xulMirror`overlay.xul"?>
 
 <window id="XULPlayground" title="XULplayground"  width="550"  height="350"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"  xmlns:html="http://www.w3.org/1999/xhtml"
@@ -14,7 +14,7 @@
 	<h:style>
 		*:hover{outline:1px solid rgb( 83,80,255);outline-offset:-3px;-moz-outline-radius:2px;}
 		*{-moz-user-select:text}
-		bound{-moz-binding: url(edit:@BindingURL)}
+		bound{-moz-binding: url(edit:@xulMirror`binding.xml)}
 	</h:style>
 	<hbox flex='1' id='a' align='center'>
 		<description>"Better place for your XUL!"</description>
@@ -48,7 +48,7 @@
 
 
 }
-!@!===template1.xbl {
+!@!===template1.binding {
 
 
 <?xml version="1.0"?>
@@ -113,7 +113,7 @@
 
 }
 
-!@!===template2.xul {
+!@!===template2.main {
 
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>

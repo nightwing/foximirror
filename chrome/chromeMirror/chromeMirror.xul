@@ -117,13 +117,13 @@
 			<vbox collapsed='false' flex='1'>
 				<deck id='slateDeck' flex='1'>
 					<browser type="content" id='dirView' flex='1' src="chrome://shadia/content/chromeMirror/slate.html" context='main-context' onclick='slateViewer.onClick(event)' disablehistory='true'/>
-					<browser type="content" id='file' flex='1' src="chrome://shadia/content/chromeMirror/slate.html" context='main-context' disablehistory='true'/>
+					<browser type="content" id='file' flex='1' src="" context='main-context' disablehistory='true'/>
 					<browser type="content" id='ace' flex='1' src="chrome://shadia/content/ace++/edit-protocol-editor.html" context='main-context'  disablehistory='true'/>
 				</deck>
 				<arrowscrollbox >
 					<textbox type='search' flex="1" id='slate-finder'/>
 					<checkbox label='' style='margin:0;padding:0' oncommand='browserFind.updateAutoHighlight()' tooltiptext='autohighlight'/>
-					<tabs setfocus='false' onmousedown='gMode=event.target.id; dirViewer.onSelect()'>
+					<tabs setfocus='false' onmousedown='gMode=event.target.id;dirViewer.onSelect()'>
 						<tab label='code'   id='code'/>
 						<tab label='view'   id='view'/>
 					</tabs>
@@ -131,14 +131,6 @@
 					<toolbarbutton label='reveal' oncommand='getCurrentFile().reveal()'/>
 					<toolbarbutton label='npp' oncommand='npp1()'/>
 				</arrowscrollbox>
-			</vbox>
-			<vbox collapsed='true' flex='1'>
-				<textbox id='editbox' multiline='true' flex='1'  wrap='off'/>
-				<toolbar>
-					<toolbarbutton label='save' oncommand="attributeViewer.saveEdit()"/>
-					<checkbox label='wrap' oncommand="attributeViewer.toggleWrap()"/>
-					<label value='status' id='editboxlabel'/>
-				</toolbar>
 			</vbox>
 		</vbox>
 	</hbox>

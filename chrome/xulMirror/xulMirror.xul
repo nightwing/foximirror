@@ -60,8 +60,8 @@
 			<vbox flex='1' id='codebox' persist='height width'>
 				<hbox>
 				  <tabs setfocus='false' oncommand="tabSelect(event.target.id)">
-					<tab label="xul" id="xul"/>
-					<tab label="xbl" id="xbl"/> 
+					<tab label="main" id="main"/>
+					<tab label="binding" id="binding"/> 
 					<tab label="overlay" id="overlay"/> 
 				  </tabs>
 				  <spacer flex='1'/>

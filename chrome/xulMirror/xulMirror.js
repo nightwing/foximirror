@@ -34,10 +34,6 @@ toggleOrient = function(){
 
 var codeCache = {}, sessions = {}, Templates = {}, gTemplate
 var contentTypes = {
-	xul: 'application/vnd.mozilla.xul+xml',
-	overlay: 'application/vnd.mozilla.xul+xml',
-	xbl: 'text/xml',
-	
 	getContextMenuItems: function(_, target){
 		var id = target.id
 		var selectedContentType = 'text/html'
@@ -48,10 +44,9 @@ var contentTypes = {
 
 
 
-xulMirrorDataSource = function(a, b){
-	a = a.slice(0, -6)
-	dump(a, contentTypes[a])
-	b.contentType = contentTypes[a]
+xulMirrorDataSource = function(a, query, editGlue){
+	//dump(a, contentTypes[a])
+	//editGlue.contentType = contentTypes[a]
 	return codeCache[a] || (codeCache[a] = sessions[a].getValue())
 }
 
@@ -88,28 +83,24 @@ xulMirror = {
 		}
 		gTemplate = Templates.template1
 
-		for each(var i in ["xbl", "xul", "overlay"]) {
-			codeCache[i] = gTemplate[i]
+		for each(var i in ["binding", "main", "overlay"]) {
+			codeCache[i] = gTemplate[i] || ""
 			sessions[i] = aceWindow.createSession(codeCache[i], href, "text/xml")
 			sessions[i].autocompletionType = 'xul';
 			sessions[i].on("change", onChange)
 		}
 		
 		$shadia.editGlue.setDataSource("xulMirror", xulMirrorDataSource)
-		$shadia.editGlue.setDataSource("BindingURL", xulMirrorDataSource)
-		$shadia.editGlue.setDataSource("overlayURL", xulMirrorDataSource)
 
-		tabSelect('xul')
+		tabSelect('main')
 		updatePreview()
 		codebox.focus()
-		content.location = 'edit:@xulMirror'
+		content.location = 'edit:@xulMirror`main.xul'
 	},
 	//* * * * * * * * * * * * * * * * * * * * * * * * *
 
 	shutdown: function() {
 		$shadia.editGlue.removeDataSource("xulMirror")
-		$shadia.editGlue.removeDataSource("BindingURL")
-		$shadia.editGlue.removeDataSource("overlayURL")
 	},
 
 };
@@ -128,7 +119,7 @@ onChange = function(){
 	return
 }
 updatePreview = function(){
-	content.location = 'edit:@xulMirror'
+	content.location = 'edit:@xulMirror`main.xul'
 }
 
 
