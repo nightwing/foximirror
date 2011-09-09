@@ -455,7 +455,7 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
         } else {
             var evalString = $q.evalString;
             if (!$q.ignoreThisValue)
-                evalString = Firebug.largeCommandLineEditor.setThisValue(evalString);
+                evalString = Firebug.jsMirror.setThisValue(evalString);
 
             this.eval(evalString);
         }

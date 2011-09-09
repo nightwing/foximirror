@@ -1,9 +1,6 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 Components.utils.import('resource://shadia/main.js', window).addDevelopmentUtils(window)
-getCssMirrorDir=$shadia.getCssMirrorDir
-getCssMirrorJarPath=$shadia.getCssMirrorJarPath
+getCssMirrorDir = $shadia.getCssMirrorDir
+getCssMirrorJarPath = $shadia.getCssMirrorJarPath
 
 ios = Services.io
 sss = Services.sss
@@ -15,30 +12,28 @@ consoleService = Services.console
 
 var initializeables=[]
 function initialize(){
-	codebox=document.getElementById('codebox');
-	codeboxEditor.init()
-	//initServices()	
+	codebox = document.getElementById('code');
+	
+	Firebug.Ace.initialize({
+		win2: {id:"code", starter:FBL.bind(cssMirror.initialize, cssMirror)}
+	})
+
 	for each(var i in initializeables)
 		i.initialize()
-/*	initFinder(codebox)
-	initAutocomplete()*/
 }
 window.addEventListener('load', function(){
-		removeEventListener('load', arguments.callee, false);
-		initialize()
-	}, false);
+	removeEventListener('load', arguments.callee, false);
+	initialize()
+}, false);
 
 /***************************************************************
  *error listener
  *
  */
-function goToErrorLine(a,b){
-	codeboxEditor.selectLines(a,b-1,a,b+1)
+function goToErrorLine(a, b){
+	cssMirror.editor.selection.moveCursorToPosition({row:a, column:b})
 }
-/*codeboxEditor.selectLines(edu.nthLine(a),b,edu.nthLine(a),b)
-ed=gBrowser.contentWindow.wrappedJSObject.editor.editor
-	edu=gBrowser.contentWindow.wrappedJSObject.editor
-*/
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 errorListener={
@@ -85,7 +80,7 @@ errorListener={
 }
 
 
-sheetTypes={agent: sss.AGENT_SHEET, user: sss.USER_SHEET}
+sheetTypes = {agent: sss.AGENT_SHEET, user: sss.USER_SHEET}
 dataStyleRegistrar={
 	getCode:function(){
 		return codebox.value
@@ -135,135 +130,6 @@ dataStyleRegistrar={
 }
 
 
-// codebox shortcuts
-keyHandler={
-	init: function(){
-		codebox.addEventListener("keydown", this, true);
-		codebox.addEventListener("keypress", this.keypress, true);
-		//codebox.addEventListener("keyup", this, true);
-		dump(125)
-	},
-	pressed:false,
-	stopEvent:function(e){
-		e.preventDefault();e.stopPropagation();
-	},
-	handleEvent:function(e){
-		dump(e.which,e.keycode,e.charcode)
-		if(e.ctrlKey) switch(e.which){
-			case KeyboardEvent.DOM_VK_K:
-			case KeyboardEvent.DOM_VK_SPACE:
-				//autocompleter.toggleMode()
-				startCodeCompletion();
-				this.stopEvent(e)
-				break
-			case KeyboardEvent.DOM_VK_RETURN:
-				cssMirror.preview();
-				this.stopEvent(e)
-				break
-			case KeyboardEvent.DOM_VK_ESCAPE:
-				cssMirror.unpreview();
-				this.stopEvent(e)
-				break
-			case KeyboardEvent.DOM_VK_DOWN:
-				EJS_nextCommandFromHistory();
-				this.stopEvent(e)
-				break
-			case KeyboardEvent.DOM_VK_UP:
-				EJS_previousCommandFromHistory();
-				this.stopEvent(e)
-				break
-		}
-		if(e.shiftKey) switch(e.which){
-			case KeyboardEvent.DOM_VK_RETURN:
-				cssMirror.unpreview();
-				this.stopEvent(e)
-				break
-			case KeyboardEvent.DOM_VK_ESCAPE:
-				cssMirror.unpreview();
-				this.stopEvent(e)
-				break
-		}
-	},
-	keypress:function(e){//tab duplicate
-		if ((e.keyCode == e.DOM_VK_TAB) && !(e.ctrlKey || e.altKey || e.metaKey)) {//tab key
-			//var start = t.selectionStart, end = t.selectionEnd;
-			var ed=codebox.editor
-			var sel=ed.selection
-			var text=sel.toString()
-			var selCon=ed.selectionController
-			if(!text){
-				insertText('\t', codebox)
-			}else{
-				var start, end = codebox.selectionEnd;
-				sel.collapseToStart()
-				selCon.intraLineMove(false,false)
-				start = codebox.selectionStart
-				codebox.selectionEnd = end
-
-				text = codebox.value.slice(start, end)
-				text = e.shiftKey?text.replace('\n\t','\n','g').replace(/^\t/,''):
-								'\t'+text.replace('\n','\n\t','g')
-				//dump(text.toSource())
-				insertText(text, codebox)
-				codebox.selectionStart=start
-			}
-
-			e.stopPropagation();
-			e.preventDefault();
-		}else if(String.fromCharCode(e.charCode).toLowerCase()=='d'&& e.ctrlKey){
-			var ed=codebox.editor
-			var sel=ed.selection
-			var text//=sel.toString()
-			var selCon=ed.selectionController
-			if(!sel.isCollapsed()){
-				selCon.intraLineMove(false,false)
-				selCon.intraLineMove(true,true)
-				//text=sel.toString()
-				text=codebox.value.slice(codebox.selectionStart,codebox.selectionEnd)
-				sel.collapseToEnd()
-				insertText('\n'+text, codebox)
-			}else{
-				text=codebox.value.slice(codebox.selectionStart,codebox.selectionEnd)
-
-				sel.collapseToEnd()
-				insertText(text, codebox)
-			}
-			e.stopPropagation();
-			e.preventDefault();
-		}else
-			sillyParser.complete()
-	},
-}
-
-function insertText(iText, elem){
-	elem.editor.QueryInterface(Ci.nsIPlaintextEditor).insertText(iText);
-}
-
-codeboxEditor={
-	init:function(){
-		keyHandler.init()
-	},
-	insertText:function(text){
-		codebox.editor.insertText||codebox.editor.QueryInterface(Ci.nsIPlaintextEditor)
-		codebox.editor.insertText(text)
-	},
-	deleteText:function(){
-		//codebox.editor.deleteSelection(EJS_cntJsCode.editor.ePreviousWord)
-	},
-	selectLines:function(i,i0,j,j0){
-		dump(i,i0,j,j0)
-		var rel=codebox.editor.rootElement
-		rel.normalize()
-		var a=rel.children[i].previousSibling,
-			b=rel.children[j].previousSibling
-			r=codebox.editor.selection.getRangeAt(0)
-		//modify var l=a.nodeValue.
-		//scrollSelectionIntoView(in short type, in short  region, in boolean isSynchronous)
-		r.setStart(a,Math.min(a.length,i0))
-		r.setEnd  (b,Math.min(b.length,j0))
-	}
- }
-
 /*****************************************************************
  *  code completion utils
  ****************/
@@ -296,73 +162,6 @@ function treeView(table){
 	this.cycleHeader = function(col, elem){}
 }
 
-sillyParser={
-	parse: function(){
-		var rx=/[\w$\-\[\]\(\)]/,i0,i
-		var skipWord=function(){i0=i;
-			while(rx.test(prev=str.charAt(i)))i--;
-		}
-		str=codebox.value
-		i=codebox.selectionStart-1
-		prev=str.charAt(i)
-
-		//*************
-		skipWord()
-		curWord=str.substring(i+1,i0+1)
-		termChar=prev
-		//****************
-		var colonSeen, mode
-		if(prev==':'&&str.charAt(i-1)==':'){
-			termChar='::'
-			mode='selector'
-			return [mode,termChar,curWord]
-		}
-		if(prev==' '){
-			var j=i
-			while(str.charAt(--j)==' ');
-			if(str.charAt(j)&&!rx.test(str.charAt(j)))termChar=str.charAt(j)
-		}
-		if(prev==':')
-			colonSeen=true
-
-		while(prev=str.charAt(i--)){
-			//dump(prev,i)
-			if(prev=='}'){
-				mode='selector';
-				return [mode,termChar,curWord]
-			}else if(prev==':'){
-				colonSeen=true
-				iColon=i
-			}else if(prev==';'||prev=='{'){
-				mode=colonSeen? 'propValue' : 'propName'
-				if(colonSeen){
-					return [mode,termChar,curWord,str.substring(i+2, iColon+1).trim()]
-				}
-				return [mode,termChar,curWord]
-
-			}
-		}
-		return  ['selector',termChar,curWord]
-
-	},
-
-	complete: function(im){
-		var t=Date.now()
-		clearTimeout(this.timeout)
-		if(!im){
-			this.timeout=setTimeout(function(){sillyParser.complete(true)},100)
-			return
-		}
-		var p=this.parse()
-
-		document.getElementById('autobox').value=p.join('\n')
-		completionProvider.tree=document.getElementById('autotree')
-		dump(t-Date.now())
-		completionProvider[p[0]](p)
-		completionProvider.setView()
-	},
-
-}
 
 completionProvider={
 	propName: function(fragment){
@@ -468,294 +267,6 @@ completionProvider={
 	},
 }
 
-autocompleter={
-	mode:false,
-	toggleMode: function(all){
-		if(typeof all=='undefined')
-			this.mode=!this.mode
-		else
-			this.mode=all
-		if(this.mode){
-			this.tree.width=620
-			this.tree.setAttribute('hidecolumnpicker',false)
-			this.tree.columns[2].element.width=32
-
-			this.tree.columns[0].element.setAttribute('hideheader',false)
-			this.tree.columns[1].element.setAttribute('hideheader',false)
-			this.tree.columns[1].element.hidden=false
-			this.tree.columns[2].element.setAttribute('hideheader',false)
-		}else{
-			this.tree.width=280
-			this.tree.columns[2].element.width=32
-			this.tree.setAttribute('hidecolumnpicker',true)
-			this.tree.columns[0].element.setAttribute('hideheader',true)
-			this.tree.columns[1].element.setAttribute('hideheader',true)
-			this.tree.columns[1].element.hidden=true
-			this.tree.columns[2].element.setAttribute('hideheader',true)
-		}
-
-	},
-	create: function(inputField,mode){
-		if(!this.panel){//get domNodes
-			this.inputField=inputField;
-			this.panel=document.getElementById("autocomplatePanel")
-			this.tree=this.panel.getElementsByTagName('tree')[0]
-			this.number=this.panel.getElementsByTagName('label')[0]
-
-			this.bubble=document.getElementById("autocomplate-bubble")
-			//set handlers
-			this.panel.setAttribute('onpopupshown','autocompleter.setView(0)')
-			this.tree.setAttribute('ondblclick','autocompleter.insertSuggestedText(),autocompleter.finish()')
-			this.tree.setAttribute('onselect','autocompleter.onSelect()')
-		}
-		try{this.toggleMode(mode)}catch(e){}
-
-		this.inputField.addEventListener("keypress", this, true);
-	},
-	start:function(evalObj,filterText,posX,posY){
-			dump('start',posX,posY)
-
-		if(typeof posX=='undefined'||typeof posY=='undefined'){
-			let bo=this.panel.boxObject
-			posX=bo.screenX;posY=bo.screenY;
-
-		}
-		dump('start',posX,posY);
-		this.object=evalObj
-		this.text=filterText
-		var t=Date.now()
-		this.unfilteredArray=getProps(evalObj)
-
-		if(this.specFunc)
-			this.getSpecialEntries()
-		dump('propsTime',t-Date.now())
-
-		this.filterText=filterText
-		this.filter(this.unfilteredArray,filterText)
-
-		if(this.panel.state=='open'){
-			this.setView(0)
-			this.panel.moveTo(posX,posY)
-		}else
-			this.panel.showPopup(null,posX,posY, "popup")
-	},
-	getSpecialEntries: function(){
-		var [spo,funcName]=this.specFunc
-		var ans=[]
-		try{
-			if(funcName=='QueryInterface'){
-				var spo = EJS_evalStringOnTarget(spo)
-				supportedInterfaces(spo).forEach(function(x){
-					ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:'interface', depth:-1,special:true})
-				})
-			}else if(funcName=="getInterface"){
-				var spo = EJS_evalStringOnTarget(spo)
-				supportedgetInterfaces(spo).forEach(function(x){
-					ans.push({name:'\u2555Ci.'+x+')',comName: 'ci.'+x.toString().toLowerCase(),description:'interface', depth:-1,special:true})
-				})
-			}else if(funcName=='getElementById'){
-				ans=getIDsInDoc()
-			}else if(funcName=="getAttribute"||funcName=="setAttribute"||funcName=="hasAttribute"){
-				var spo = EJS_evalStringOnTarget(spo)
-				var att=spo.attributes
-				for(var i=0;i<att.length;i++){
-					var x=att[i]
-					ans.push({name:'\u2555"'+x.nodeName+'")',comName: '"'+x.nodeName.toLowerCase(),description:x.value, depth:-1,special:true})
-				}
-			}
-		}catch(e){Cu.reportError(e)}
-		this.unfilteredArray=ans.concat(this.unfilteredArray)
-	},
-	setView: function(si){
-		if(typeof si!='number')
-			si=this.tree.currentIndex
-		this.tree.view=new treeView(this.sortedArray)
-		this.tree.view.selection.select(si);
-        this.tree.treeBoxObject.ensureRowIsVisible(si);
-		this.number.value=si+':'+this.sortedArray.length+'/'+this.unfilteredArray.length
-	},
-	finish:function(i){
-		this.hidden=true
-		this.inputField.removeEventListener("keypress", this, true);
-		window.removeEventListener("mousedown",this.u,true)
-
-		this.panel.hidePopup()
-	},
-
-	filter:function(data,text){
-		var table =[];
-		if(!text){
-			data.forEach(function(val) {table.push(val)})
-			table.sort()
-			this.sortedArray=table
-			return;
-		}
-		var filterText=text.toLowerCase()
-		var filterTextCase=this.text
-
-		//**funcs*****/
-		function springyIndex(val){
-			var lowVal=val.comName
-			var priority=0,lastI=0,ind1=0;
-			if(val.name.indexOf(filterTextCase)===0){
-				val.priority=-2
-				table.push(val);
-				return;//exact match
-			}
-			for(var j=0;j<filterText.length;j++){
-				lastI = lowVal.indexOf(filterText[j],ind1);				
-				if(lastI===-1)
-					break;//doesn't match
-				priority += lastI-ind1
-				ind1 = lastI+1;
-			}
-			if(lastI != -1){
-				val.priority=priority
-				table.push(val);
-			}
-		}
-
-		function sorter(a,b){
-
-		}
-		var sortVals=['priority','depth','comName']
-
-		data.forEach(springyIndex)
-		table.sort(function (a, b) {
-			if(!a.special&&b.special) return 1;
-			if(a.special&&!b.special) return -1;//???
-			for each(var i in sortVals){
-			  if (a[i]<b[i]) return -1;
-			  if (a[i]>b[i]) return 1;
-			}
-			return 0;
-		})
-		this.sortedArray=table
-	}
-
-	,handleEvent: function(event){
-		dump('handleEvent---------',event.charCode,String.fromCharCode(event.charCode),event.ctrlKey,event.altKey)
-		if(String.fromCharCode(event.charCode)=='t'&&event.ctrlKey){
-			this.toggleMode()
-			event.preventDefault();event.stopPropagation();
-		}
-		var t
-		if(event.ctrlKey||event.altKey){
-			if(event.charCode!=0&&(t=String.fromCharCode(event.charCode))){
-				if (t=='.'){//complete object and start inspecting it
-					var o=this.sortedArray[this.tree.currentIndex]
-					if(o){
-						this.insertSuggestedText(t)
-						this.start(o.object,"")
-					}
-				}
-			}
-			return;
-		}
-		switch(event.keyCode){
-			case KeyEvent.DOM_VK_HOME:
-				this.moveTreeSelectionBig('top');
-				event.preventDefault();event.stopPropagation();
-				break
-			case KeyEvent.DOM_VK_END:
-				this.moveTreeSelectionBig('end');
-				event.preventDefault();event.stopPropagation();
-				break
-			case KeyEvent.DOM_VK_UP:
-				this.moveTreeSelection(-1);
-				event.preventDefault();event.stopPropagation();
-				break
-			case KeyEvent.DOM_VK_DOWN:
-				this.moveTreeSelection(1);
-				event.preventDefault();event.stopPropagation();
-				break
-			case KeyEvent.DOM_VK_BACK_SPACE:
-				this.text=this.text.substr(0,this.text.length-1)
-				this.filter(this.unfilteredArray,this.text);
-				this.setView(0);
-				break
-			case KeyEvent.DOM_VK_RETURN:
-				this.insertSuggestedText();
-				this.finish()
-				event.preventDefault();event.stopPropagation();
-				break
-			case 46:
-			this.startMain(this.object[this.selected()],"")
-				break;
-			case KeyEvent.DOM_VK_RIGHT:
-				this.finish();break
-			case KeyEvent.DOM_VK_RIGHT:
-			default:
-
-				if(event.charCode==0){
-					this.finish();event.preventDefault();event.stopPropagation();break
-				}
-				var t=String.fromCharCode(event.charCode)
-				if (!event.ctrlKey&&/[; \+\-\*\:;\]\)\(\)\}\{\?]/.test(t))
-					this.finish()
-
-				this.text+=t;
-				dump('-===>',t,this.text)
-
-				this.filter(this.unfilteredArray,this.text);
-				this.setView(0)
-				//break
-		}
-	},
-/* listbox{
--moz-user-focus:none;
-}
-
-*/
-	moveTreeSelectionBig: function(to){
-		var tree=this.tree,view=tree.view
-		switch(to){
-			case 'end':var c=view.rowCount-1;break
-			case 'top':var c=0;break
-			case 'pup':var c=view.rowCount-1;break
-			default: return
-		}
-		view.selection.timedSelect(c, tree._selectDelay);
-		tree.treeBoxObject.ensureRowIsVisible(c)//(c>0?c:0)
-	}
-	,moveTreeSelection: function(direction){
-		var tree=this.tree,view=tree.view,c=view.selection.currentIndex
-		c+=direction
-		if(c>=view.rowCount)	c=-1
-		if(c<-1)				c=view.rowCount-1
-		view.selection.timedSelect(c, tree._selectDelay);
-		tree.treeBoxObject.ensureRowIsVisible(c>=0?c:(direction>0?0:view.rowCount-1))
-	},
-	selectedText: function(){
-		var c=this.tree.view.selection.currentIndex
-		if(c<0) return
-		return this.sortedArray[c].name
-	},
-	insertSuggestedText: function(additionalText){
-		var c=this.tree.view.selection.currentIndex
-		if(c<0) return
-		var c=this.sortedArray[c]
-		var isSpecial=c.special
-		var text=c.name
-
-		var l=this.text.length
-		if(isSpecial){
-			text=text.substr(1)
-		}else if(/^\d*$/.test(text)){
-			text='['+text+']'
-			l++
-		}else if(!/^[a-z$_][a-z$_0-9]*$/i.test(text)){
-			text='["'+text+'"]'
-			l++
-		}
-		if(additionalText)
-			text=text+additionalText
-		this.inputField.selectionStart=this.inputField.selectionStart-l;
-		insertText(text, this.inputField)
-	}
-
-
-}
 
 /*
 
@@ -814,7 +325,7 @@ defaultFileComponent={
 		
 	},
 	createStyle: function(){
-		var name=prompt('enter name')
+		var name = 'untitled'//prompt('name for new style')
 		if(!name)
 			return
 		gstyle={
@@ -828,7 +339,7 @@ defaultFileComponent={
 	},
 	initialize: function(){
 		this.tree= treeOnSelectHandler.addTree('style-list-tree', function(tree){cssMirror.openStyle()})
-		styleList=getDirEntries(getCssMirrorJarPath())
+		styleList = getDirEntries(getCssMirrorJarPath())
 		this.resetView()
 		//
 		
@@ -920,8 +431,8 @@ treeOnSelectHandler={
 //
 function onTreeClicked(event){
 	var tree = document.getElementById("tree");
-	var i=tree.currentIndex
-	var style=styleList[i]
+	var i = tree.currentIndex
+	var style = styleList[i]
 
 	if(style)
 		defaultFileComponent.openStyle(style)
@@ -979,22 +490,22 @@ getDirEntries=function(uri){
 //**************//
 
 function writeData(data,entryPath){
-	var  jarFile=getCssMirrorDir()
+	var  jarFile = getCssMirrorDir()
 	syncWriteToJar(jarFile, entryPath, writeStringToJar, data, Ci.nsIZipWriter.COMPRESSION_FASTEST)
 }
 
 
 function importFromStylish(){
-	var service= Cc["@userstyles.org/style;1"].getService(Ci.stylishStyle)
-	var styleList=service.list(service.REGISTER_STYLE_ON_CHANGE,{})
-	var service= Cc["@userstyles.org/style;1"].getService(Ci.stylishStyle)
+	var service = Cc["@userstyles.org/style;1"].getService(Ci.stylishStyle)
+	var styleList = service.list(service.REGISTER_STYLE_ON_CHANGE,{})
+	var service = Cc["@userstyles.org/style;1"].getService(Ci.stylishStyle)
 
-	for(var i=0;i<styleList.length;i++){
+	for(var i=0; i<styleList.length; i++){
 		var st=styleList[i]
 		st.name
 		st.code
 		st.enabled
-		writeData(st.code,st.name+'.css')
+		writeData(st.code, st.name+'.css')
 		//prompt(st.name)
 	}
 }
@@ -1060,6 +571,13 @@ jarRegistrar={
  /***main object*/
 
 cssMirror={
+	initialize: function(aceWindow) {
+		// fixme
+		codebox = Firebug.Ace.win2.editor
+		this.editor = codebox
+		
+	},
+	
 	toggle: function(){
 		jarRegistrar.toggleEnabled(gstyle)
 	},
@@ -1118,3 +636,4 @@ cssMirror={
 		cssMirror.updateSaveButton()
 	}
 }
+

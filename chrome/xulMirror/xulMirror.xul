@@ -78,8 +78,8 @@
 	
 	
 	<script type="application/x-javascript" src="../shadia.js"/>
-	<script type="application/x-javascript" src="../jsMirror/menuUtils.js"/>
 	<script type="application/x-javascript" src="../jsMirror/emulate-fb.js"/>
+	<script type="application/x-javascript" src="../jsMirror/menuUtils.js"/>
 
 	<script type="application/x-javascript" src="../jsMirror/autocompleter.js"/>
     <script type="application/x-javascript" src="xulMirror.js"/>

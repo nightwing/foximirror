@@ -585,10 +585,14 @@ function byId(id){
 
 function doOnload(){
 	initGlobals();
-	Firebug.Ace.initialize()
 	
-	codebox.focus();
+	var starter = FBL.bind(Firebug.jsMirror.initialize, Firebug.jsMirror)
+	Firebug.Ace.initialize({
+		win2: {id:"jsCode", starter:starter, deps:['fbace/consoleMode', "fbace/worker"]},
+		win1: {id:"result", starter:starter, deps:['fbace/consoleOutputMode']}
+	})
 }
+
 function doOnUnload(){
 	var data = $shadia.$jsMirrorData
 	if(!data.newTarget)
@@ -833,250 +837,17 @@ FBL.unwrapObject = jn.unwrap
 $=function(x)document.getElementById(x)
 /**======================-==-======================*/
 
-aceManager = Firebug.Ace = {
-	initialize: function() {
-		var browser = $("jsCode");
-		var win2Wrapped = browser.contentWindow;
-		this.win2 = win2Wrapped.wrappedJSObject;
+aceManager = Firebug.Ace
 
-		var browser = $("result");
-		var win1Wrapped = browser.contentWindow;
-		this.win1 = win1Wrapped.wrappedJSObject;
-
-		this.win1.startAcebugAutocompleter =
-		this.win2.startAcebugAutocompleter = this.startAutocompleter;
-
-		//set Firebug.Ace on wrapped window so that Firebug.getElementPanel can access it
-		win1Wrapped.document.getElementById('editor').ownerPanel = this;
-		win2Wrapped.document.getElementById('editor').ownerPanel = this;
-
-		this.win1.aceManager = this.win2.aceManager = this
-		this.win1.onclose = this.win2.onclose = FBL.bind(this.shutdown, this)
-		
-		var starter = FBL.bind(Firebug.largeCommandLineEditor.initialize, Firebug.largeCommandLineEditor)
-
-		Firebug.Ace.win2.startAce(starter, null, ['fbace/consoleMode', "fbace/worker"]);
-		Firebug.Ace.win1.startAce(starter, null, ['fbace/consoleOutputMode']);
-	},
-
-	shutdown: function() {
-		if(!this.win1)
-			return
-		this.win1.aceManager = this.win2.aceManager = null
-		this.win1 = this.win2 = null
-	},
-
-	// context menu
-	getContextMenuItems: function(nada, target) {
-		var env = target.ownerDocument.defaultView.wrappedJSObject;
-
-		var items = [],
-			editor = env.editor,
-			clipBoardText = gClipboardHelper.getData(),
-			editorText = editor.getCopyText(),
-			self = this;
-		// important: make sure editor is focused
-		editor.focus()
-
-		items.push(
-			{
-				label: "copy",
-				command: function() {
-					gClipboardHelper.copyString(editorText);
-				},
-				disabled: !editorText
-			},
-			{
-				label: ("cut"),
-				command: function() {
-					gClipboardHelper.copyString(editorText);
-					editor.onCut();
-				},
-				disabled: !editorText
-			},
-			{
-				label: ("paste"),
-				command: function() {
-					editor.onTextInput(clipBoardText);
-				},
-				disabled: !clipBoardText
-			},
-			"-",
-			{
-				label: "help",
-				command: function() {
-					var mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
-					mainWindow.gBrowser.selectedTab = mainWindow.gBrowser.addTab("https://github.com/MikeRatcliffe/Acebug/issues");
-				}
-			}
-		);
-
-		var sessionOwner;
-		switch(editor.session.owner) {
-			case 'console': sessionOwner = Firebug.largeCommandLineEditor; break;
-			case 'stylesheetEditor': sessionOwner = StyleSheetEditor.prototype; break;
-			case 'htmlEditor': sessionOwner = null; break;
-		}
-		sessionOwner && sessionOwner.addContextMenuItems(items, editor, editorText);
-
-		return items;
-	},
-
-	getSourceLink: function(target, object) {
-		var env = target.ownerDocument.defaultView.wrappedJSObject;
-		var session = env.editor.session;
-		if (!session.href)
-			return;
-		var cursor = Firebug.Ace.win1.editor.session.selection.selectionLead;
-		var link = new FBL.SourceLink(session.href, cursor.row);
-		link.column = cursor.column;
-		return link
-	},
-
-	getPopupObject: function(target) {
-		return null;
-	},
-
-	getTooltipObject: function(target) {
-		return null;
-	},
-
-	// save and load
-	initFilePicker: function(session, mode) {
-		var ext = session.extension,
-			fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker),
-			ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-		if (mode == 'save')
-			fp.init(window, ("saveas"), Ci.nsIFilePicker.modeSave);
-		else
-			fp.init(window, ("selectafile"), Ci.nsIFilePicker.modeOpen);
-
-		// try to set initial file
-		if (session.filePath) {
-			try{
-				var file = ios.newURI(session.filePath, null, null);
-				file = file.QueryInterface(Ci.nsIFileURL).file;
-				fp.displayDirectory = file.parent;
-				var name = file.leafName;
-				fp.defaultString = file.leafName;
-			} catch(e) {}
-		}
-		// session.extension not always is the same as real extension; for now 
-		if (name && name.slice(-ext.length) != ext)
-			fp.appendFilters(Ci.nsIFilePicker.filterAll);
-
-		if (ext)
-			fp.appendFilter(ext, "*." + ext);
-		fp.appendFilters(Ci.nsIFilePicker.filterAll);
-
-		return fp;
-	},
-
-	loadFile: function(editor) {
-		var result, name, result,
-			session = editor.session, ext = session.extension,
-			ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-		var fp = this.initFilePicker(session, 'open');
-
-		result = fp.show();
-
-		if (result == Ci.nsIFilePicker.returnOK) {
-			session.setValue(readEntireFile(fp.file));
-			session.setFileInfo(ios.newFileURI(fp.file).spec);
-		}
-	},
-
-	saveFile: function(editor, doNotUseFilePicker) {
-		var file, name, result, session = editor.session,
-			ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService),
-			fp = this.initFilePicker(session, 'save');
-
-		if (doNotUseFilePicker && session.href) {
-			try {
-				file = ios.newURI(session.href, null, null)
-					.QueryInterface(Ci.nsIFileURL).file;
-				if (file.exists()) {
-					result = Ci.nsIFilePicker.returnOK;
-					fp = {file: file};
-				}
-			} catch(e){}
-		}
-
-		if (!fp.file)
-			result = fp.show();
-		if (result == Ci.nsIFilePicker.returnOK) {
-			file = fp.file;
-			name = file.leafName;
-
-			if (name.indexOf('.')<0) {
-				file = file.parent;
-				file.append(name + '.' + session.extension);
-			}
-
-			writeFile(file, session.getValue());
-			if (!session.filePath)
-				session.setFileInfo(ios.newFileURI(file).spec);
-		}
-		else if (result == Ci.nsIFilePicker.returnReplace) {
-			writeFile(fp.file, session.getValue());
-			if (!session.filePath)
-				session.setFileInfo(ios.newFileURI(file).spec);
-		}
-	},
-
-	savePopupShowing: function(popup) {
-		FBL.eraseNode(popup)
-		FBL.createMenuItem(popup, {label: 'save As', nol10n: true });
-	},
-
-	loadPopupShowing: function(popup) {
-		FBL.eraseNode(popup)
-		FBL.createMenuItem(popup, {label: 'ace auto save', nol10n: true });
-	},
-
-	getUserFile: function(id){
-		var file = Services.dirsvc.get(dir||"ProfD", Ci.nsIFile);
-		file.append('acebug')
-		file.append('autosave-'+id)
-		return file
-	},
-
-
-	// search
-	search: function(text, reverse) {
-		var e = this.editor;
-		e.$search.set({
-			needle: text,
-			backwards: reverse,
-			caseSensitive: false,
-			//regExp: Firebug.searchUseRegularExpression,
-		});
-
-		var range = e.$search.find(e.session);
-		if (!range) {
-			range = e.selection.getRange();
-			if (!range.isEmpty()) {
-				range.end = range.start;
-				e.selection.setSelectionRange(range);
-				range = e.$search.find(e.session);
-			}
-		}
-
-		if (range) {
-			e.gotoLine(range.end.row + 1, range.end.column);
-			e.selection.setSelectionRange(range);
-		}
-		return range&&!range.isEmpty();
-	}
-};
 function toggleEditorFocus(env){
 	if(env.editor != codebox)
 		codebox.focus()
 	else
 		resultbox.focus()
 }
-Firebug.largeCommandLineEditor = {
-	initialize: function(window) {       
+Firebug.jsMirror = {
+	initialize: function(window) {
+		dump(4)
 		var editor = window.editor;
 		editor.session.owner = 'console';
 		editor.session.href = '';
@@ -1087,8 +858,8 @@ Firebug.largeCommandLineEditor = {
 
 		//add shortcuts
 		editor.addCommands({
-			execute: function()Firebug.largeCommandLineEditor.enter(true, false),
-			dirExecute: function()Firebug.largeCommandLineEditor.enter(true, true)
+			execute: function()Firebug.jsMirror.enter(true, false),
+			dirExecute: function()Firebug.jsMirror.enter(true, true)
 		});
 		window.canon.addCommand({
 			name: "toggleEditorFocus",
@@ -1183,7 +954,7 @@ Firebug.largeCommandLineEditor = {
 		}
 		text = text.replace(/\.\s*$/, '');
 
-		Firebug.largeCommandLineEditor.runUserCode(text, cell);
+		Firebug.jsMirror.runUserCode(text, cell);
 	},
 	setThisValue: function(code, cell){
 		cell = cell || Firebug.Ace.win2.editor.session.getMode().getCurrentCell();
@@ -1220,18 +991,18 @@ Firebug.largeCommandLineEditor = {
 		this.lastEvaledCode = code;
 		code = this.setThisValue(code, this.cell);
 		Firebug.evaluate(code,
-			Firebug.largeCommandLineEditor.logSuccess,
-			Firebug.largeCommandLineEditor.logError
+			Firebug.jsMirror.logSuccess,
+			Firebug.jsMirror.logError
 		);
 	},
 	logSuccess: function(e){
-		Firebug.largeCommandLineEditor.$useConsoleDir?
+		Firebug.jsMirror.$useConsoleDir?
 			Firebug.dir(e):
 			Firebug.log(jn.inspect(e, 'long'));
 	},
 	logError: function(error) {
 		var loc = Firebug.currentContext.errorLocation
-		var self = Firebug.largeCommandLineEditor;
+		var self = Firebug.jsMirror;
 
 		dump(loc.fileName, error.fileName, error.filename)
 		if(self.$useConsoleDir)

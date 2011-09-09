@@ -21,12 +21,34 @@
 		<h:link rel="stylesheet"  href="chrome://shadia/content/css/global.css" type="text/css" />
 		<h:link rel="stylesheet"  href="chromeMirror.css" type="text/css" />
 	</h:head>
-		
-	<script type="application/javascript" src="cssMirror.js"/>
-	<script type="application/javascript" src="chrome://shadia/content/utils/prefUtils.js"/>
-	<script type="application/javascript" src="chrome://shadia/content/utils/fileUtils.js"/>
-	<script type="application/javascript" src="../property_database.js"/>
-	
+
+	<popupset>
+		<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
+		<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
+			<stack id='autocomplatePanelStack' flex='1'>
+				<hbox>
+					<tree id="window-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
+							hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
+						<treechildren id="inspector-tree-body"/>
+
+						<treecols>
+							<treecol id="name" hideheader="true" primary="true" flex="1" />
+							<splitter class="tree-splitter"/>
+							<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
+							<splitter class="tree-splitter"/>
+							<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
+						</treecols>
+					</tree>
+					<splitter/>
+					<textbox multiline='true' id='autocomplate-info-bubble' flex='1' wrap='off' width='200' hidden='true' />
+				</hbox>
+				<resizer element='autocomplatePanel' dir="bottomleft" left="0" bottom="0" width="16" height="16"/>
+				<resizer element='autocomplatePanel' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
+			</stack>
+		</panel>
+
+		<menupopup id='main-context' onpopupshowing='MenuUtils.onContextShowing(event)'/>
+	</popupset>
 
 	<toolbox id="viewSource-toolbox">
 		<menubar id="viewSource-main-menubar">
@@ -36,7 +58,7 @@
 			<toolbarbutton onclick="">(</toolbarbutton>
 			<toolbarbutton onclick="">[</toolbarbutton>
 			<toolbarbutton onclick="toggleWrap()" type='checkbox'>wrap</toolbarbutton>
-			<toolbarbutton onclick="initTree()"	label='manage'></toolbarbutton> 
+			<!-- <toolbarbutton onclick="initTree()"	label='manage'></toolbarbutton>  -->
 			<spacer flex='1'/>
 			<shadiaglue/>
 		</menubar> 			
@@ -49,7 +71,9 @@
 					<splitter class="tree-splitter"/>
 					<treecol id="name" label="name" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" primary="true"/>
 					<splitter class="tree-splitter"/>
-					<treecol id="enabled" label="enabled" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" sortDirection="ascending"/>
+					<treecol id="isEnabled" label="enabled" flex="1" type="checkbox"
+						persist="width ordinal hidden" onclick="sort(this)" 
+						class="sortDirectionIndicator" sortDirection="ascending" />
 				</treecols>
 				<treechildren/>
 			</tree>
@@ -60,7 +84,8 @@
 		</vbox>
 		<splitter collapse="before" state="collapsed2"><grippy/></splitter>
 		<vbox  flex='1'>		
-			<textbox id='codebox' multiline='true' flex='1' wrap='off'/>
+			<iframe flex='1' id="code" context='main-context' type='content' src='chrome://shadia/content/ace++/simple-editor.html'/>
+
 			<hbox id="errors" style="display:none;color:green;width:100%;-moz-user-select:text!important">
 				<vbox></vbox>
 				<toolbarbutton class="findbar-closebutton" oncommand='errorListener.clearErrors()'>1</toolbarbutton>
@@ -79,31 +104,23 @@
 				<!--<statusbarpanel id="statusbar-line-col" label="" flex="1"/>/-->
 			</statusbar>
 		</vbox>
-		<vbox  width='256' persist='width' id='sm-auto'>
-			<tree id="autotree" flex="1" persist="sortDirection sortResource" sortDirection="ascending" sortResource="description" 
-				onselect="" seltype="" treelines="true" editable="false" disableKeyNavigation="false">
-				<treecols>
-					<splitter class="tree-splitter"/>
-					<treecol id="name" label="name" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" primary="true"/>
-					<splitter class="tree-splitter"/>
-					<treecol id="enabled" label="enabled" flex="1" persist="width ordinal hidden" onclick="sort(this)" class="sortDirectionIndicator" sortDirection="ascending"/>
-				</treecols>
-				<treechildren id="tree-children" onclick='autotreeClicked(event)'	/>
-			</tree>
-			<textbox id='autobox' multiline='true' label='new' flex='1'/>
-		</vbox>
 	</hbox> 
 		
 	<hbox style="display:none" flex="1">
 		<iframe id='hiddenframe'/>
 	</hbox> 
 
-<!-- 	
-<tree id="elementList" flex="1">
-  <treecols>
-    <treecol id="element" label="Element" primary="true" flex="1"/>
-  </treecols>
-  <treechildren/>
-</tree> -->
+	<script type="application/x-javascript" src="../shadia.js"/>
+	<script type="application/javascript" src="chrome://shadia/content/utils/prefUtils.js"/>
+	<script type="application/javascript" src="chrome://shadia/content/utils/fileUtils.js"/>
+
+	<script type="application/x-javascript" src="../jsMirror/menuUtils.js"/>
+	<script type="application/x-javascript" src="../jsMirror/emulate-fb.js"/>
+
+	<script type="application/x-javascript" src="../jsMirror/autocompleter.js"/>
+	<script type="application/javascript" src="../property_database.js"/>
+	
+	<script type="application/javascript" src="cssMirror.js"/>
+	
 
 </window>

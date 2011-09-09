@@ -75,9 +75,9 @@
 			<hbox flex="1">
 				<toolbarbutton label="Clear"      oncommand="codebox.focus();Firebug.Ace.win1.editor.execCommand('clear')" />
 				<hbox style='border:solid gray 1px'/>
-				<toolbarbutton label="run"  	onclick="codebox.focus();Firebug.largeCommandLineEditor.enter(!(event.button||event.shiftKey||event.ctrlKey), false)" style='color:darkblue' />
-				<toolbarbutton label="dir" 		onclick="codebox.focus();Firebug.largeCommandLineEditor.enter(!(event.button||event.shiftKey||event.ctrlKey), true)" style='color:green'/>
-				<toolbarbutton label="line"    	onclick="codebox.focus();Firebug.largeCommandLineEditor.enter('line', event.button||event.shiftKey||event.ctrlKey)"  />
+				<toolbarbutton label="run"  	onclick="codebox.focus();Firebug.jsMirror.enter(!(event.button||event.shiftKey||event.ctrlKey), false)" style='color:darkblue' />
+				<toolbarbutton label="dir" 		onclick="codebox.focus();Firebug.jsMirror.enter(!(event.button||event.shiftKey||event.ctrlKey), true)" style='color:green'/>
+				<toolbarbutton label="line"    	onclick="codebox.focus();Firebug.jsMirror.enter('line', event.button||event.shiftKey||event.ctrlKey)"  />
 				<spacer flex='1'/>
 				<toolbarbutton label="timer"    oncommand="codebox.focus();insertTimer()"  />
 			</hbox>
