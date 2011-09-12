@@ -63,7 +63,7 @@
 					</template>
 				</menupopup>
 			</menulist>
-			<checkbox id="contentWinCB" persist="checked" disabled="false" label="Content Window" oncommand="targetWinChanged()" tabindex="2"/>
+			<checkbox id="contentWinCB"/>
 		</toolbar>
 		<spacer flex='1'/>
 		<shadiaglue/>
