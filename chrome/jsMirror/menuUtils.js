@@ -56,8 +56,9 @@ MenuUtils.setItemIntoElement = function(element, item){
 
     if (item.command)
         element.addEventListener("command", item.command, false);
-
-    if (item.commandID)
+	else if (item.onclick)
+        element.addEventListener("click", item.onclick, false);
+	else if (item.commandID)
         element.setAttribute("command", item.commandID);
 
     if (item.option)

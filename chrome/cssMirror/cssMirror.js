@@ -1,4 +1,22 @@
+//ensure singleton
+ (function(){
+	var e = Services.wm.getEnumerator(null)
+
+	while(e.hasMoreElements()){
+		var w = e.getNext()
+		
+		if(w==window)
+			continue
+		if(w.location.href == window.location.href){
+			w.focus()        
+			window.close()
+			return
+		}
+	}
+})() 
+
 Components.utils.import('resource://shadia/main.js', window).addDevelopmentUtils(window)
+
 getCssMirrorDir = $shadia.getCssMirrorDir
 getCssMirrorJarPath = $shadia.getCssMirrorJarPath
 
@@ -430,22 +448,17 @@ treeOnSelectHandler={
 }
 //
 function onTreeClicked(event){
-	var tree = document.getElementById("tree");
-	var i = tree.currentIndex
-	var style = styleList[i]
-
-	if(style)
-		defaultFileComponent.openStyle(style)
-
-	/*if(event.detail==2){
-		target=target[cellText]
-
-		data=getProps(target)
-		inputFilter({target:document.getElementById("filter")})
-	}else
-	targetPropName=cellText;
-	targetProp=target[cellText];
-	answer.value=targetProp;*/
+	var row = {};
+    var col = {};
+    var obj = {};
+    var b = defaultFileComponent.tree.treeBoxObject
+    b.getCellAt(event.clientX, event.clientY, row, col, obj);
+      
+	col.value.id == 'isEnabled'
+     
+	row.value 
+	
+	defaultFileComponent.setE
 
 }
 
@@ -525,11 +538,7 @@ jarRegistrar={
 				isEnabled=true
 			} 
 			x.isEnabled=isEnabled
-		})
-		/*
-		this.enabledStyles.forEach(function(x){
-			self.register(x.name)
-		})*/
+		})		
 	},
 	savePref: function(){
 		var arr=[]
@@ -578,8 +587,8 @@ cssMirror={
 		
 	},
 	
-	toggle: function(){
-		jarRegistrar.toggleEnabled(gstyle)
+	toggle: function(i){
+		jarRegistrar.toggleEnabled(i==null?gstyle:i)
 	},
 	preview: function(){
 		dataStyleRegistrar.preview()

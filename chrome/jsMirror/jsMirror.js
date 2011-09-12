@@ -772,7 +772,10 @@ Firebug.evaluate = function(code, onSuccess, onerror){
 	try{
 		//unwrap
 		var win = jn.unwrap(getTargetWindow())
-					
+		
+		if(!win || win.closed)
+			return appendToConsole('window is closed')
+		
 		//add jn
 		win.jn=jn
 		jn.$useResultBuffer = true
@@ -789,7 +792,8 @@ Firebug.evaluate = function(code, onSuccess, onerror){
 	}finally{
 		//remove jn
 		jn.$useResultBuffer = false
-		if(win.location.href!=window.location.href)
+		//if(win.location.href!=window.location.href)
+		if(/^http/.test(win.location.href))
 			win.jn=''
 		if(jn.resultBuffer.length){
 			appendToConsole2(jn.resultBuffer.map(jn.inspect).join('\n'))
@@ -821,6 +825,28 @@ Firebug.dir = function(obj){
 	appendToConsole(jn.inspect(obj)+' ~'+n)	
 	appendToConsole(ans)
 }
+jn.dir = function(obj){
+	if(typeof obj == 'string'){
+		jn.say("String source:");
+		jn.say(obj.toSource().slice(12,-2))
+		return
+	}
+	jn.say("Properties for object:");
+	var n = 0
+	var ans=''
+	for(var i in obj){
+		ans+=i+': '
+		try{
+			ans+=jn.inspect(obj[i])
+		}catch(e){
+			ans+=jn.inspect(e)
+		}
+		ans+='\n'
+		n++
+	}
+	jn.say(jn.inspect(obj)+' ~'+n)	
+	jn.say(ans)
+}
 Firebug.log = function(obj){
 	appendToConsole(obj)
 }
@@ -850,6 +876,7 @@ Firebug.jsMirror = {
 		dump(4)
 		var editor = window.editor;
 		editor.session.owner = 'console';
+		Firebug.Ace.sessionOwners = {console:Firebug.jsMirror}
 		editor.session.href = '';
 		editor.session.autocompletionType = 'console';
 
@@ -906,8 +933,8 @@ Firebug.jsMirror = {
 		items.unshift(
 			{
 				label: ("Execute selection"),
-				command: function() {
-					Firebug.CommandLine.enter(Firebug.currentContext, editorText);
+				onclick: function(event) {
+					Firebug.jsMirror.enter(false, event.button||event.shiftKey||event.ctrlKey, editorText)
 				},
 				disabled: !editorText
 			},
@@ -922,9 +949,9 @@ Firebug.jsMirror = {
 	},
 
 	// * * * * * * * * * * * * * * * * * * * * * *
-	enter: function(runSelection, dir) {
+	enter: function(runSelection, dir, text) {
 		this.$useConsoleDir = dir;
-		var editor = Firebug.Ace.win2.editor;
+		var editor = editor || Firebug.Ace.win2.editor;
 		var cell = editor.session.getMode().getCurrentCell();
 		this.cell = cell;
 
@@ -952,7 +979,7 @@ Firebug.jsMirror = {
 				}).join('\n');
 			//Firebug.commandHistory.appendToHistory(cell.body.join('\n'));
 		}
-		text = text.replace(/\.\s*$/, '');
+		text = text.replace(/[\.,:]\s*$/, '').replace(/^\s*[\.,:]/, '');
 
 		Firebug.jsMirror.runUserCode(text, cell);
 	},

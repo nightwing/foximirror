@@ -84,7 +84,7 @@
 			</hbox>
 		</groupbox>
 		<groupbox id='domViewerOperations' class="split-menuitem">
-			<caption label='root'/>
+			<caption label='set root in'/>
 			<toolbarbutton label='parent window' oncommand='inspect(mNode,"parent")'/>
 			<toolbarbutton label='current window' oncommand='inspect(mNode)'/>
 		</groupbox>
