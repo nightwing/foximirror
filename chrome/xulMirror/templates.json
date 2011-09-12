@@ -130,6 +130,169 @@
 	<hbox flex='1' id='a' align='center'>
 		<description>"the Best place for your XUL!"</description>
 	</hbox>
-	
+</window>
 
 }
+
+!@!===newTemplate.binding    {
+
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+
+<window id="XULPlayground" title="XULplayground"  width="550"  height="350"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"  xmlns:html="http://www.w3.org/1999/xhtml"
+		xmlns:h="http://www.w3.org/1999/xhtml" xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:svg='http://www.w3.org/2000/svg'
+		onload="onLoad()"  onunload="" windowtype='shadia:XULplayground'>	
+	<script type="application/javascript;version=1.8"><![CDATA[
+		function onLoad(){
+		}    
+        
+	]]></script>
+<hbox>7</hbox>
+<browser src="overlay.xul" flex='1' type="content"  disablehistory="true"/>
+
+    <toolbarbutton popup='pop' label='open popup'/>
+	<menupopup id='pop' ignorekeys='true' width='500' >
+		<menuitem label='asas'/>
+		<menuitem label='asas'/>
+		<menuitem label='asas'/>
+		<menuitem label='asas'/>
+		<menuitem label='asas'/>
+		<menuitem label='asas'/>
+		<menuitem label='asas'/>
+		<menuitem label='asas'/> 
+		<menuitem label='asas'/>
+		<menuitem label='asas'/>
+		<menuitem label='asas'/> 
+		<menuitem label='asas'/>
+		<menuitem label='asas'/>
+		<menuitem label='asas'/>
+	</menupopup>
+</window>
+
+
+
+
+}
+!@!===newTemplate.main    {
+
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+
+<window id="XULPlayground" title="XULplayground"  width="550"  height="350"
+    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"  xmlns:html="http://www.w3.org/1999/xhtml"
+		xmlns:h="http://www.w3.org/1999/xhtml" xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:svg='http://www.w3.org/2000/svg'
+		onload="onLoad()"  onunload="" windowtype='shadia:XULplayground'>	
+	<script type="application/javascript;version=1.8"><![CDATA[
+		function onLoad(){ a=document.querySelectorAll("browser")
+            a[0].contentWindow.document.documentElement.style.border='solid red'
+  
+		}
+		
+	fixBrowserEventHandlers= function(contentDocument, callback){
+		var temp = document.querySelector("temp")
+		var frames = contentDocument.querySelectorAll("browser, iframe");
+		bf = []
+		gf = []
+		var j = 0
+		onLoad = function(){
+			//newBrowser.removeEventListener("DOMContentLoaded", arguments.callee, false)	
+			j++
+			if(j == bf.length)
+				onFinalLoad()
+		}
+		onFinalLoad = function(){
+			for(var i in bf){
+				bf[i].swapDocShells( frames[i])
+				frames[i].parentNode.replaceChild(gf[i], frames[i])
+				
+			}
+			callback()
+			
+			for(var i in gf){	
+                Components.utils.import('resource://shadia/main.js', window).dump(i)
+                frames[i].removeAttribute("src")
+				gf[i].parentNode.replaceChild(frames[i], gf[i])
+			 	bf[i].swapDocShells( frames[i])
+			}
+			
+			
+			//	callback()
+		} 
+		
+		for(var i = frames.length; i--; ){
+			gf[i] = document.createElement('placeholder')
+			
+			bf[i] = frames[i].cloneNode(true)
+			bf[i].setAttribute("src", "")
+		//	bf[i].addEventListener("DOMContentLoaded", onLoad, false)	
+			temp.appendChild(bf[i])
+		}
+			onFinalLoad()
+			
+	}
+	swap = function(){
+		fixBrowserEventHandlers(a[0].contentDocument,
+		function(){a[0].swapDocShells(a[1])}
+		)
+		
+	}
+        
+	]]></script>
+<browser src="binding.xul" flex='1' disablehistory="true"/>
+<hbox>-----------------------------<button onclick='swap()'/>
+-<button onclick='a[0].removeAttribute("src");
+a[0].contentDocument.documentElement.style.border= "solid green"
+;/*document.documentElement.appendChild(a[0])*/'/></hbox>
+<temp />
+<browser src="" flex='1' disablehistory="true"/>
+</window>
+
+
+}
+!@!===newTemplate.overlay    {
+
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+
+<window id="op"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+>
+
+  <hbox id='b' flex='1'>
+    this is b
+  </hbox>
+
+  <hbox id='c' flex='1' insertbefore='a'>
+    this is c
+  </hbox>
+
+  <hbox id='d' flex='1' insertafter='b'>
+    hi from overlay
+  </hbox>
+
+
+<script type="application/javascript;version=1.8"><![CDATA[
+    
+	$=function(x)document.getElementById(x)
+
+		$('b').style.background='Cornsilk'
+		$('c').style.background='gold'
+		$('d').style.background='CadetBlue'
+        
+        $('d').textContent = window.top == window
+		
+	
+  ]]></script>
+</window>
+
+
+
+
+}
+
+

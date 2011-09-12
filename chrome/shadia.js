@@ -139,16 +139,16 @@ shadowInspector.prototype={
 		this.finish()
 		this.light="lime"
 
-		window.addEventListener('mousemove',  this.l1 =function(e){shadia.mouseMoveListener(e)}, true);
-		window.addEventListener('mouseout',   this.l12=function(e){shadia.mouseOutListener(e)}, true);
-		window.addEventListener('deactivate', this.l13=function(e){shadia.deactivateListener(e)}, true);
-		window.addEventListener('activate',   this.l14=function(e){shadia.activateListener(e)}, true);
-
-		window.addEventListener('keydown',    this.l2 =function(e){shadia.keydownListener(e)}, true);
-		window.addEventListener('keypress',   this.l21=function(e){shadia.keydownListener(e)}, true);
-		window.addEventListener('keyup',      this.l22=function(e){shadia.keydownListener(e)}, true);
-
-		window.addEventListener('popupshown', this.l3=function(e){shadia.popupOpenListener(e)}, true);
+		window.addEventListener('mousemove',  this.l1  = function(e){shadia.mouseMoveListener(e)}, true);
+		window.addEventListener('mouseout',   this.l12 = function(e){shadia.mouseOutListener(e)}, true);
+		window.addEventListener('deactivate', this.l13 = function(e){shadia.deactivateListener(e)}, true);
+		window.addEventListener('activate',   this.l14 = function(e){shadia.activateListener(e)}, true);
+                                                         
+		window.addEventListener('keydown',    this.l2  = function(e){shadia.keydownListener(e)}, true);
+		window.addEventListener('keypress',   this.l21 = function(e){shadia.keydownListener(e)}, true);
+		window.addEventListener('keyup',      this.l22 = function(e){shadia.keydownListener(e)}, true);
+                                                         
+		window.addEventListener('popupshown', this.l3  = function(e){shadia.popupOpenListener(e)}, true);
 
 		this.on=true;
 		this.updateLight()&&this.showHelp()
@@ -157,7 +157,7 @@ shadowInspector.prototype={
 	finish: function(){
 		if(!this.on)
 			return;
-		this.on=false;
+		this.on = false;
 
 		window.removeEventListener('mousemove',  this.l1,  true); this.l1=null;
 		window.removeEventListener('mouseout',   this.l12, true); this.l12=null;
@@ -243,17 +243,17 @@ shadowInspector.prototype={
 		this.light=this.lcs?'click':'lime'
 	},
 	updateLight: function(event){
-		var istop=this.fm.activeWindow==window
-		if(istop){
+		var istop = this.fm.activeWindow == window
+		if(istop) {
 			this.windowActive=true
 			this.light=this.lcs?'click':'lime'
-		}else{
+		} else {
 			this.windowActive=false
 			this.light='off'
 		}
 		return istop
 	},
-	mouseMoveListener: function(event){
+	mouseMoveListener: function(event) {
 		this.infoPanelBo.moveTo(event.screenX+10,event.screenY+10)
 		if(event[this.targetType]!=this.historyA[0])
 			this.advanceLight(event[this.targetType],"lime")
@@ -510,12 +510,12 @@ shadowInspector.prototype={
 			return
 		event.stopPropagation();event.preventDefault()
 		if(event.type=='mousedown'){
-			this.windowWasActive=this.windowActive//shouldn't open inpector if window is not active
-			this.windowWasActive&&window.removeEventListener('mousedown', this.lcs, true);
+			this.windowWasActive = this.windowActive//shouldn't open inpector if window is not active
+			this.windowWasActive && window.removeEventListener('mousedown', this.lcs, true);
 			window.addEventListener('mouseup',   this.lcs, true);
 			window.addEventListener('click',     this.lcs, true);
 			window.addEventListener('mouseout',  this.lcs, true);
-		}else if(event.type=='click'||event.type=='mouseout'){
+		}else if(event.type=='click' || event.type=='mouseout'){
 			window.removeEventListener('click',    this.lcs, true);
 			window.removeEventListener('mouseout', this.lcs, true);
 			window.removeEventListener('mouseup',  this.lcs, true);

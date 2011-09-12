@@ -23,7 +23,7 @@ FBL.eraseNode = function (node) {
     while (node.lastChild)
         node.removeChild(node.lastChild);
 }
-FBL.createMenuItem = MenuUtils.createMenuItem
+FBL.createMenuItem = FBL.bind(MenuUtils.createMenuItem, MenuUtils)
 Firebug = {Ace: {}}
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -214,18 +214,17 @@ Firebug.Ace = {
 
 	savePopupShowing: function(popup) {
 		FBL.eraseNode(popup)
-		FBL.createMenuItem(popup, {label: 'save As', nol10n: true });
+		FBL.createMenuItem(popup, {label: 'save As'});
 	},
 
 	loadPopupShowing: function(popup) {
 		FBL.eraseNode(popup)
-		FBL.createMenuItem(popup, {label: 'ace auto save', nol10n: true });
+		FBL.createMenuItem(popup, {label: 'ace auto save'});
 	},
 
-	getUserFile: function(id){
-		var file = Services.dirsvc.get(dir||"ProfD", Ci.nsIFile);
-		file.append('acebug')
-		file.append('autosave-'+id)
+	getUserFile: function(id, dir){
+		var file = Services.dirsvc.get(dir || "ProfD", Ci.nsIFile);
+		id && file.append(id)
 		return file
 	},
 

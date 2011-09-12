@@ -71,15 +71,31 @@
 					<iframe flex='1' id="code" context='main-context' type='content' src='chrome://shadia/content/ace++/simple-editor.html'/>
 				</tabpanel>
 			</vbox>
-			<splitter><grippy/></splitter>
-			<iframe id="content" flex='1' persist='height width' />
+			<splitter collapse="after" id="split"><grippy/></splitter>
+			<vbox flex='1' id='contentbox' persist='height width'>
+				<iframe id="content" flex='1'/>
+				<toolbar> 
+					<toolbarbutton label="&#10227;" oncommand='updatePreview()'   />
+					<toolbarbutton type="checkbox" checked="true" label="autoupdate" oncommand='gAutoUpdate = this.checked;updatePreview()' />
+					<toolbarbutton  label="detach" oncommand="toggleDetach(this)"/>
+					
+					<spacer flex="1"/>
+					<toolbarbutton type="menu-button" label="load">
+						<menupopup onpopupshowing="Firebug.Ace.loadPopupShowing(this)"/>
+					</toolbarbutton>
+					<toolbarbutton type="menu-button" label="save" oncommand="if(event.target==this)saveTemplates()">
+						<menupopup onpopupshowing="Firebug.Ace.savePopupShowing(this)"/>
+					</toolbarbutton>
+				</toolbar>
+			</vbox>
 		</box>
     </vbox>
 	
 	
 	<script type="application/x-javascript" src="../shadia.js"/>
-	<script type="application/x-javascript" src="../jsMirror/emulate-fb.js"/>
+	<script type="application/x-javascript" src="../utils/fileUtils.js"/>
 	<script type="application/x-javascript" src="../jsMirror/menuUtils.js"/>
+	<script type="application/x-javascript" src="../jsMirror/emulate-fb.js"/>
 
 	<script type="application/x-javascript" src="../jsMirror/autocompleter.js"/>
     <script type="application/x-javascript" src="xulMirror.js"/>

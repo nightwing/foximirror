@@ -22,6 +22,8 @@ var PR_APPEND      = 0x10;
 var PR_TRUNCATE    = 0x20;
 var PR_SYNC        = 0x40;
 var PR_EXCL        = 0x80;
+var PERMS_DIRECTORY = 0755;
+var PERMS_FILE      = 0644;
 
 /***
 var jarfile=getCurrentFile()
@@ -417,8 +419,7 @@ function readEntireFile(file) {
     const replacementChar = Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER;
     fstream.init(file, -1, 0, 0);
     converter.init(fstream, "UTF-8", 1024, replacementChar);
-    while (converter.readString(4096, str) != 0)
-    {
+    while (converter.readString(4096, str) != 0){
         data += str.value;
     }
     converter.close();
@@ -429,7 +430,10 @@ function readEntireFile(file) {
 function writeToFile(file, text) {
     var fostream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream),
         converter = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
-
+	
+	if(!file.exists)
+		file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0664)
+	
     fostream.init(file, 0x02 | 0x08 | 0x20, 0664, 0); // write, create, truncate
     converter.init(fostream, "UTF-8", 4096, 0x0000);
     converter.writeString(text);

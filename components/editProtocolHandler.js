@@ -6,7 +6,7 @@ var Cc	= Components.classes;
 var Ci	= Components.interfaces;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://shadia/main.js");
-Components.utils.import("resource://gre/modules/Services.jsm");
+
 
 $shadia.editGlue = {
 	// https://developer.mozilla.org/en/Sample_.htaccess_file
