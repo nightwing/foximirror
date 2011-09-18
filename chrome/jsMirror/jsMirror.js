@@ -112,7 +112,7 @@ jn.inspect=function(x,long){
 		string=x.toString()
 	if(Class==string)
 		string=''//most objects have same class and toString
-	
+	dump(Class, string,'+++++++++++++++++++')
 	Class=Class.slice(8,-1)
 	
 	if(Class=='Function'){
@@ -137,7 +137,10 @@ jn.inspect=function(x,long){
 	if(t!='object')
 		return '`'+Class+'` '+string
 	
-	if(Class=='Array'){
+	if(Class=='XPCWrappedNative_NoHelper'){
+		Class = string
+		string = ''
+	}if(Class=='Array'){
 		var l=x.length
 		nameList.push('`'+Class+'` ~'+l)
 		l=Math.min(long?100:10,l)

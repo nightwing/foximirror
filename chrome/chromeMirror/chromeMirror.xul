@@ -77,7 +77,7 @@
 					<treecols>
 						<treecol id="name" hideheader="true" flex="1" primary="true" />          
 					</treecols>
-					<treechildren onmousedown="if(event.button==0)selectObjectInTree('addonViewer')" />
+					<treechildren contextmenu='main-context' onmousedown="if(event.button==0)selectObjectInTree('addonViewer')" />
 				</tree>
 			</hbox>
 			<hbox>

@@ -100,21 +100,36 @@ errorListener={
 
 sheetTypes = {agent: sss.AGENT_SHEET, user: sss.USER_SHEET}
 dataStyleRegistrar={
+	initialize: function(){
+		Services.io.newURI('edit:@cssMirror`|_|.css', null, null)
+		$shadia.editGlue.setDataSource('cssMirror',  this.getCode)
+	},
+	shutdown: function(){
+		$shadia.editGlue.removeDataSource('cssMirror');
+		var i
+		while(i = this.activeURLList.pop())
+			this.unregister(i)
+	},
 	getCode:function(){
-		return codebox.value
+		return codebox.session.getValue()
 	},
 	saveStyle: function(){
 	},
 	activeSheetType: sheetTypes.agent,
-	register:function(){
-		this.activeURL&&this.unregister()
-		this.activeURL=this.getDataUrl()
-		this.activeURL&&sss.loadAndRegisterSheet(this.activeURL, this.activeSheetType)
+	register:function(name){
+		if(!name)
+			name = '__default__.css'
+		else if(name.slice(-4)!='.css')
+			name = name + '.css'
+
+		var i = Services.io.newURI('edit:@cssMirror`'+name, null, null)
+		this.unregister(i)
+		this.activeURLList.push(i)
+		sss.loadAndRegisterSheet(i, this.activeSheetType)
 	},
-	unregister:function(){
-		if (this.activeURL&&sss.sheetRegistered(this.activeURL, this.activeSheetType))
-			sss.unregisterSheet(this.activeURL, this.activeSheetType);
-		this.activeURL=''
+	unregister:function(i){
+		if (i && sss.sheetRegistered(i, this.activeSheetType))
+			sss.unregisterSheet(i, this.activeSheetType);
 	},
 	changeSheetType: function(aType){
 		if (this.activeURL&&sss.sheetRegistered(this.activeURL, this.activeSheetType)){
@@ -127,14 +142,13 @@ dataStyleRegistrar={
 	preview:function(){
 		//t=Date.now()
 		errorListener.clearErrors()
-		errorListener.checkForErrors(this,this.register)
-		setTimeout("document.getElementById('unpreview-button').style.display=''",200)
+		errorListener.checkForErrors(this, this.register)
+		setTimeout("document.getElementById('unpreview-button').hidden=false", 200)
 	},
 	unpreview:function(){
 		this.unregister()
 		errorListener.clearErrors()
-
-		setTimeout("document.getElementById('unpreview-button').style.display='none'",200)
+		setTimeout("document.getElementById('unpreview-button').hidden=true", 200)
 
 	},
 	getDataUrl: function(){
@@ -144,9 +158,9 @@ dataStyleRegistrar={
 		// this will strip new lines rather than escape - not what we want
 		//return this.ios.newURI("data:text/css," + nameComment + this.code.replace(/\n/g, "%0A"), null, null);
 		return ios.newURI("data:text/css," + encodeURIComponent(code), null, null);
-	}
+	},
 }
-
+	initializeables.push(dataStyleRegistrar)
 
 /*****************************************************************
  *  code completion utils
@@ -604,21 +618,22 @@ cssMirror={
 		if(!style)
 			return
 		
-		if(gstyle.code!=codebox.value){
-			gstyle.dirty=true
-			gstyle.code=codebox.value			
+		var newCode = codebox.session.getValue()
+		if(gstyle.code != newCode){
+			gstyle.dirty = true
+			gstyle.code = newCode
 		}
 			
 		if(cssMirror.activeURL)
 			cssMirror.unpreview()
-		if(!style.code)
-			style.code=makeReq(style.spec)
-		codebox.value=style.code
-		gstyle=style
+		if(!style.code){
+			style.code = makeReq(style.spec)
+			style.session = Firebug.Ace.win2.createSession(style.code, style.spec, 'text/css')
+		}
+		codebox.setSession(style.session)
+		gstyle = style
 		cssMirror.updateSaveButton()
 		document.getElementById("ToggleEnabled").checked=style.isEnabled
-
-
 	},
 	get activeURL(){
 		return dataStyleRegistrar.activeURL

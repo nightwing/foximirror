@@ -1,36 +1,3 @@
-//filepicker
-function setFilters(fp, filter){
-   // fp.appendFilter("JavaScript files", "*.js");
-	//fp.appendFilters(nsIFilePicker.filterXUL);
-}
-
-function initFP(filter){
-	fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-	fp.appendFilters(nsIFilePicker.filterAll);
-}
-
-
-
-function loadFileToTextbox(win, textbox, filter){
-	if(!fp)
-		initFP(filter);
-	fp.init(win, "Select a File", nsIFilePicker.modeOpen);
-	var res = fp.show();
-	if(res == nsIFilePicker.returnOK) {
-		textbox.value = readEntireFile(fp.file);
-	}
-}
-
-function saveFileFromTextbox(win, textbox, filter){
-	if(!fp)
-		initFP(filter);
-	fp.init(win, "Save As", nsIFilePicker.modeSave);
-	var res = fp.show();
-	if(res == nsIFilePicker.returnOK || res == nsIFilePicker.returnReplace) {
-		writeToFile(fp.file, textbox.value);
-	}
-}
-
 //install unpacked extension
 function getExtId(c){
 	var parser = new DOMParser();
@@ -110,175 +77,76 @@ function installUnpacked(){
 	}
 }
 
-
-var fails=[],nonfails=[]
-// make compatible
-compatibleForever={	
-	/****/
-	removeMinMaxVersionInString: function(str){
-		return str.replace(/maxVersion>(.+)<\//g,"maxVersion>333.3.3</")
-				  .replace(/minVersion>(.+)<\//g,"minVersion>1.0.0</");
+function registerChromeLocation(file){
+	if(file.isDirectory())
+		file.append('chrome.manifest')
+	
+	if(file.path.slice(-15) == 'chrome.manifest' && file.exists())
+		Components.manager.QueryInterface(Ci.nsIComponentRegistrar).autoRegister(file)
+	else if(file.path.slice(-4) == '.xpi')
+		AddJarManifestLocation(file.path)
+	else
+		dump(file.path, '-----------------not a xpi')
 		
-	},
-	removeMinMaxVersionInDir: function(addonDir){
-		var dir = addonDir.clone();
-		dir.append("install.rdf");
-		var srt=readEntireFile(dir);
-		if(!srt){
-			Components.utils.reportError("Failed to read " + dir.path);
-			return
-		}
-		srt=this.removeMinMaxVersionInString(srt)
-		if(!writeToFile(dir, srt)){
-		   Components.utils.reportError("Failed to write " + dir.path);
-		   return
-		}
-	},
-	removeMinMaxVersionInJar: function(addonJar){return
-		var uri=fileHandler.getURLSpecFromFile(addonJar)
-		uri='jar:'+uri+'!/'+'install.rdf'
-		var srt=makeReq(uri)		
-		if(!srt){
-			Components.utils.reportError("Failed to read " + addonJar.path);
-			return
-		}
-		srt=this.removeMinMaxVersionInString(srt)
-		try{
-			var copy=addonJar.parent.clone()
-			copy.append(addonJar.leafName+'.bak.zip')
-			if(!copy.exists())
-				addonJar.copyTo(addonJar.parent,addonJar.leafName+'.bak.zip')
-			var err=syncWriteToJar(addonJar, 'install.rdf', writeStringToJar, srt)
-			if(err){prompt(addonJar.path,'fail'),fails.push(addonJar)}
-			else{prompt(addonJar.path),nonfails.push(addonJar)}
-		}catch(e){
-		   Components.utils.reportError("Failed to write " + addonJar.path);
-		   Components.utils.reportError(e);
-		   return
-		}
-	},
-	removeAllMinMax: function(){
-		for( var i in addonList){
-			var m=addonList[i];
-			if(m.addon){//&&m.addon.appDisabled){
-				if(m.file.isDirectory())
-					this.removeMinMaxVersionInDir(m.file)
-				else if(/\.jar$|\.xpi$|\.zip$/.test(m.file.leafName))
-					this.removeMinMaxVersionInJar(m.file)
-				//jn.say(jn.inspect(m.file)+m.addon.appDisabled)
-			}
-		}
-
-	},
-	
-	cloneRDFOld: function(){
-		this.dirservCID = '@mozilla.org/file/directory_service;1';	
-		this.propsIID   = Components.interfaces.nsIProperties;	
-		this.fileIID    = Components.interfaces.nsIFile;
-
-		var dir = Components.classes[this.dirservCID].createInstance(this.propsIID).get("ProfD", this.fileIID);
-		var file2 = dir.clone();
-		dir.append("extensions.rdf")
-		file2.append("extensions.rdf1")
-		var srt=compatibleForever.FileIO.read(dir)
-		srt=srt.replace(/maxVersion=\"(.+)\"/g,'maxVersion="333.3.3"').replace(/minVersion=\"(.+)\"/g,'minVersion="1.0.0"')
-		if(!compatibleForever.FileIO.write(file2, srt)){
-			   throw Error("Failed to write " + dir.path);
-		}	
-	},
-	
-	almostForeverOld:function(){
-		var o=new String(),ans=[];
-		o=this.nsIExtensionManagerComponent.getItemList(14,o)
-		for(i in o){
-			var n=o[i]
-			if(n.maxAppVersion!=="333.3.3"||n.minAppVersion!=="1.0.0"){
-				ans.push(n.name+" : "+n.id+" : "+n.minAppVersion+" - "+n.maxAppVersion)
-				this.removeMinMaxVersion(n.id)
-			}
-		}
-		return ans.join("\n")
-	},
-	
-	/* Components.utils.import("resource://gre/modules/AddonManager.jsm");AddonManager.getAllAddons(function(a){alert(a.length)}) */
-	
-
+	Services.chromeReg.checkForNewChrome()
 }
 
+//
+function AddJarManifestLocation(path) {
+	Components.utils.import("resource://gre/modules/ctypes.jsm");
+	var file = Cc["@mozilla.org/file/directory_service;1"]
+				.getService(Ci.nsIProperties)
+				.get("XCurProcD", Ci.nsIFile);//resource:app
+	file.append(ctypes.libraryName("xul"));
+	var libxul = ctypes.open(file.path);
+  
+	// we need to explicitly allocate a type for the buffer we'll need to hold
+	// the path in :(
+	var bufLen = path.length + 2;
+	var PathBuffer_t = ctypes.StructType("PathBuffer",
+										[{buf: ctypes.jschar.array(bufLen)}])
+	var nsString_t = ctypes.StructType("nsAString",
+										[{mData:   PathBuffer_t.ptr}
+										,{mLength: ctypes.uint32_t}
+										,{mFlags:  ctypes.uint32_t}])
+	var PRBool_t = ctypes.uint32_t; // yay NSPR
+	var nsILocalFile_t = ctypes.StructType("nsILocalFile").ptr;
 
-/*
-XPIProviderBP=Components.utils.import("resource://gre/modules/XPIProvider.jsm")//
-bart=XPIProviderBP.XPIDatabase.getAddons()[0]
-
-Components.utils.import("resource://gre/modules/Services.jsm")
-XPIProviderBP.XPIDatabase.updateTargetApplications
-targets=[{id:Services.appinfo.ID,minVersion:0,maxVersion:400}]
-XPIProviderBP.XPIDatabase._getTargetApplications(bart)[0]
-
-XPIProviderBP.XPIDatabase.updateTargetApplications(bart,targets)
-
-XPIProviderBP.XPIDatabase._getTargetApplications(bart)[0].maxVersion
-*/
-
-/****/
-function makeAllAddonsCompatible(){
-	var XPIProviderBP=Components.utils.import("resource://gre/modules/XPIProvider.jsm")//
-
-	with(XPIProviderBP){function comp() {
-		var aTarget={id:Services.appinfo.ID,minVersion:1,maxVersion:333}
-		var addons = this.getAddons();
-		this.beginTransaction();
-		try {
-			let stmt = this.getStatement("updateTargetApplications");
-			addons.forEach(function(aAddon){
-				stmt.params.internal_id = aAddon._internal_id;
-				stmt.params.id = aTarget.id;
-				stmt.params.minVersion = aTarget.minVersion;
-				stmt.params.maxVersion = aTarget.maxVersion;
-				executeStatement(stmt);
-			});
-			this.commitTransaction();
-		}catch (e) {
-			this.rollbackTransaction();
-			throw e;
+	var NS_NewLocalFile = libxul.declare("NS_NewLocalFile_P",
+                   ctypes.default_abi,
+                   ctypes.uint32_t,         // nsresult return
+                   nsString_t.ptr,          // const nsAString &path
+                   PRBool_t,                // PRBool followLinks
+                   nsILocalFile_t.ptr       // nsILocalFile* *result
+	);
+	var XRE_AddJarManifestLocation = libxul.declare("XRE_AddJarManifestLocation",
+                   ctypes.default_abi,
+                   ctypes.uint32_t,         // nsresult return
+                   ctypes.int32_t,          // NSLocationType aType
+                   nsILocalFile_t           // nsILocalFile* aLocation
+	);
+	var pathBuffer = new PathBuffer_t;
+	pathBuffer.buf = path + '\0';
+	var manifest = new nsString_t;
+	manifest.mData = pathBuffer.address();
+	manifest.mLength = path.length;
+	manifest.mFlags = 1 << 4; // F_FIXED
+	var manifestPtr = manifest.address();
+  
+	try {
+		var rv;
+		var localFile = new nsILocalFile_t;
+		rv = NS_NewLocalFile(manifest.address(), false, localFile.address());
+		if (rv & 0x80000000) {
+			throw Components.Exception("NS_NewLocalFile error", rv);
 		}
-	}}
-	comp.call(XPIProviderBP.XPIDatabase,null)
-	XPIProviderBP.XPIProvider.updateAllAddonDisabledStates()
+		const NS_SKIN_LOCATION = 1;
+		rv = XRE_AddJarManifestLocation(NS_SKIN_LOCATION, localFile);
+		if (rv & 0x80000000) {
+			throw Components.Exception("XRE_AddJarManifestLocation error", rv);
+		}
+	} finally {
+		libxul.close();
+	}
 }
 
-
-/*
-reopenJarCache(mAddonData.file)
-
-addonJar=mAddonData.file
-reopenJarCache(mAddonData.file)
-var uri=fileHandler.getURLSpecFromFile(addonJar)
-		uri='jar:'+uri+'!/'+'install.rdf'
-		var srt=makeReq(uri)
-
-
-var zipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
-	var zipW = new zipWriter();
-	zipW.open(mAddonData.file, PR_RDWR | PR_APPEND | PR_SYNC);
-if(zipW.hasEntry('install.rdf2'))
-	zipW.removeEntry('install.rdf2',false)
-
-	//zipW.addEntryStream('install.rdf2',null,Ci.nsIZipWriter.COMPRESSION_FASTEST,istream,false)
-
-//zipW.close();
-compatibleForever.removeMinMaxVersionInString(srt)
-
-
-data=srt.replace(/maxVersion>(.+)<\//g,"maxVersion>3373.3.3</").replace(/minVersion>(.+)<\//g,"minVersion>1.0.0</");
-let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);	
-	istream.setData(data, data.length);
-istream
-
-addonJar.QueryInterface(Ci.nsILocalFile)
-
-reopenJarCache(mAddonData.file)
-
-data
-zipW.close()
-*/

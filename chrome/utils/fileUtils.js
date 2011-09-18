@@ -1,17 +1,14 @@
-
 /***********************************************************
  *
  * file utils
  *****************/
-Cc=Components.classes
-Ci=Components.interfaces
-Cu=Components.utils
+Cc = Components.classes
+Ci = Components.interfaces
+Cu = Components.utils
 var zipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
-//ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",
- //                                      "nsIZipReader", "open");
-
-ios= Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
-var jarProtocolHandler = ios.getProtocolHandler("jar").QueryInterface(Ci.nsIJARProtocolHandler);
+//ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1", "nsIZipReader", "open");
+Cu.import('resource://shadia/main.js')
+var jarProtocolHandler = Services.io.getProtocolHandler("jar").QueryInterface(Ci.nsIJARProtocolHandler);
 
 /**zr constants*/
 var PR_RDONLY      = 0x01;
@@ -25,20 +22,6 @@ var PR_EXCL        = 0x80;
 var PERMS_DIRECTORY = 0755;
 var PERMS_FILE      = 0644;
 
-/***
-var jarfile=getCurrentFile()
-JARCache=jarProtocolHandler.JARCache
-a=rd.findEntries('*.jar').getNext()
-rd=JARCache.getZip(jarfile)
-
-function closeInner(innerPath){
-	var reader=JARCache.getInnerZip(jarfile,innerPath)
-	reader.close()
-	return function reopen(){
-		reader.openInner(JARCache.getZip(jarfile),innerPath)
-	}
-}
-*/
 function unlockJarFile(jarfile){
 	var JARCache = jarProtocolHandler.JARCache
 	var reader = JARCache.getZip(jarfile)
@@ -274,8 +257,7 @@ function extractFiles(aZipFile, aDir) {
 			let target = getTargetFile(aDir, entryName);
 			if (!target.exists()) {
 				try {
-					target.create(Ci.nsILocalFile.DIRECTORY_TYPE,
-                        FileUtils.PERMS_DIRECTORY);
+					target.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 				} catch (e) {
 					Cu.reportError("extractFiles: failed to create target directory for " +
 						"extraction file = " + target.path, e);
@@ -291,7 +273,7 @@ function extractFiles(aZipFile, aDir) {
 				continue;
 
 			zipReader.extract(entryName, target);
-			target.permissions |= FileUtils.PERMS_FILE;
+			target.permissions |= PERMS_FILE;
 		}
 	} finally {
 		zipReader.close();
@@ -303,7 +285,7 @@ f=getCurrentFile()
 f.moveTo
 f.parent
 f.leafName
-//f.copyTo(f.parent,f.leafName+'b')
+//f.copyTo(f.parent, f.leafName+'b')
 //f.reveal()
 //syncWriteToJar(f,'r1.rdf',writeStringToJar,syncWriteToJar.toString())
 f
@@ -319,93 +301,6 @@ syncWriteToJar(f,'r11.rdf',writeStringToJar,syncWriteToJar.toString())
 
 f.moveTo(f.parent,f.leafName.slice(0,-5))
 */
-
-
-/* var store2 = Cc["@mozilla.org/file/directory_service;1"]
-                                  .getService(Ci.nsIProperties).get("ProfD",  Ci.nsIFile);
-store2.append("quizfx"); */
-
-function importQuiz(){
-    var file = pickZipQuiz();
-    var fileName = file.leafName;
-    var extensionDelimiter = fileName.lastIndexOf(".");
-    var prefix = fileName.substr(0, extensionDelimiter);
-    store2.append(prefix);
-    alert(store2.path);
-    if(!store2.exists() || !store2.isDirectory() ){ // if it doesn't exist, create
-        store2.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
-	}
-    alert(store2.path);
-    extractExtensionFiles(prefix, file);
-}
-
-
-function pickZipQuiz(){
-    const nsIFilePicker = Ci.nsIFilePicker;
-
-    var fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, "Dialog Title", nsIFilePicker.modeOpen);
-    fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText);
-
-    var rv = fp.show();
-    if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
-		var file = fp.file;
-		// Get the path as string. Note that you usually won't
-		// need to work with the string paths.
-		var path = fp.file.path;
-		// work with returned nsILocalFile...
-		return file;   
-    }
-}
-
-function extractExtensionFiles(extensionID, xpiFile) {
-    var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
-    zipReader.open(xpiFile);
-    zipReader.test(null);
-    // create directories first
-    var entries = zipReader.findEntries("*/");
-    while (entries.hasMore()) {
-      var entryName = entries.getNext();
-      var target = getItemFile(entryName);
-      if (!target.exists()) {
-        try {
-          target.create(Ci.nsILocalFile.DIRECTORY_TYPE, 0777);
-        }
-        catch (e) {
-          alert("extractExtensionsFiles: failed to create target directory for extraction " +
-                " file = " + target.path + ", exception = " + e + "\n");
-        }
-      }
-    }
-
-    entries = zipReader.findEntries(null);
-    while (entries.hasMore()) {
-      var entryName = entries.getNext();
-      target = getItemFile(entryName);
-      if (target.exists())
-        continue;
-
-      try {
-        target.create(Ci.nsILocalFile.DIRECTORY_TYPE, 0777);
-      }
-      catch (e) {
-        alert("extractExtensionsFiles: failed to create target file for extraction " +
-              " file = " + target.path + ", exception = " + e + "\n");
-      }
-      zipReader.extract(entryName, target);
-    }
-    zipReader.close();
-}
-
-function getItemFile( filePath) {
-    //alert(store2.path);
-    var itemLocation = store2.clone();
-    var parts = filePath.split("/");
-    for (var i = 0; i < parts.length; ++i)
-      itemLocation.append(parts[i]);
-    return itemLocation;
-}
-
 
 
 
@@ -431,71 +326,12 @@ function writeToFile(file, text) {
     var fostream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream),
         converter = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
 	
-	if(!file.exists)
+	if(!file.exists())
 		file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0664)
 	
     fostream.init(file, 0x02 | 0x08 | 0x20, 0664, 0); // write, create, truncate
     converter.init(fostream, "UTF-8", 4096, 0x0000);
     converter.writeString(text);
     converter.close();
-}
-
-/***********************************************************************************/
-function AddJarManifestLocation(path) {
-	Components.utils.import("resource://gre/modules/ctypes.jsm");
-	var file = Cc["@mozilla.org/file/directory_service;1"]
-				.getService(Ci.nsIProperties)
-				.get("resource:app", Ci.nsIFile);
-	file.append(ctypes.libraryName("xul"));
-	var libxul = ctypes.open(file.path);
-
-	// we need to explicitly allocate a type for the buffer we'll need to hold
-	// the path in :(
-	var bufLen = path.length + 2;
-	var PathBuffer_t = ctypes.StructType("PathBuffer",
-										[{buf: ctypes.jschar.array(bufLen)}])
-	var nsString_t = ctypes.StructType("nsAString",
-										[{mData:   PathBuffer_t.ptr}
-										,{mLength: ctypes.uint32_t}
-										,{mFlags:  ctypes.uint32_t}])
-	var PRBool_t = ctypes.uint32_t; // yay NSPR
-	var nsILocalFile_t = ctypes.StructType("nsILocalFile").ptr;
-
-	var NS_NewLocalFile = libxul.declare("NS_NewLocalFile_P",
-                   ctypes.default_abi,
-                   ctypes.uint32_t,         // nsresult return
-                   nsString_t.ptr,          // const nsAString &path
-                   PRBool_t,                // PRBool followLinks
-                   nsILocalFile_t.ptr       // nsILocalFile* *result
-	);
-	var XRE_AddJarManifestLocation = libxul.declare("XRE_AddJarManifestLocation",
-                   ctypes.default_abi,
-                   ctypes.uint32_t,         // nsresult return
-                   ctypes.int32_t,          // NSLocationType aType
-                   nsILocalFile_t           // nsILocalFile* aLocation
-	);
-	var pathBuffer = new PathBuffer_t;
-	pathBuffer.buf = path + '\0';
-	var manifest = new nsString_t;
-	manifest.mData = pathBuffer.address();
-	manifest.mLength = path.length;
-	manifest.mFlags = 1 << 4; // F_FIXED
-	var manifestPtr = manifest.address();
-  
-	try {
-		var rv;
-		var localFile = new nsILocalFile_t;
-		rv = NS_NewLocalFile(manifest.address(), false, localFile.address());
-		if (rv & 0x80000000) {
-			throw Components.Exception("NS_NewLocalFile error", rv);
-		}
-		const NS_SKIN_LOCATION = 1;
-		rv = XRE_AddJarManifestLocation(NS_SKIN_LOCATION, localFile);
-		if (rv & 0x80000000) {
-			throw Components.Exception("XRE_AddJarManifestLocation error", rv);
-		}
-	} finally {
-		libxul.close();
-	}
 }
 

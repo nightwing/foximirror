@@ -83,7 +83,23 @@ $shadia.editGlue = {
 		flag = flag.toLowerCase()
 		delete this.data[flag]
 	},
-	reloadMessage: '<html>=== no data is avaliable yet===<br><button onclick=window.location.reload()>reload'
+	reloadMessage: '<html>=== no data is avaliable yet===<br><button onclick=window.location.reload()>reload',
+	
+	getServer: function(flag){
+		if(!this.servers)
+			this.servers = {}
+
+		var i = flag.indexOf('`')
+		if(i==-1){
+			var serverName = flag
+			var t
+		}else{
+			var serverName = flag.substring(0, i)
+			var q =  flag.substr(i+1)
+		}
+		
+		return 'chrome://shadia/content/edit-protocol-server.html'
+	}
 }
 
 
@@ -115,23 +131,29 @@ editProtocolHandler.prototype = {
 	newURI : function (spec, charset, baseURI){
 		//dump('********',spec, charset, baseURI)
 		if (spec.indexOf(':') == -1 && baseURI){
-			//dump(spec, charset, baseURI.spec)
-			if (baseURI.spec[5] == '#')
+			var base = baseURI.spec
+			if (base[5] == '#')
 				return Services.io.newURI(spec, null, 
 					Services.io.newURI(this.editorURI ,null,null)
 				);
-			if(spec[0] == '#')
-				spec = baseURI.spec.replace(indexRe, '') + spec
-			else if(spec[0] == '?')
-				spec = baseURI.spec.replace(qRe, '') + spec
-			else
-				spec = baseURI.spec.replace(qRe, '').replace(fRe, '') + spec
+			if (spec[0] == '#')
+				spec = base.replace(indexRe, '') + spec
+			else if (spec[0] == '?')
+				spec = base.replace(qRe, '') + spec
+			else if (spec[0] == '/') {
+				var i = base.indexOf('/')
+				if( i == -1)
+					spec = base + spec
+				else
+					spec = base.substring(0, i) + spec
+			} else
+				spec = base.replace(qRe, '').replace(fRe, '') + spec
 		}
 
 		var a = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI)
 		spec = spec.replace(editRe, '')
-		if (spec[0] == '@'){
-			spec = 'edit:@' + spec.substr(1)
+		if (spec[0] == '@' || spec[0] == '~') {
+			spec = 'edit:' + spec
 		} else {
 			spec = 'edit:#' + spec
 		}
@@ -155,6 +177,17 @@ editProtocolHandler.prototype = {
 				return extChannel;
 			}
 			uriString = uriString.substr(6)
+			if (flag == '~') {
+				uriString = $shadia.editGlue.getServer(uriString)
+				// check for self reference
+				if(uriString[0] == 'e')
+					uriString = 'about:blank'
+
+				var extUri = Services.io.newURI(uri, null, null);
+				var extChannel = Services.io.newChannelFromURI(extUri);
+				extChannel.originalURI = uri;
+				return extChannel;
+			}
 			//var i = uriString.indexOf('!@!')
 			
 			if (flag == '@') {

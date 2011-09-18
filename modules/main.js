@@ -8,21 +8,14 @@ var Cu = Components.utils;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-try{
+try {
 	Components.utils.import("resource://gre/modules/Services.jsm");
-}catch(e){
+} catch(e) {
 	// shim for v<4
 	Components.utils.import("resource://shadia/Services.jsm");
 }
 XPCOMUtils.defineLazyServiceGetter(Services, "jsd", "@mozilla.org/js/jsd/debugger-service;1", "jsdIDebuggerService");
-/*XPCOMUtils.defineLazyGetter(Services, "jsd", function () {
-	try{
-		var jsd = Cu.import('resource://firebug/firebug-service.js', {}).jsd
-	}catch(e){
-		var jsd = Cc["@mozilla.org/js/jsd/debugger-service;1"].getService(Ci.jsdIDebuggerService)
-	}
-	return jsd
-});*/
+
 XPCOMUtils.defineLazyGetter(Services, "chromeReg", function () {
   return Cc["@mozilla.org/chrome/chrome-registry;1"]
 		.getService(Ci.nsIChromeRegistry)
@@ -341,8 +334,9 @@ var externalEditors = {
 					return;
 				if(proceed == 'extract')
 					file = extractRelative(uri, true).file
-			}else
-				file = result.file
+				else
+					file = result.file
+			}
 		}
 
 		if(!file || !file.exists())
@@ -516,8 +510,9 @@ var PERMS_FILE      = 0644;
 
 
 function getCssMirrorJarPath(){
-	var cssMirrorDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-	cssMirrorDir.append('cssMirrorStyles.zip')
+	/*var cssMirrorDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+	cssMirrorDir.append('foxiMirror')
+	cssMirrorDir.append('cssMirrorStyles.zip')*/
 	
 	var fileHandler = Services.io.getProtocolHandler("file").QueryInterface(Ci.nsIFileProtocolHandler);
 	var uri = fileHandler.getURLSpecFromFile(getCssMirrorDir());
@@ -527,6 +522,7 @@ function getCssMirrorJarPath(){
 
 function getCssMirrorDir(){
 	var cssMirrorDir=Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
+	cssMirrorDir.append('foxiMirror')
 	cssMirrorDir.append('cssMirrorStyles.zip')
 	if(!cssMirrorDir.exists()){
 		cssMirrorDir.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);

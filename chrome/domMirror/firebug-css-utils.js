@@ -1594,6 +1594,62 @@ InfoTip = {
             this.hideInfoTip(browser.infoTip);
     },
 
+	mouseover:function(e){
+		clearTimeout(this.mouseoverTimeout)
+		this.mouseoverTimeout=setTimeout(slateViewer.overNode,100, e.target, e.rangeParent, e.rangeParent)
+	},
+	overNode:function(target, rangeOffset, rangeParent){
+		var node=target
+		if(node.nodeName){
+			var i=getSlatePosition(node)
+			
+			if(i){
+				//dump('infotip', i.id, i.slateId, currentRules[i.slateId]&&currentRules[i.slateId].parentStyleSheet.href)
+				
+
+				//content.InfoTip.populateImageInfoTip("https://ftp.mozilla.org/favicon.ico")
+
+				var InfoTip = content.InfoTip
+				//var propValue = content.Dom.getAncestorByClass(target, "val");
+				//dump(propValue)
+				//if (!propValue) 
+				//	return 
+				var text = node.textContent;
+				var cssValue = content.parseCSSValue(text, rangeOffset);
+				if (!cssValue || cssValue.value == this.infoTipValue)
+					return true;
+
+				this.infoTipValue = cssValue.value;
+
+				if (cssValue.type == "rgb" || cssValue.type == "hsl" || cssValue.type == "gradient" ||
+					(!cssValue.type && content.Css.isColorKeyword(cssValue.value)))
+				{
+					this.infoTipType = "color";
+					this.infoTipObject = cssValue.value;
+
+					InfoTip.populateColorInfoTip(cssValue.value);
+					InfoTip.show()
+				} else if (cssValue.type == "url") {
+					var propNameNode = target.parentNode.getElementsByClassName("name").item(0);
+					if (propNameNode && propNameNode.textContent) {
+						/*var rule = currentRules[i.slateId]
+						var baseURL = this.getStylesheetURL(rule, true);*/
+						var relURL = content.parseURLValue(cssValue.value);
+						/*var absURL = Url.isDataURL(relURL) ? relURL : Url.absoluteURL(relURL, baseURL);
+						var repeat = parseRepeatValue(text);
+
+						this.infoTipType = "image";
+						this.infoTipObject = absURL;*/
+dump(cssValue.value)
+						InfoTip.populateImageInfoTip(relURL, true);
+					}
+				}
+				InfoTip.show()
+				return 
+			}
+			content.InfoTip.hide()
+		}
+	},
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
     populateColorInfoTip: function(color){

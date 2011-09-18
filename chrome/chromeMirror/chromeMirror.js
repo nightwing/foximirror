@@ -11,6 +11,53 @@ function initialize(){
   //* viewer objects
  //****************************/
 addonViewer={
+	getContextMenuItems: function(_, target){
+        var items = []
+			
+		/* mAddonData.addon.userDisabled = true
+		mAddonData.addon.pendingOperations == AddonManager.pen
+		mAddonData.disabled = true */
+
+        items.push({
+                label: "copy name",
+                command: function() {
+					var i = self.getSelectedItem()
+                    gClipboardHelper.copyString(mAddonData.name);
+                },
+            },'-'
+		)
+		if(mAddonData.addon)
+			items.push({
+                label: "enabled",
+				checked: !mAddonData.addon.userDisabled && !mAddonData.addon.appDisabled, // &&  mAddonData.addon.pendingOperations != 2 // AddonManager.PENDING_DISABLE						
+				type: "checkbox",
+                command: function() {
+					mAddonData.disabled = 
+					mAddonData.addon.userDisabled =
+					mAddonData.addon.appDisabled = !this.getAttribute('checked')
+					
+					mAddonData.cellProp = mAddonData.disabled?'disabled':''
+					addonViewer.tree.treeBoxObject.invalidate()
+                }
+            },{
+                label: "register chrome",
+                command: function() {
+                    registerChromeLocation(mAddonData.file)
+                },
+            })
+		items.push({
+			label: "reveal",
+			command: function() {
+				mAddonData.file.QueryInterface(Ci.nsILocalFile).reveal()
+			},
+		})
+
+
+        return items;
+	},
+	
+
+
 	initialize:function(){
 		try{
 			getAddonsOld()
@@ -24,6 +71,8 @@ addonViewer={
 		doParseManifests()
 		this.view=new simpleView()
 		this.activate()
+		
+		this.tree.ownerPanel = this
 	},
 	activate:function(type){
 		this.mode=type
@@ -122,6 +171,36 @@ dirViewer={
                 }
             }
         );
+		
+		
+		if(isJarJar)
+			var archiveUri = null
+		else if(isJar)
+			var archiveUri = uri
+		else if(/\.(jar|xpi|zip)/.test(uri))
+			var archiveUri = 'jar:'+uri+'!/'
+		
+		if(archiveUri)
+			items.push({
+				label: "extract",
+				command: function(){
+					// $shadia.extractRelative(Services.io.newURI(archiveUri, null, null), false).file
+					var file = getLocalFile(archiveUri)
+					var dir = file.parent
+					// do not add junk into extensions folder firefox doesn't like it
+					if (dir.leafName == 'extensions'){
+						dir = dir.parent
+						dir.append('extensions.unjarred')
+					}
+					dir.append(file.leafName.slice(0,-4))
+        
+					extractFiles(file, dir)
+        
+					dir.QueryInterface(Ci.nsILocalFile).reveal()				
+				}
+			})
+		
+		
 
         return items;
 	},
@@ -414,9 +493,19 @@ slateViewer={
 				var uri = chromeUri
 			else if (gMode=='viewSource')
 				uri = chromeUri
+			else
+				uri = data.spec
 			
 			this.deck.selectedIndex = 1
-			this.fileBrowser.contentWindow.location = uri
+			try{
+				this.fileBrowser.contentWindow.location = uri
+			}catch(e){
+				try{
+					this.fileBrowser.contentWindow.location = data.spec
+				}catch(e){
+					Components.utils.reportError(e)
+				}
+			}
 		}
 		
 		
