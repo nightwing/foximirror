@@ -2,8 +2,8 @@
 //  edit:@key`flag.ext?query#index
 //  edit:anything  -> edit:#anything
 
-var Cc	= Components.classes;
-var Ci	= Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://shadia/main.js");
 
@@ -23,6 +23,7 @@ $shadia.editGlue = {
 		js: 'text/javascript',
 	},
 	data: {},
+    servers: {},
 	setDataSource: function(flag, data){
 		flag = flag.toLowerCase()
 		this.data[flag] = data
@@ -86,26 +87,28 @@ $shadia.editGlue = {
 	reloadMessage: '<html>=== no data is avaliable yet===<br><button onclick=window.location.reload()>reload',
 	
 	getServer: function(flag){
-		if(!this.servers)
-			this.servers = {}
-
 		var i = flag.indexOf('`')
 		if(i==-1){
 			var serverName = flag
-			var t
+			var q
 		}else{
 			var serverName = flag.substring(0, i)
 			var q =  flag.substr(i+1)
 		}
-		
-		return 'chrome://shadia/content/edit-protocol-server.html'
+		var server = this.servers[serverName]
+		if(!server){
+			return 'chrome://shadia/content/edit-protocol-server.html'            
+		}
+		return server + q
 	}
 }
 
+$shadia.editGlue.servers[1]="file:///D:/ffaddons/orion.client/bundles/org.eclipse.orion.client.editor/web"
 
 indexRe = /#\.*$/
 qRe = /\?.*$/
 fRe = /[^\/`]*$/
+bRe = /[\/#?].*$/
 editRe = /e(dit)?:\/*#*/i
 
 function editProtocolHandler(){}
@@ -118,20 +121,30 @@ editProtocolHandler.prototype = {
 	editorURI: 'chrome://shadia/content/ace++/edit-protocol-editor.html',
 	defaultPort: -1,
 	
-	protocolFlags: Ci.nsIProtocolHandler.URI_NORELATIVE
-				 | Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE    //URI_DANGEROUS_TO_LOAD
+	protocolFlags: Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE    //URI_DANGEROUS_TO_LOAD
+				 | Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE
 				 | Ci.nsIProtocolHandler.URI_NON_PERSISTABLE,
 	allowPort: function(port, scheme) false,
 	
 	get chromePrincipal() {
 		delete editProtocolHandler.prototype.chromePrincipal
 		return editProtocolHandler.prototype.chromePrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+	},
+	get nullPrincipal() {
+		delete editProtocolHandler.prototype.nullPrincipal
+		//return editProtocolHandler.prototype.nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal)
+
+		delete editProtocolHandler.prototype.nullPrincipal
+		return editProtocolHandler.prototype.nullPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal) 
+		// Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager).getCodebasePrincipal(makeURI('edit:~'))
 	},	
   
 	newURI : function (spec, charset, baseURI){
-		//dump('********',spec, charset, baseURI)
+		dump('********',spec, charset, baseURI)
 		if (spec.indexOf(':') == -1 && baseURI){
 			var base = baseURI.spec
+					dump('********--',spec, base)
+
 			if (base[5] == '#')
 				return Services.io.newURI(spec, null, 
 					Services.io.newURI(this.editorURI ,null,null)
@@ -140,13 +153,9 @@ editProtocolHandler.prototype = {
 				spec = base.replace(indexRe, '') + spec
 			else if (spec[0] == '?')
 				spec = base.replace(qRe, '') + spec
-			else if (spec[0] == '/') {
-				var i = base.indexOf('/')
-				if( i == -1)
-					spec = base + spec
-				else
-					spec = base.substring(0, i) + spec
-			} else
+			else if (spec[0] == '/')
+				spec = base.replace(bRe, '') + spec
+			else
 				spec = base.replace(qRe, '').replace(fRe, '') + spec
 		}
 
@@ -163,6 +172,7 @@ editProtocolHandler.prototype = {
 	},
   
 	newChannel : function(uri){
+        dump(1)
 		//dump('---------------------',uri.spec)
 		try {
 			var uriString = uri.spec.toLowerCase();
@@ -182,10 +192,10 @@ editProtocolHandler.prototype = {
 				// check for self reference
 				if(uriString[0] == 'e')
 					uriString = 'about:blank'
-
-				var extUri = Services.io.newURI(uri, null, null);
+				var extUri = Services.io.newURI(uriString, null, null);
 				var extChannel = Services.io.newChannelFromURI(extUri);
 				extChannel.originalURI = uri;
+                extChannel.owner = this.nullPrincipal
 				return extChannel;
 			}
 			//var i = uriString.indexOf('!@!')
@@ -228,7 +238,8 @@ if (XPCOMUtils.generateNSGetFactory)
 else
 	var NSGetModule = NSGetFactory = XPCOMUtils.generateNSGetModule([editProtocolHandler]);
 
-/*;(function(){
+/**** reload ****
+;(function(){
 	var reg = Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
 	var CONTRACT_ID = editProtocolHandler.prototype.contractID
 	try{
@@ -241,5 +252,12 @@ else
 	var factory = NSGetFactory(o.classID)
 	reg.registerFactory(o.classID, o.classDescription, o.contractID, factory);
 })();*/
+/*
+$shadia.editGlue.getServer('1`/io')
 
+u=Services.io.newURI('edit:~1', null, null)
+//u=Services.io.newURI('edit:', null, null)
+
+u.resolve('#as')
+*/
 dump = $shadia.dump
