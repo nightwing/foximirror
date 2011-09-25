@@ -23,7 +23,6 @@ $shadia.editGlue = {
 		js: 'text/javascript',
 	},
 	data: {},
-    servers: {},
 	setDataSource: function(flag, data){
 		flag = flag.toLowerCase()
 		this.data[flag] = data
@@ -85,25 +84,8 @@ $shadia.editGlue = {
 		delete this.data[flag]
 	},
 	reloadMessage: '<html>=== no data is avaliable yet===<br><button onclick=window.location.reload()>reload',
-	
-	getServer: function(flag){
-		var i = flag.indexOf('`')
-		if(i==-1){
-			var serverName = flag
-			var q
-		}else{
-			var serverName = flag.substring(0, i)
-			var q =  flag.substr(i+1)
-		}
-		var server = this.servers[serverName]
-		if(!server){
-			return 'chrome://shadia/content/edit-protocol-server.html'            
-		}
-		return server + q
-	}
 }
 
-$shadia.editGlue.servers[1]="file:///D:/ffaddons/orion.client/bundles/org.eclipse.orion.client.editor/web"
 
 indexRe = /#\.*$/
 qRe = /\?.*$/
@@ -121,26 +103,18 @@ editProtocolHandler.prototype = {
 	editorURI: 'chrome://shadia/content/ace++/edit-protocol-editor.html',
 	defaultPort: -1,
 	
-	protocolFlags: Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE    //URI_DANGEROUS_TO_LOAD
-				 | Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE
+	protocolFlags: Ci.nsIProtocolHandler.URI_NORELATIVE
+				 | Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE    //URI_DANGEROUS_TO_LOAD
 				 | Ci.nsIProtocolHandler.URI_NON_PERSISTABLE,
 	allowPort: function(port, scheme) false,
 	
 	get chromePrincipal() {
 		delete editProtocolHandler.prototype.chromePrincipal
 		return editProtocolHandler.prototype.chromePrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
-	},
-	get nullPrincipal() {
-		delete editProtocolHandler.prototype.nullPrincipal
-		//return editProtocolHandler.prototype.nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal)
-
-		delete editProtocolHandler.prototype.nullPrincipal
-		return editProtocolHandler.prototype.nullPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal) 
-		// Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager).getCodebasePrincipal(makeURI('edit:~'))
 	},	
-  
+
 	newURI : function (spec, charset, baseURI){
-		dump('********',spec, charset, baseURI)
+		//dump('********',spec, charset, baseURI)
 		if (spec.indexOf(':') == -1 && baseURI){
 			var base = baseURI.spec
 					dump('********--',spec, base)
@@ -172,7 +146,6 @@ editProtocolHandler.prototype = {
 	},
   
 	newChannel : function(uri){
-        dump(1)
 		//dump('---------------------',uri.spec)
 		try {
 			var uriString = uri.spec.toLowerCase();
@@ -187,21 +160,10 @@ editProtocolHandler.prototype = {
 				return extChannel;
 			}
 			uriString = uriString.substr(6)
-			if (flag == '~') {
-				uriString = $shadia.editGlue.getServer(uriString)
-				// check for self reference
-				if(uriString[0] == 'e')
-					uriString = 'about:blank'
-				var extUri = Services.io.newURI(uriString, null, null);
-				var extChannel = Services.io.newChannelFromURI(extUri);
-				extChannel.originalURI = uri;
-                extChannel.owner = this.nullPrincipal
-				return extChannel;
-			}
 			//var i = uriString.indexOf('!@!')
 			
 			if (flag == '@') {
-    			let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream)
+				let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream)
 				var content = $shadia.editGlue.getData(uriString)
 				 
 				
@@ -212,7 +174,7 @@ editProtocolHandler.prototype = {
 				channel.QueryInterface(Ci.nsIChannel)
 				channel.setURI(uri)
 				channel.originalURI = uri
-                channel.owner = this.chromePrincipal
+				channel.owner = this.chromePrincipal
 				
 				// set this at the very end otherwise error is thrown
 				let ct = $shadia.editGlue.contentType
@@ -226,7 +188,7 @@ editProtocolHandler.prototype = {
 			throw Components.results.NS_ERROR_FAILURE;
 		}
 	},
-  
+
 	QueryInterface : function(iid) {
 		if (!iid.equals(Ci.nsIProtocolHandler) && !iid.equals(Ci.nsISupports))
 			throw Components.results.NS_ERROR_NO_INTERFACE;

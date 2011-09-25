@@ -149,7 +149,7 @@ Firebug.Ace = {
 				fp.defaultString = file.leafName;
 			} catch(e) {}
 		}
-		// session.extension not always is the same as real extension; for now 
+		// session.extension isn't always the same as real extension; for now 
 		if (name && name.slice(-ext.length) != ext)
 			fp.appendFilters(Ci.nsIFilePicker.filterAll);
 
