@@ -43,6 +43,19 @@ DrawCross(M_C, r, z, dc){
 	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, r,   Int, r)
 }
 
+DrawRuller(M_C, r, z, dc){
+        ;specify the style, thickness and color of the cross lines
+    h_pen := DllCall( "gdi32.dll\CreatePen", Int, 0, Int, 1, UInt, 0x0000FF)
+        ;select the correct pen into DC
+    DllCall( "gdi32.dll\SelectObject", UInt, dc, "uint", h_pen )
+        ;update the current position to specified point - 1st horizontal
+    DllCall( "gdi32.dll\MoveToEx", UInt, dc, Int, r,   Int, r, UInt, 0)
+    DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, r,   Int, r+z)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, r+z, Int, r+z)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, r+z, Int, r)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, r,   Int, r)
+}
+
 DrawMask( M_C , R_C, zoom_c, dc ){
 	; xz := In(x-Rz-6,0,A_ScreenWidth-2*Rz) ; keep the frame on screen
 	DllCall("gdi32.dll\BitBlt", UInt,dc, Int,R_C+M_C-1, Int,R_C+M_C, Int,R_C, Int,1
@@ -52,9 +65,7 @@ DrawMask( M_C , R_C, zoom_c, dc ){
 
 
 
-/*SetTimer Repaint, 50   ; flow through
-Repaint:
-*/
+
 ;WinGet MagnifierID
 Loop{
     MouseGetPos x, y
@@ -69,8 +80,8 @@ Loop{
 	colorG:=(color>>8) & 0xff
 	colorB:=(color>>16) & 0xff
 	color=% "rgb(" colorR "," colorG "," colorB ")"
-    TrayTip,,% color "p" part "p*" p1 "n" Rz  "z" zoom  "r" R  
-;WinSetTitle ,ahk_id %MagnifierID%,, %color%
+   ; TrayTip,,% color "p" part "p*" p1 "n" Rz  "z" zoom  "r" R  
+WinSetTitle ,ahk_id %MagnifierID%,, %color%
 	If GetKeyState("Esc")
 		Break
 }

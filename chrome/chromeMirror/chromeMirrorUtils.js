@@ -284,8 +284,10 @@ function doParseManifests(){
 	chromeRegistry=[]
 
 	for each(i in cs.chromeMap){
-		var f = getLocalFile(i.realPath)
-		if (f.exists()){
+		try{
+			var f = getLocalFile(i.realPath)
+		}catch(e){}
+		if (f && f.exists()){
 			var item={
 				 name:       i.alias+'/'+i.subAlias+'\n\u2690'+i.flags+'\n'+i.aliasPath+'\n'+i.realPath
 				,file:       f
@@ -297,7 +299,7 @@ function doParseManifests(){
 			chromePaths.push(item)
 		}
 		else
-			dump(i.realPath)
+			$shadia.dump(i.realPath)
 	}
 
 
