@@ -29,9 +29,6 @@ hdd_frame := DllCall("GetDC", UInt, PrintSourceID)
 hdc_frame := DllCall("GetDC", UInt, MagnifierID)
 
 
-
-
-
 ;#############   draw cross lines   ###########################################
 DrawCross(M_C, r, z, dc){
         ;specify the style, thickness and color of the cross lines
@@ -55,11 +52,10 @@ DrawMask( M_C , R_C, zoom_c, dc ){
 
 
 
-/*SetTimer Repaint, 50   ; flow through
+SetTimer Repaint, 50   ; flow through
 Repaint:
-*/
+
 ;WinGet MagnifierID
-Loop{
     MouseGetPos x, y
     xz := x-Rz
     yz := y-Rz
@@ -77,12 +73,44 @@ Loop{
 		
 		WinSetTitle ,ahk_id %MagnifierID%,, %colorStr% "press ctrl+shift+c"
 	}
-	If GetKeyState("Esc")
-		Break
-}
-
 Return
 
+
+;#############                      ###########################################
+getClientRect(byRef x="", byRef y="", byRef w="", byRef h="", hwnd=0) {
+	hwnd:=hwnd ? hwnd : WinExist()    ; use LFW if no hwnd given
+	VarSetCapacity(rt, 16)            ; alloc. mem. for RECT struc.
+	VarSetCapacity(pt, 8, 0)          ; alloc. mem. for POINT struc.
+	DllCall("GetClientRect" , "uint", hwnd, "uint", &rt)
+	DllCall("ClientToScreen", "uint", hwnd, "uint", &pt)
+	x:=NumGet(pt, 0, "int"), y:=NumGet(pt, 4, "int")
+	w:=NumGet(rt, 8, "int"), h:=NumGet(rt, 12, "int")
+}
+
+
+OnMessage(0x05, "MsgMonitor") ;WM_SIZE
+MsgMonitor(wParam, lParam, msg){    
+	; Since returning quickly is often important, it is better to use a ToolTip than
+    ; something like MsgBox that would prevent the function from finishing:
+    ToolTip Message %msg% arrived:`nWPARAM: %wParam%`nLPARAM: %lParam%
+
+	;SetTimer, RemoveToolTip, 5000
+	
+	;getClientRect(x, y, w, h, MagnifierID)
+}
+RemoveToolTip:
+SetTimer, RemoveToolTip, Off
+ToolTip
+return
+
+
+
+
+
+
+
+
+; key handlers
 ESC::
 #x::
 GuiClose:

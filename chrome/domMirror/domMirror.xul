@@ -76,7 +76,7 @@
 			</caption>
 			<hbox>
 				<toolbarbutton label='view source' id='view'   class="split-menuitem-item"/>
-				<toolbarbutton label='copy'        id='copy url'   class="split-menuitem-menu"/>
+				<toolbarbutton label='copy'        id='copy-url'   class="split-menuitem-menu"/>
 			</hbox>
 			<hbox>
 				<toolbarbutton label='reveal' id='reveal' class="split-menuitem-menu" flex='1'/>

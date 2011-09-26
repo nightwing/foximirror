@@ -2370,11 +2370,11 @@ urlOperations=function(command){
 	var path=mURI
 	if(path)
 	switch(command){
-		case 'view':    viewFileURI(mURI, mLine);break
-		case 'launch':	getLocalFile(path).launch();break
-		case 'reveal':  getLocalFile(path).reveal();break
-		case 'copy':    gClipboardHelper.copyString(path);break
-		case 'edit':    npp(path, mLine);break
+		case 'view':     viewFileURI(mURI, mLine);break
+		case 'launch':	 getLocalFile(path).launch();break
+		case 'reveal':   getLocalFile(path).reveal();break
+		case 'copy-url': gClipboardHelper.copyString(path);break
+		case 'edit':     npp(path, mLine);break
 	}
 }
 
