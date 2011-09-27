@@ -676,12 +676,14 @@ function openJSMirrorFor(window, forceNewInstance, code){
 		jsWin.initTargetWindow(window)
 		jsWin.focus()
 		return
-	}	
-	
-	$jsMirrorData.newTarget3 =
-	$jsMirrorData.newTarget = {winRef: Cu.getWeakReference(window), code: code}
-	openWindow(url)
+	}
+	if(!$jsMirrorData.newTarget)
+		$jsMirrorData.newTarget = {}
+	$jsMirrorData.newTarget.winRef = Cu.getWeakReference(window)
+	if(code)
+		$jsMirrorData.newTarget.code = code
 
+	openWindow(url)
 }
 
 

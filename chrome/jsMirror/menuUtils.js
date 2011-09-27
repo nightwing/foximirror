@@ -137,7 +137,6 @@ MenuUtils.onContextShowing = function(event){
 
 MenuUtils.getContextMenuItems = function(_, target) {
 	var env = target.ownerDocument.defaultView.wrappedJSObject;
-dump(target)
 	var items = [],
 		editor = env.editor,
 		clipBoardText = gClipboardHelper.getData(),

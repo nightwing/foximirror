@@ -112,7 +112,6 @@ jn.inspect=function(x,long){
 		string=x.toString()
 	if(Class==string)
 		string=''//most objects have same class and toString
-	dump(Class, string,'+++++++++++++++++++')
 	Class=Class.slice(8,-1)
 	
 	if(Class=='Function'){
@@ -309,7 +308,6 @@ jn.bait= modernFox?(function(a){
 		has: function(name) true,
 		hasOwn: function(name) true,
 		get: function(receiver, name) {
-			dump( name); 
 			if(name =='toString') return toString; 
 			if(name =='__proto__') return null;
 			else return receiver;
@@ -463,80 +461,6 @@ jn.$x = function(xpath){
   /********************************************************/
  /** start of tral ***/
 /**/
-var stackStartLineNumber
-function executeJS(sel, printProps){
-	/*jn.exec();return;*/
-	var code = codebox.value;
-
-	if(sel){
-		let s = codebox.selectionStart, e = codebox.selectionEnd
-		if (sel=='line') {
-			s = code.lastIndexOf('\n', s)
-			if(s == -1)
-				s = 0
-			let e1 = code.indexOf('\n', e)
-			if(e1 != -1)
-				e = e1
-	}
-		if(s < e)
-			code = code.substring(s, e)
-}
-	if(!code){
-		appendToConsole("no code entered:(");
-		codebox.focus();
-		return null
-	}
-
-	printProps&&appendToConsole("Properties for object:");
-
-	try{
-		var result = evalStringOnTarget(code)
-	}catch(e){
-		result=LastError=e;
-		Components.utils.reportError(e)
-		appendToConsole(ejsInspectError(e));
-		codebox.focus();
-		return result;
-	}
-	appendToConsole(jn.inspect(result,'long'));
-
-	codebox.focus();
-	printProps&&printPropertiesForTarget(result)
-	return result;
-}
-function ejsInspectError(e){
-	var fn=e.filename||Components.stack.fileName
-	if(!stackStartLineNumber||Components.stack.fileName!==fn ){
-		stackStartLineNumber=0
-		Components.utils.reportError(e)
-	}
-	return e.lineNumber-stackStartLineNumber+': '+e.message+'->'+e.fn
-}
-function evalStringOnTarget(string){
-	var evalString = string//replaceShortcuts(string);
-	var win = getTargetWindow()
-	if(cntContentWinCB.checked==true && cntContentWinCB.disabled==false){
-		win = win.content||win
-	}
-	//unwrap
-	try{
-		win = XPCNativeWrapper.unwrap(win)
-	}catch(e){
-		if('wrappedJSObject' in win)
-		win = win.wrappedJSObject||win
-	}
-		
-	//add jn
-	win.jn=jn
-	//evaluate
-	stackStartLineNumber=Components.stack.lineNumber
-	var ans=win.eval(evalString)
-	//remove jn
-	if(win.location.href!=window.location.href)
-		win.jn=''
-		
-	return ans	
-}
   /**/
  /** end of tral **/
 /********************************************************/
@@ -546,7 +470,7 @@ var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsID
 var targetWindowId 
 if(utils.getOuterWindowWithId){
 	getTargetWindow=function(){
-	var win = getOuterWindowWithId(targetWindowId)
+		var win = getOuterWindowWithId(targetWindowId)
 		if(!win||win.closed)
 			win = null
 		return win
@@ -554,9 +478,9 @@ if(utils.getOuterWindowWithId){
 	getOuterWindowID = function(window){
 		return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
 	}
-getOuterWindowWithId = function(id){
-	return utils.getOuterWindowWithId(id)
-}
+	getOuterWindowWithId = function(id){
+		return utils.getOuterWindowWithId(id)
+	}
 /***/
 }
 else//old versions
@@ -656,7 +580,7 @@ function getSelectedWinID(){
 	var resource = cntTargetWinML.selectedItem.getAttribute('id')
 	var win = mediator.getWindowForResource(resource);
 	var id = getOuterWindowID(win)
-	dump(resource, id)
+
 	return id
 }
 
@@ -786,7 +710,6 @@ Firebug.evaluate = function(code, onSuccess, onerror){
 		//evaluate
 		stackStartLineNumber=Components.stack.lineNumber
 		var ans=win.eval(code)
-		//dump(ans)
 
 		onSuccess(ans, Firebug.currentContext)
 	}catch(e){
@@ -876,7 +799,6 @@ function toggleEditorFocus(env){
 }
 Firebug.jsMirror = {
 	initialize: function(window) {
-		dump(4)
 		var editor = window.editor;
 		editor.session.owner = 'console';
 		Firebug.Ace.sessionOwners = {console:Firebug.jsMirror}
@@ -909,10 +831,10 @@ Firebug.jsMirror = {
 		resultbox = Firebug.Ace.win1.editor
 		var data = $shadia.$jsMirrorData
 		if(data && data.newTarget){
-
+dump('--------------', data.newTarget.code)
 			initTargetWindow(data.newTarget.winRef.get())
 			codebox.session.doc.setValue(data.newTarget.code||'')
-			data.newTarget = null
+			//data.newTarget = null
 			codebox.selectAll();
 		}
 		codebox.focus()
@@ -992,7 +914,7 @@ Firebug.jsMirror = {
 		if (thisValue&&code){
 			code = '(function(){return eval(' + code.quote() + ')}).call(' + thisValue[1] + ')'
 		}
-		//dump(code)
+
 		return code
 	},
 	setErrorLocation: function(context){
@@ -1034,11 +956,9 @@ Firebug.jsMirror = {
 		var loc = Firebug.currentContext.errorLocation
 		var self = Firebug.jsMirror;
 
-		dump(loc.fileName, error.fileName, error.filename)
 		if(self.$useConsoleDir)
 			Firebug.dir(error)
 		else if(loc.fileName == error.fileName || loc.fileName == error.filename) {
-		dump(error.source,'*************')
 			var source = error.source || self.lastEvaledCode//.slice(loc.before, loc.after);
 			var cellStart = self.cell.bodyStart;
 			var lineNumber = error.lineNumber - loc.lineNumber;
@@ -1271,3 +1191,170 @@ THE SOFTWARE.
 }(this));
 
 
+/*********************************************************************
+ * window picker
+ **********************************************************/
+ 
+windowViewer={
+	initialize: function(){
+		this.tree=document.getElementById('window-tree')
+		this.button=document.getElementById('windowViewerButton')
+		/*this.popup.setAttribute('onpopupshowing','windowViewer.start()')
+		this.popup.setAttribute('onpopuphiding','windowViewer.finish()')*/
+		this.view=new multiLevelTreeView()
+		//this.tree.onclick='windowViewer.startShadia()'
+		//this.tree.onselect=init2()
+		this.tree.setAttribute('onselect','windowViewer.setWindow()')
+		this.tree.setAttribute('ondblclick','windowViewer.selectWindow()')
+
+		this.tree.addEventListener('keypress',this,true)
+	},
+	fillWindowList: function(){
+		function toUp(el){
+			return domUtils.getParentForNode(el, true)||{};
+		}
+		var winTable=[],index=0,slf=this
+		function inspwin(w,level){
+			var d=w.document;
+			var uri=sayHref(d.documentURI)
+			var t=d.title.substring(0,40)
+			t= t.length==0? uri : t+'->'+uri//.substring(0,50)+'...'+uri.slice(-10)
+
+			if(w==mWindow)
+				slf.curWinIndex=index
+			winTable.push({
+				level: level,
+				text: t+ (level==0?'':' <'+domNodeSummary(toUp(d))),
+				parent: toUp(d),
+				frame: w,
+				index: index++,
+				cellProp: d instanceof HTMLDocument ?'blue':'ACCESSIBLE_NODE'
+			})
+		}
+		function iterateInnerFrames(mWindow,level){
+			inspwin(mWindow,level)
+			var sortedFrames=[]
+			for(var i=0;i<mWindow.frames.length;i++){
+				sortedFrames.push(mWindow.frames[i])
+			}
+			sortedFrames.sort(function(a,b){
+				var o=toUp(a.document).compareDocumentPosition(toUp(b.document));
+				if((o|document.DOCUMENT_POSITION_FOLLOWING)==o)return -1
+				if((o|document.DOCUMENT_POSITION_PRECEDING)==o)return 1
+				return 0
+			})
+			for(var i=0;i<sortedFrames.length;i++){
+				var innerFrame=sortedFrames[i]
+				try{
+					if(innerFrame.frames.length>0)
+						iterateInnerFrames(innerFrame,level+1)
+					else
+						inspwin(innerFrame,level+1)
+				}catch(e){Components.utils.reportError(e);
+				dump('--->why error in innerFrame.frames?',innerFrame.location)}//
+			}
+		}
+		var fWins=winService.getEnumerator('');
+		while(fWins.hasMoreElements()){
+			iterateInnerFrames(fWins.getNext(),0)
+		}
+		this.view.childData=winTable
+		this.view.visibleData=[]
+		for(var i=0;i<winTable.length;i++){
+			this.view.visibleData.push(winTable[i]);
+		}
+
+	},
+
+	rebuild: function(){
+		this.fillWindowList()
+		this.tree.view=this.view
+		this.tree.view.selection.select(this.curWinIndex)
+	},
+	activate: function(){
+		this.rebuild()
+		//winService.addListener(this)
+		rightpane.setIndex(0)
+		this.tree.focus()
+		this.tree.parentNode.style.MozUserFocus='normal'
+		this.tree.setAttribute('onblur',' if(document.activeElement!=windowViewer.tree)windowViewer.deactivate()')
+		this.button.checked=!true
+		this.active=true
+	},
+	deactivate: function(){
+		//winService.removeListener(this)
+		this.tree.view=null
+		this.view.visibleData=this.view.childData=[]
+		rightpane.setIndex(1)
+
+		this.button.checked=!false
+		this.active=false
+	},
+	setWindow:  function(useSameWin){
+		var i=this.tree.currentIndex,data=this.view.visibleData, topIndex=i, topWindow
+		useSameWin=true
+		if(leftPane==domViewer&&useSameWin){
+			topWindow=data[topIndex]
+			while(topWindow&&topWindow.level>0&&topWindow.frame!=mWindow){
+				topIndex=this.view.getParentIndex(topIndex)
+				topWindow=data[topIndex]
+			}
+			if(topWindow.frame!=mWindow){
+				topIndex=i
+			}
+		}
+		if(leftPane==domViewer){
+			if(data[topIndex].frame!=mWindow){
+				mWindow=data[topIndex].frame
+				domViewer.setWindow(mWindow)
+			}else{
+				domViewer.setNode(data[i].frame.document.documentElement)
+			}
+		}else{
+			mWindow=data[i].frame
+			leftPane.setWindow(mWindow)
+		}
+		//notify viewers that window was changed
+		if(leftPane!=domViewer)	domViewer.winMustChange=true
+		if(leftPane!=stylesheetViewer)	stylesheetViewer.winMustChange=true
+		//descripton of
+		this.updateButton()
+	},
+	toggle: function(){
+		if(this.active)this.deactivate()
+		else this.activate()
+	},
+
+	handleEvent: function(event){
+		switch(event.keyCode){
+			case KeyEvent.DOM_VK_ESCAPE:
+			case KeyEvent.DOM_VK_RETURN:
+				this.selectWindow()
+				event.preventDefault();event.stopPropagation();
+				break
+		}
+	},
+	selectWindow: function(event){
+		if(this.active)
+				this.deactivate()
+		if(leftPane.textbox)leftPane.textbox.focus()
+		else leftPane.tree.focus()
+	},
+
+	updateButton: function(){
+		var t=mWindow.document.title
+		var uri=sayHrefEnd(mWindow.document.documentURI)
+
+		if(!t) t=uri
+		else if(t!=uri) t+=' '+uri
+		this.button.label=t
+	},
+
+	//window service
+
+	currentURI: function(){
+		var i=this.tree.currentIndex
+		if(i>=0)
+			return this.view.visibleData[i].frame.location.href
+	},
+}

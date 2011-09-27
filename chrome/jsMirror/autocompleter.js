@@ -1210,7 +1210,7 @@ if (!modernFox) { //for old versions
                 o = "error";
             }
             data.push({name:i, comName: i.toLowerCase(), description: d, depth: depth, object: o});
-        } //dump('-----------------------------**',t-Date.now())
+        }
         //special cases
         try{
             if ('QueryInterface' in targetObj) {

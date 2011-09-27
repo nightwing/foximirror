@@ -33,7 +33,6 @@ var Ci = Components.interfaces;
 Firebug.Ace = {
 	initialize: function(config) {		
 		for(var i in config){
-			dump(i, config[i].deps)
 			var browser = $(config[i].id);
 			var winWrapped = browser.contentWindow;
 			//set Firebug.Ace on wrapped window so that Firebug.getElementPanel can access it
@@ -46,7 +45,6 @@ Firebug.Ace = {
 			this[i].onclose = FBL.bind(this.shutdown, this)
 			
 			this[i].startAce(config[i].starter, null, config[i].deps);
-			dump(config[i].starter)
 		}
 	},
 
