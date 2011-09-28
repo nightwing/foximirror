@@ -83,7 +83,7 @@
 					<toolbarbutton type="menu-button" label="load">
 						<menupopup onpopupshowing="Firebug.Ace.loadPopupShowing(this)"/>
 					</toolbarbutton>
-					<toolbarbutton type="menu-button" label="save" oncommand="if(event.target==this)saveTemplates()">
+					<toolbarbutton type="menu-button" label="save" oncommand="if(event.target==this){cleanupDirtyState();saveTemplates()}">
 						<menupopup onpopupshowing="Firebug.Ace.savePopupShowing(this)"/>
 					</toolbarbutton>
 				</toolbar>

@@ -124,7 +124,7 @@ shadowInspector.prototype={
 		else
 			this.start()
 	},
-	start: function(aDocument){
+	start: function(mWindow){
 		if(!this.infoPanel)
 			this.createInfoPanel()
 		if(!this.fm){
@@ -139,42 +139,57 @@ shadowInspector.prototype={
 		this.finish()
 		this.light="lime"
 
-		window.addEventListener('mousemove',  this.l1  = function(e){shadia.mouseMoveListener(e)}, true);
-		window.addEventListener('mouseout',   this.l12 = function(e){shadia.mouseOutListener(e)}, true);
-		window.addEventListener('deactivate', this.l13 = function(e){shadia.deactivateListener(e)}, true);
-		window.addEventListener('activate',   this.l14 = function(e){shadia.activateListener(e)}, true);
-                                                         
-		window.addEventListener('keydown',    this.l2  = function(e){shadia.keydownListener(e)}, true);
-		window.addEventListener('keypress',   this.l21 = function(e){shadia.keydownListener(e)}, true);
-		window.addEventListener('keyup',      this.l22 = function(e){shadia.keydownListener(e)}, true);
-                                                         
-		window.addEventListener('popupshown', this.l3  = function(e){shadia.popupOpenListener(e)}, true);
+		this.mWindow = mWindow || this.defWindow
+		if(this.mWindow){
+			this.addListeners()
+			this.mWindow.focus()
+			this.mWindow = Components.utils.getWeakReference(mWindow)
+		}else{
+			this.mWindow = window
+			this.addListeners()
+			this.mWindow = null
+		}
 
 		this.on=true;
 		this.updateLight()&&this.showHelp()
+	},
+	
+	addListeners: function(){
+		this.mWindow.addEventListener('mousemove',  this.l1  = function(e){shadia.mouseMoveListener(e)}, true);
+		this.mWindow.addEventListener('mouseout',   this.l12 = function(e){shadia.mouseOutListener(e)}, true);
+		this.mWindow.addEventListener('deactivate', this.l13 = function(e){shadia.deactivateListener(e)}, true);
+		this.mWindow.addEventListener('activate',   this.l14 = function(e){shadia.activateListener(e)}, true);
+                                                         
+		this.mWindow.addEventListener('keydown',    this.l2  = function(e){shadia.keydownListener(e)}, true);
+		this.mWindow.addEventListener('keypress',   this.l21 = function(e){shadia.keydownListener(e)}, true);
+		this.mWindow.addEventListener('keyup',      this.l22 = function(e){shadia.keydownListener(e)}, true);
+                                                         
+		this.mWindow.addEventListener('popupshown', this.l3  = function(e){shadia.popupOpenListener(e)}, true);
 	},
 
 	finish: function(){
 		if(!this.on)
 			return;
 		this.on = false;
+		
+		var mWindow = this.mWindow?	this.mWindow.get(): window;
 
-		window.removeEventListener('mousemove',  this.l1,  true); this.l1=null;
-		window.removeEventListener('mouseout',   this.l12, true); this.l12=null;
-		window.removeEventListener('deactivate', this.l13, true); this.l13=null;
-		window.removeEventListener('activate',   this.l14, true); this.l14=null;
+		mWindow.removeEventListener('mousemove',  this.l1,  true); this.l1=null;
+		mWindow.removeEventListener('mouseout',   this.l12, true); this.l12=null;
+		mWindow.removeEventListener('deactivate', this.l13, true); this.l13=null;
+		mWindow.removeEventListener('activate',   this.l14, true); this.l14=null;
 
-		window.removeEventListener('keydown',    this.l2,  true); this.l2=null;
-		window.removeEventListener('keypress',   this.l21, true); this.l21=null;
-		window.removeEventListener('keyup',      this.l22, true); this.l22=null;
+		mWindow.removeEventListener('keydown',    this.l2,  true); this.l2=null;
+		mWindow.removeEventListener('keypress',   this.l21, true); this.l21=null;
+		mWindow.removeEventListener('keyup',      this.l22, true); this.l22=null;
 
-		window.removeEventListener('popupshown', this.l3,  true); this.l3=null;
+		mWindow.removeEventListener('popupshown', this.l3,  true); this.l3=null;
 
 		/**clickselect listeners*/
-		window.removeEventListener('mousedown',  this.lcs, true);
-		window.removeEventListener('mouseup',    this.lcs, true);
-		window.removeEventListener('click',      this.lcs, true);
-		window.removeEventListener('mouseout',   this.lcs, true); this.lcs=null
+		mWindow.removeEventListener('mousedown',  this.lcs, true);
+		mWindow.removeEventListener('mouseup',    this.lcs, true);
+		mWindow.removeEventListener('click',      this.lcs, true);
+		mWindow.removeEventListener('mouseout',   this.lcs, true); this.lcs=null
 
 		this.hidePanel()
 		this.unLightElement(this.historyA[0]);

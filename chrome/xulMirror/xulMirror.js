@@ -9,6 +9,9 @@ function doOnload(){
 	wrap = $("wrap")
 	gBrowser = $("content")
 	content = gBrowser.contentWindow
+	
+	// sadia must inspect content
+	shadia.defWindow = gBrowser
 
 	Firebug.Ace.initialize({
 		win2: {id:"code", starter:FBL.bind(xulMirror.initialize, xulMirror)}
@@ -79,8 +82,8 @@ xulMirror = {
 
 	shutdown: function() {
 		$shadia.editGlue.removeDataSource("xulMirror")
-		if(currentTemplateChanged())
-			gTemplateName = "autosave"
+		if(currentTemplateChanged() && gTemplateName[gTemplateName.length-1]!='\u2217')
+			gTemplateName += '\u2217'
 		
 		saveTemplates()
 	},
@@ -199,11 +202,11 @@ loadTemplate =  function(name){
 	gTemplate = Templates[name]
 	gTemplateName = name
 	
-	document.title = 'XULMirror - ' + gTemplateName
-	
+	winTitle.update(name)
 	for(var i in sessions){
 		codeCache[i] = gTemplate[i] || ""
-		sessions[i].setValue(codeCache[i])		
+		sessions[i].setValue(codeCache[i])
+		winTitle.track(sessions[i])
 	}
 }
 saveTemplates = function(){
@@ -217,16 +220,30 @@ saveTemplates = function(){
 	file.append("xulMirrorTemplate.json")
 	writeToFile(file, t)
 }
-
+cleanupDirtyState = function(){
+	delete Templates[gTemplateName]
+	gTemplateName = winTitle.clearName(gTemplateName)
+	winTitle.update(gTemplateName)
+	delete Templates[gTemplateName]
+	
+	for(var i in sessions){
+		winTitle.track(sessions[i])
+	}
+}
 deleteTemplete = function(name){
 	name = prompt('are yo sure you want to delete', name)
 	if(!name)
 		return
 		
-	delete templates[name]
+	delete Templates[name]
 	if(gTemplateName == name){
-		set
+		for(var i in Templates)
+			break				
+		gTemplateName = i || 'newTemplate'
+		
+		loadTemplate(gTemplateName)
 	}
+	saveTemplates()
 	
 }
 
@@ -240,18 +257,24 @@ Firebug.Ace.savePopupShowing = function(popup) {
 			}
 		});
 	FBL.createMenuItem(popup, {
-		label: 'save Template',
+		label: 'save "' + gTemplateName + '"',
 			command: function(){
-				
+				cleanupDirtyState()
 				saveTemplates()
 			}
 		});
 	FBL.createMenuItem(popup, {
-		label: 'save Template As',
+		label: 'save "' + gTemplateName  + '" As',
 			command: function(){
 				var newName = prompt('enter name')
 				gTemplateName = newName.trim()
 				saveTemplates()
+			}
+		});
+	FBL.createMenuItem(popup, {
+		label: 'delete "' + gTemplateName + '""',
+			command: function(){
+				deleteTemplete(gTemplateName)
 			}
 		});
 }
@@ -286,7 +309,26 @@ Firebug.Ace.loadPopupShowing = function(popup) {
 
 
 
-
+winTitle = {
+	update: function(name){
+		document.title = 'XULMirror - ' + name
+	},
+	clearName: function(name){
+		if(name[name.length-1]=='\u2217'){
+			name = name.slice(0, -1)
+		}
+		
+		return name
+	},
+	track: function(session){
+		var l = function(){
+		
+			session.removeEventListener(l)
+			winTitle.update(winTitle.clearName(gTemplateName)+'\u2217')
+		}
+		session.on("change", l)
+	},
+}
 
 
 
