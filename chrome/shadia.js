@@ -143,7 +143,7 @@ shadowInspector.prototype={
 		if(this.mWindow){
 			this.addListeners()
 			this.mWindow.focus()
-			this.mWindow = Components.utils.getWeakReference(mWindow)
+			this.mWindow = Components.utils.getWeakReference(this.mWindow)
 		}else{
 			this.mWindow = window
 			this.addListeners()

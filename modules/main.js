@@ -562,7 +562,7 @@ function registerStyles(){
 			var uri = cssMirrorJarPath + name;
 			uri = ios.newURI(uri, null, null);
 			sss.loadAndRegisterSheet(uri, sss.AGENT_SHEET);
-		}catch(e){Components.utils.reportError(e)}
+		}catch(e){Components.utils.reportError(e+'\n'+name)}
 	})
 }
 

@@ -300,6 +300,16 @@ Firebug.Ace.loadPopupShowing = function(popup) {
 	}
 	FBL.createMenuItem(popup, "-")
 	FBL.createMenuItem(popup, {
+		label: 'new Template',
+			command: function(){
+				var newName = prompt('enter name')				
+				gTemplateName = newName.trim()
+				Templates[gTemplateName] = {}
+				loadTemplate(gTemplateName)
+				saveTemplates()
+			}
+		});
+	FBL.createMenuItem(popup, {
 		label: 'load File',
 			command: function(){
 				Firebug.Ace.loadFile(codebox)

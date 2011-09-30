@@ -29,7 +29,7 @@ var WinABI;
 
 if (ctypes.size_t.size == 8) {
     CallBackABI = ctypes.default_abi;
-	WinABI = ctypes.default_abi;
+    WinABI = ctypes.default_abi;
 } else {
 	CallBackABI = ctypes.stdcall_abi;
 	WinABI = ctypes.winapi_abi;
@@ -119,7 +119,7 @@ t-Date.now()
 	
   
 
-  FindWindow("MozillaUIWindowClass", "")
+  FindWindow("MozillaWindowClass", "")
   FindWindow("Notepad++", "")
   
 #>>
@@ -184,6 +184,14 @@ a = buf.toString().slice(24,-2).split(',').map(function(x)x=='true'||true)
 //aaaaa
 
 
+GetAsyncKeyState = user32dll.declare('GetAsyncKeyState', WinABI, ctypes.short, ctypes.int);
+//CreateWindow(0x00000080, 'u', 'i', 0x10000000, 10,10,100,100)
+GetAsyncKeyState(13)
+GetAsyncKeyState(0x6c)
+
+
+
+#>>
 
 
 
