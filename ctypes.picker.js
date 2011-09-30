@@ -32,12 +32,12 @@ if (ctypes.size_t.size == 8) {
     WinABI = ctypes.default_abi;
 } else {
     CallBackABI = ctypes.stdcall_abi;
-	WinABI = ctypes.winapi_abi;
+    WinABI = ctypes.winapi_abi;
 }
 var EnumWindowsProc = ctypes.FunctionType(CallBackABI, BOOL, [HWND, LPARAM]);
 
 UnLoaddlls = function() {
-	user32dll.close();
+    user32dll.close();
 	kernel32dll.close();
 	gdi32dll.close();
 }
@@ -81,22 +81,34 @@ Loaddlls = function() {
 	DestroyWindow = user32dll.declare('DestroyWindow', WinABI, ctypes.long, HWND)
 
 }
+SetWindowText = user32dll.declare('SetWindowTextW', WinABI, BOOL, HWND, LPCTSTR)
 
 Loaddlls()
 
-var h 
+var whnd, interval 
 var antialias
 
 startPicker = function(){
-	h = CreateWindow(
-		392, "MozillaWindowClass", "hello r" , 2496593920,// GetWindowLong(h, -20)  GetWindowLong(h, -16)
-		100, 100, 200, 200,
-		0,0,0,null)	
-	ShowWindow(h, 8)
+    var AdjustWindowRectEx = user32dll.declare('AdjustWindowRectEx', WinABI, BOOL,
+    	ctypes.voidptr_t,DWORD, BOOL,DWORD
+	);
+    var w = 200, h = 200
+    var cr = ctypes.int.array(4)([0,0,w,h])
+    var dwExStyle = 392, dwStyle = 2496593920// GetWindowLong(h, -20)  GetWindowLong(h, -16)
+    AdjustWindowRectEx(cr.address(), dwStyle, false, dwExStyle)
+    w = cr[2]-cr[0]
+    h = cr[3]-cr[1]
+    
+	whnd = CreateWindow(
+		dwExStyle, "MozillaWindowClass", "hello r" , dwStyle,
+		100, 100, w, h,
+		0,0,0,null)
+	ShowWindow(whnd, 8)
 }
 endPicker = function(){
-	DestroyWindow(h)
-    h=null
+    clearInterval(interval)
+	DestroyWindow(whnd)
+    whnd=null
 }
 
 /*
@@ -105,51 +117,95 @@ TextOut = gdi32dll.declare('TextOutW', WinABI, BOOL,
 	);
 TextOut(pickerDC, 0,0, 'pop', 15)
 */
-h&&DestroyWindow(h)
+whnd&&endPicker()
 startPicker()
+#>>
+t=Date.now()
+SetWindowText(whnd, 'popdd\tpo')
+t-Date.now()
 #>>
 
 
 function draw(){   
 	var desktopDC = GetDC(0)
-	var pickerDC = GetDC(h)
+	var pickerDC = GetDC(whnd)
 
-	SetStretchBltMode(pickerDC, 0)
-
+	SetStretchBltMode(pickerDC, z>1?0:4)
+ cx=Math.floor(size.x/2-z*a.x-z/2), cy=Math.floor(size.y/2-z*a.y-z/2)
 	StretchBlt(
-        pickerDC, Math.floor(size.x/2-z*a.x-z/2), Math.floor(size.y/2-z*a.y-z/2), z*(1+2*a.x),z*(1+2*a.y), 
+        pickerDC, cx, cy, Math.floor(z*(1+2*a.x)),Math.floor(z*(1+2*a.y) ),
         desktopDC,p.x-a.x, p.y-a.y, 1+2*a.x, 1+2*a.y,
         0xCC0020
     )
-
+    var cx = Math.floor(size.x/2-z/2),cy = Math.floor(size.y/2-z/2)
+    var rec = ctypes.int.array(4)([cx,cy,cx+z,cy+z])
+    FrameRect(pickerDC, rec, 0)
+    
 	ReleaseDC(0, desktopDC)
-	ReleaseDC(h, pickerDC)
+	ReleaseDC(whnd, pickerDC)
 }
 
 
-z=10
+z=3
 
 GetClientRect = user32dll.declare('GetClientRect', WinABI, BOOL, HWND, PVOID)
 var cr = ctypes.int.array(4)()
 var p=new POINT
-
-#>>
+ a={x:20,y:20}
+ 
 function fullDraw(){
      t = Date.now()
-    GetClientRect(h, cr.address())
+    GetClientRect(whnd, cr.address())
     size={x:cr[2], y:cr[3]}
 
-    a={x:5,y:5}
+    a={x:Math.floor((size.x/z-1)/2), y:Math.floor((size.y/z-1)/2)}
     
     GetCursorPos(p.address())
     
     draw()
     return t-Date.now()
 }
-
-i=setInterval(fullDraw,100)
-
-clearInterval(i)
+clearInterval(interval)
+interval=setInterval(fullDraw,100)
 
 #>>
-    //DllCall("GetClientRect" , "uint", hwnd, "uint", &rt)
+
+a
+#>>
+
+var rec = ctypes.int.array(4)([10,0,100,100])
+
+
+    FillRect = user32dll.declare("FillRect", WinABI, ctypes.int, 
+		UINT, ctypes.voidptr_t, UINT
+	)
+    FrameRect = user32dll.declare("FrameRect", WinABI, ctypes.int, 
+		UINT, ctypes.voidptr_t, UINT
+	)
+    var pickerDC = GetDC(whnd)
+    SetDCBrushColor(pickerDC, 0x00F11FFF)
+    FillRect(pickerDC, rec, brush)
+    
+    var rec = ctypes.int.array(4)([20,20,40,40])
+    FrameRect(pickerDC, rec, 0)
+    var rec = ctypes.int.array(4)([20,10,40,11])
+    FrameRect(pickerDC, rec, 0)
+    
+        ReleaseDC(whnd, pickerDC)
+
+
+#>>
+CreateSolidBrush = gdi32dll.declare("CreateSolidBrush", WinABI, UINT,  DWORD)
+SelectObject = gdi32dll.declare("SelectObject", WinABI, UINT,  UINT)
+DeleteObject = gdi32dll.declare("DeleteObject", WinABI, BOOL,  UINT)
+GetStockObject = gdi32dll.declare("GetStockObject", WinABI, UINT,  UINT)
+SetDCBrushColor = gdi32dll.declare("SetDCBrushColor", WinABI, UINT,  UINT, DWORD)
+brush = GetStockObject(18)
+
+//dc_Brush := 18
+//brush = DllCall("GetStockObject",UInt,dc_Brush)
+#>>
+//0x00bbggrr
+f=CreateSolidBrush(0x000000FF)
+ctypes.uint32_t("0x000000FF")
+

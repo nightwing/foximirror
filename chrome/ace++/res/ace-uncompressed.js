@@ -12532,6 +12532,9 @@ define('ace/theme/textmate', ['require', 'exports', 'module' , 'pilot/dom'], fun
 }\
 \
 .ace-tm .ace_marker-layer .ace_selection {\
+  background: rgb(216, 218, 220);\
+}\
+.ace-tm.ace_focus .ace_marker-layer .ace_selection {\
   background: rgb(181, 213, 255);\
 }\
 \

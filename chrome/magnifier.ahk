@@ -4,20 +4,35 @@ SetBatchLines -1
 CoordMode Mouse, Screen
 OnExit GuiClose
 
-  zoom = 9                ; initial magnification, 1..32
-  halfside = 128          ; circa halfside of the magnifier
-  oldcolor = 0
-  part := halfside/zoom
-  Rz := Round(part)
-  R := Rz*zoom
-  LineMargin := 10
-                        ; GUI 2 shows the magnified image
+  zoom := 9
+  ws_x := 207
+  ws_y := 207
+
+computeSize(){
+	global as_x
+	global as_y
+	global ws_x
+	global ws_y
+	global hws_x
+	global hws_y
+	global zoom
+	as_x := Round(ws_x/zoom/2 - 0.5)
+	as_y := Round(ws_y/zoom/2 - 0.5)
+  
+	hws_x := Round(ws_x /2 - zoom /2)
+	hws_y := Round(ws_y /2 - zoom /2)
+	
+	ToolTip Message %as_x% %zoom% %ws_x% %hws_x% 
+}
+computeSize()  
+  
+; GUI shows the magnified image
 Gui +AlwaysOnTop  +Resize +ToolWindow ;-Caption +E0x20
 Gui, Font, underline
 Gui, Add, Text, cBlue gCopyColor, gcolor
 Gui, Font, norm
 
-Gui Show, % "w" 2*R+zoom+3 " h" 2*R+zoom+3 " x0 y0", Magnifier
+Gui Show, % "w" ws_x " h" ws_y " x0 y0", Magnifier
 
 
 WinGet MagnifierID, id,  Magnifier
@@ -30,51 +45,36 @@ hdc_frame := DllCall("GetDC", UInt, MagnifierID)
 
 
 ;#############   draw cross lines   ###########################################
-DrawCross(M_C, r, z, dc){
+DrawCross(rX,rY,z, dc){
         ;specify the style, thickness and color of the cross lines
     h_pen := DllCall( "gdi32.dll\CreatePen", Int, 0, Int, 1, UInt, 0x0000FF)
         ;select the correct pen into DC
     DllCall( "gdi32.dll\SelectObject", UInt, dc, "uint", h_pen )
         ;update the current position to specified point - 1st horizontal
-    DllCall( "gdi32.dll\MoveToEx", UInt, dc, Int, r,   Int, r, UInt, 0)
-    DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, r,   Int, r+z)
-	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, r+z, Int, r+z)
-	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, r+z, Int, r)
-	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, r,   Int, r)
+    DllCall( "gdi32.dll\MoveToEx", UInt, dc, Int, rX,   Int, rY, UInt, 0)
+    DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, rX,   Int, rY+z)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, rX+z, Int, rY+z)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, rX+z, Int, rY)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, rX,   Int, rY)
+	
+	DllCall( "gdi32.dll\MoveToEx", UInt, dc, Int, rX-5*z,   Int, rY, UInt, 0)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, rX-5*z,   Int, rY+z)
+
+	DllCall( "gdi32.dll\MoveToEx", UInt, dc, Int, rX+6*z,   Int, rY, UInt, 0)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, rX+6*z,   Int, rY+z)
+
+	DllCall( "gdi32.dll\MoveToEx", UInt, dc, Int, rX,       Int, rY-5*z, UInt, 0)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, rX+z,     Int, rY-5*z)
+
+	DllCall( "gdi32.dll\MoveToEx", UInt, dc, Int, rX,       Int, rY+6*z, UInt, 0)
+	DllCall( "gdi32.dll\LineTo"  , UInt, dc, Int, rX+z,     Int, rY+6*z)	
 }
 
 DrawMask( M_C , R_C, zoom_c, dc ){
 	; xz := In(x-Rz-6,0,A_ScreenWidth-2*Rz) ; keep the frame on screen
-	DllCall("gdi32.dll\BitBlt", UInt,dc, Int,R_C+M_C-1, Int,R_C+M_C, Int,R_C, Int,1
+	DllCall("gdi32.dll\BitBlt", UInt,dc, Int,0, Int, 0, Int,20, Int,20
 					,UInt,dc, UInt,0, UInt,0, UInt,0x00000042) ; SOLID_BLACK (42)
 }
-
-
-
-
-SetTimer Repaint, 50   ; flow through
-Repaint:
-
-;WinGet MagnifierID
-    MouseGetPos x, y
-    xz := x-Rz
-    yz := y-Rz
-	DllCall("gdi32.dll\StretchBlt", UInt,hdc_frame, Int,0, Int,0, Int,2*R+zoom, Int,2*R+zoom
-				, UInt,hdd_frame, UInt,xz, UInt,yz, Int,2*Rz+1, Int,2*Rz+1, UInt,0xCC0020) ; SRCCOPY	
-    DrawCross(LineMargin, R, zoom, hdc_frame)                        
-    
-    color:=DllCall("GetPixel", UInt, hdd_frame, Int, x, Int, y)
-	if (color != oldcolor){
-		oldcolor = %color%
-		colorR:=color & 0xff
-		colorG:=(color>>8) & 0xff
-		colorB:=(color>>16) & 0xff
-		colorStr=% "rgb(" colorR "," colorG "," colorB ")"
-		
-		WinSetTitle ,ahk_id %MagnifierID%,, %colorStr% "press ctrl+shift+c"
-	}
-Return
-
 
 ;#############                      ###########################################
 getClientRect(byRef x="", byRef y="", byRef w="", byRef h="", hwnd=0) {
@@ -89,22 +89,56 @@ getClientRect(byRef x="", byRef y="", byRef w="", byRef h="", hwnd=0) {
 
 
 OnMessage(0x05, "MsgMonitor") ;WM_SIZE
-MsgMonitor(wParam, lParam, msg){    
+MsgMonitor(wParam, lParam, msg){
 	; Since returning quickly is often important, it is better to use a ToolTip than
     ; something like MsgBox that would prevent the function from finishing:
     ToolTip Message %msg% arrived:`nWPARAM: %wParam%`nLPARAM: %lParam%
 
 	;SetTimer, RemoveToolTip, 5000
 	
-	;getClientRect(x, y, w, h, MagnifierID)
+	getClientRect(x, y, w, h, MagnifierID)
+	
+	global ws_x = w
+	global ws_y = h
+	computeSize()
 }
+
+    
+
+
+SetTimer Repaint, 50   ; flow through
+Repaint:
+	;WinGet MagnifierID
+    MouseGetPos x, y
+    xz := x-as_x
+    yz := y-as_y
+	DllCall("gdi32.dll\StretchBlt", UInt,hdc_frame, Int,0, Int,0, Int,ws_x, Int,ws_y
+				, UInt,hdd_frame, UInt,xz, UInt,yz, Int,2*as_x+1, Int,2*as_y+1, UInt,0xCC0020) ; SRCCOPY	
+    DrawCross(hws_x, hws_y, zoom, hdc_frame) 
+
+DrawMask(0,0,0, hdc_frame)	
+    
+    color:=DllCall("GetPixel", UInt, hdd_frame, Int, x, Int, y)
+	if (color != oldcolor){
+		oldcolor = %color%
+		colorR:=color & 0xff
+		colorG:=(color>>8) & 0xff
+		colorB:=(color>>16) & 0xff
+		colorStr=% "rgb(" colorR "," colorG "," colorB ")"
+		
+		WinSetTitle ,ahk_id %MagnifierID%,, %colorStr% "press ctrl+shift+c"
+	}
+Return
+
+
+
+
+
+
 RemoveToolTip:
 SetTimer, RemoveToolTip, Off
 ToolTip
 return
-
-
-
 
 
 
@@ -121,7 +155,7 @@ ExitApp
 ;Ctrl ^; Shift +; Win #; Alt !
 ^NumPadAdd::
 ^WheelUp::   
-    If(zoom < halfside and ( A_ThisHotKey = "^WheelUp" or A_ThisHotKey ="^NumPadAdd") )
+   ; If(zoom < halfside and ( A_ThisHotKey = "^WheelUp" or A_ThisHotKey ="^NumPadAdd") )
 		zoom *= 1.189207115         ; sqrt(sqrt(2))
 	Gosub,setZoom
 return
@@ -142,9 +176,8 @@ setZoom:
 		DllCall( "gdi32.dll\SetStretchBltMode", "uint", hdc_frame, "int", 4*antialize )  ; Antializing ?
 	}
 
-    part := halfside/zoom           ;new calculation of the magnified image
-    Rz := Round(part)
-    R := Rz*zoom
+    ;new calculation of the magnified image
+    computeSize()
 	;WinMove Magnifier,,0, 0, 2*R+zoom+3, 2*R+zoom+3
    ; Gui 2:Show, % "w" 2*R+zoom+3 " h" 2*R+zoom+3 " x0 y0", Magnifier
    ; TrayTip,,% "Zoom = " Round(100*zoom) "%"
