@@ -44,8 +44,7 @@ var contentTypes = {
 	}
 }
 
-xulMirrorDataSource = function(a, query, editGlue){
-	//editGlue.contentType = contentTypes[a]
+xulMirrorDataSource = function(a, query, ext, editGlue){
 	return codeCache[a] || (codeCache[a] = sessions[a].getValue())
 }
 
@@ -67,9 +66,7 @@ xulMirror = {
 		}
 
 		loadTemplate(gTemplateName)
-		
-		Services.io.newURI('edit:@xulMirror`main.xul', null, null)
-		
+	
 		// make sure editGlue is initialized
 		$shadia.editGlue.setDataSource("xulMirror", xulMirrorDataSource)
 

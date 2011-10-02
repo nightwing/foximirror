@@ -54,6 +54,13 @@ clipboardHelper = {
 };
 XPCOMUtils.defineLazyServiceGetter(clipboardHelper, "cbHelperService", "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 
+// edit protocol
+this.__defineGetter__("editGlue", function(){
+     Services.io.newURI('edit:@xulMirror`main.xul', null, null)
+     return this.editGlue
+})
+
+
 
 var addDevelopmentUtils = function(window){
 	//window.toOpenWindowByType = toOpenWindowByType;

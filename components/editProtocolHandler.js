@@ -7,7 +7,7 @@ var Ci = Components.interfaces;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://shadia/main.js");
 
-
+delete $shadia.editGlue
 $shadia.editGlue = {
 	// https://developer.mozilla.org/en/Sample_.htaccess_file
 	// Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService).getTypeFromExtension('xhtml')
@@ -34,7 +34,7 @@ $shadia.editGlue = {
 		flag = flag.toLowerCase().replace(indexRe, '')
 		// get query
 		var i = flag.indexOf('?')
-		if(i!=-1){			 
+		if(i!=-1){
 			var query = flag.substr(i + 1)
 			flag = flag.substring(0, i)
 		}
@@ -46,16 +46,16 @@ $shadia.editGlue = {
 			
 			//get contentType
 			i = flag.lastIndexOf('!`')
-			if(i != -1){			 
-				var c = flag.substr(i + 2)
-				this.contentType = c				
+			if(i != -1){
+				var ext = flag.substr(i + 2)
+				this.contentType = ext
 				flag = flag.substring(0, i)
 			}else{
 				// or extension
 				i = flag.lastIndexOf('.')
 				if(i != -1){
-					var c = flag.substr(i + 1)
-					this.contentType = this.contentTypes[c] || ''
+					var ext = flag.substr(i + 1)
+					this.contentType = this.contentTypes[ext] || ''
 					flag = flag.substring(0, i)
 				}
 			}
@@ -66,7 +66,7 @@ $shadia.editGlue = {
 		
 		if (typeof content == 'function') {			
 			try{
-				content = content(flag, query, this)
+				content = content(flag, query, ext, this)
 			}catch(e){
 				content = this.reloadMessage +'<br>' +e
 				this.contentType = ''
