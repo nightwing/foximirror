@@ -38,7 +38,7 @@ var EnumWindowsProc = ctypes.FunctionType(CallBackABI, BOOL, [HWND, LPARAM]);
 
 UnLoaddlls = function() {
     user32dll.close();
-	kernel32dll.close();
+    kernel32dll.close();
 	gdi32dll.close();
 }
 
@@ -80,8 +80,8 @@ Loaddlls = function() {
 	);
 	DestroyWindow = user32dll.declare('DestroyWindow', WinABI, ctypes.long, HWND)
 
+	SetWindowText = user32dll.declare('SetWindowTextW', WinABI, BOOL, HWND, LPCTSTR)
 }
-SetWindowText = user32dll.declare('SetWindowTextW', WinABI, BOOL, HWND, LPCTSTR)
 
 Loaddlls()
 
@@ -209,3 +209,29 @@ brush = GetStockObject(18)
 f=CreateSolidBrush(0x000000FF)
 ctypes.uint32_t("0x000000FF")
 
+#>>
+
+h=WindowFromPoint(POINT(Math.max(window.screenX+1,0),Math.max(window.screenY+1,0)))
+
+#>>
+    GetWindowLong  = user32dll.declare('GetWindowLongW', WinABI, DWORD, HWND, ctypes.int)  
+    SetWindowLong  = user32dll.declare('SetWindowLongW', WinABI, DWORD, HWND, ctypes.int, DWORD)  
+    SetWindowPos  = user32dll.declare('SetWindowLongW', WinABI, BOOL,
+        UINT, UINT, ctypes.int, ctypes.int, ctypes.int, ctypes.int, UINT)  
+GetLastError = kernel32dll.declare("GetLastError", WinABI, DWORD )
+SetWindowPos(whnd, 0, 10,10, 100,100, 0x4000)
+GetLastError()
+#>>
+
+h=whnd
+l=GetWindowLong(h, -16)
+ if(GetWindowLong(h, -20) & 0x00000008){
+     
+ }
+l | 8
+
+l.toString(16)
+DWORD('0x94cf0008')
+
+SetWindowLong(h, -16, DWORD('0x94cf0008'))
+#>>

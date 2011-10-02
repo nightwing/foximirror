@@ -185,26 +185,9 @@ if(!window.shadia)
 <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup-base">
     <content>
       <children>
-        <xul:label class="tooltip-label" xbl:inherits="xbl:text=label" flex="1"/>
+        <xul:box flex="1"/>
       </children>
     </content>
-    
-    <implementation >
-
-
-      <field name="_mouseOutCount">0</field>
-      <field name="_isMouseOver">false</field>
-      
-      <property name="label"
-                onget="return this.getAttribute('label');"
-                onset="this.setAttribute('label', val); return val;"/>
-    </implementation>
-
-    <handlers>
-      <handler event="mouseover"><![CDATA[        
-        dump("ENTERING ");        
-      ]]></handler>      
-    </handlers>
   </binding>
 
 

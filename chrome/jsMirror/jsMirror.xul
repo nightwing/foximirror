@@ -54,16 +54,11 @@
 		<toolbarbutton label="/*" oncommand="codebox.focus();Firebug.Ace.win2.editor.execCommand('toggleStreamComment')"/>
 		<hbox width="10px"/>
 		<toolbar align="center">
-			<menulist id="targetWin" oncommand="codebox.focus();targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
-				<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
-					<template>
-						<rule>
-							<menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-						</rule>
-					</template>
+			<toolbarbutton id="targetWin" oncommand="codebox.focus();targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
+				<menupopup id="window-menu">
+					
 				</menupopup>
-			</menulist>
-			<checkbox id="contentWinCB"/>
+			</toolbarbutton>
 		</toolbar>
 		<spacer flex='1'/>
 		<shadiaglue/>

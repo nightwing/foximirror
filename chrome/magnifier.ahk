@@ -16,8 +16,16 @@ computeSize(){
 	global hws_x
 	global hws_y
 	global zoom
+	global pix
 	as_x := Round(ws_x/zoom/2 - 0.5)
 	as_y := Round(ws_y/zoom/2 - 0.5)
+
+	if(zoom>1){
+		pix := Round(zoom)
+	}else{
+		pix := 1
+	}
+		pix := zoom
   
 	hws_x := Round(ws_x /2 - zoom /2)
 	hws_y := Round(ws_y /2 - zoom /2)
@@ -114,8 +122,8 @@ Repaint:
     yz := y-as_y
 	DllCall("gdi32.dll\StretchBlt", UInt,hdc_frame, Int,0, Int,0, Int,ws_x, Int,ws_y
 				, UInt,hdd_frame, UInt,xz, UInt,yz, Int,2*as_x+1, Int,2*as_y+1, UInt,0xCC0020) ; SRCCOPY	
-    DrawCross(hws_x, hws_y, zoom, hdc_frame) 
-
+Traytip,, %zoom%
+    DrawCross(hws_x, hws_y, pix, hdc_frame) 
 DrawMask(0,0,0, hdc_frame)	
     
     color:=DllCall("GetPixel", UInt, hdd_frame, Int, x, Int, y)
@@ -155,7 +163,7 @@ ExitApp
 ;Ctrl ^; Shift +; Win #; Alt !
 ^NumPadAdd::
 ^WheelUp::   
-   ; If(zoom < halfside and ( A_ThisHotKey = "^WheelUp" or A_ThisHotKey ="^NumPadAdd") )
+    If(zoom < ws_x and ( A_ThisHotKey = "^WheelUp" or A_ThisHotKey ="^NumPadAdd") )
 		zoom *= 1.189207115         ; sqrt(sqrt(2))
 	Gosub,setZoom
 return

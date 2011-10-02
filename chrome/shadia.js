@@ -314,6 +314,9 @@ shadowInspector.prototype={
 
 				case KeyEvent.DOM_VK_DOWN     :if(this.ignorekeys)return
 				case KeyEvent.DOM_VK_NUMPAD2  :obj=this.toDown(obj);break;
+				
+				case KeyEvent.DOM_VK_DELETE   :if(!event.ctrlKey) return;
+											   var p = obj.nextSibling||obj.previousSibling||obj.parentNode;obj.parentNode.removeChild(obj);obj = p;break;
 				default: return//need to return to not catch keys
 			}
 			if(obj)
