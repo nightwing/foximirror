@@ -210,13 +210,6 @@ exports.launch = function(env, options) {
     EditSession = require("ace/edit_session").EditSession;
     UndoManager = require("ace/undomanager").UndoManager;
 
-    CSSMode = require("ace/mode/css").Mode;
-    HTMLMode = require("ace/mode/html").Mode;
-    XMLMode = require("ace/mode/xml").Mode;
-	JSMode = require("ace/mode/javascript").Mode;
-
-    [CSSMode, HTMLMode, XMLMode, JSMode].forEach(function(x){delete x.prototype.createWorker})
-
 	HashHandler = require("ace/keyboard/hash_handler").HashHandler;
 	Search = require("ace/search").Search;	
 	
@@ -398,17 +391,30 @@ exports.launch = function(env, options) {
 		if(mime) return (mime.toLowerCase().match(/(xml|html?|css|jsm?|xul|rdf)/i)||[,'js'])[1]
 		return (name.match(/.(xml|html?|css|jsm?|xul|rdf)($|\?|\#)/i)||[,'js'])[1]
 	};
-	getMode = function(ext) {
-		if("xml|html|xul|rdf".indexOf(ext)!=-1)return HTMLMode
-		if("css".indexOf(ext)!=-1)return CSSMode
-		if("jsm".indexOf(ext)!=-1)return JSMode
-		// default
-		return JSMode
+	modeCache = {
+		_get: function(name){
+			name = "ace/mode/"+name
+			if(!this[name])
+				try{
+					var Mode = require(name).Mode
+					delete Mode.prototype.createWorker
+					this[name] = new Mode()
+				}catch(e){}
+			
+			return this[name]
+		},
+		get: function(ext){
+			if("xml|html|xul|rdf".indexOf(ext)!=-1)
+				ext = "html"
+			else if("jsm".indexOf(ext)!=-1 || "css".indexOf(ext)==-1)
+				ext = "javascript"
+			return this._get(ext)
+		}
 	};
 	createSession = function(value, name, mimeType) {
 		var s = new EditSession(value);
 		s.setFileInfo(name.toLowerCase(), mimeType);
-		s.setMode(new (getMode(s.extension)));
+		s.setMode(modeCache.get(s.extension));
 		s.setUndoManager(new UndoManager());
 
 		s.setUseSoftTabs(options.softtabs);

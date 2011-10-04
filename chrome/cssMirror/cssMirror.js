@@ -1,4 +1,4 @@
-//ensure singleton
+//ensure no other instances of cssmirror are open
  (function(){
 	var e = Services.wm.getEnumerator(null)
 
@@ -73,6 +73,7 @@ errorListener={
 		label.b=error.columnNumber
 	},
 	clearErrors:function(){
+		
 		var errors = document.getElementById("errors");
 		errors.style.display = "none";
 		errors=errors.firstChild
@@ -80,20 +81,25 @@ errorListener={
 			errors.removeChild(errors.lastChild);
 		}
 	},
-	QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIConsoleListener, Components.interfaces.nsISupports]),
+	QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener, Ci.nsISupports]),
 	observe: function(message) {
 		this.reportError(message)
 	},
-	checkForErrors:function(context,callback,args){
+	
+	checkForErrors:function(context,funcToCheck,args){
 		//t=Date.now()
 		this.clearErrors()
 		consoleService.unregisterListener(this)
 		consoleService.registerListener(this);
 		try{
-			callback.apply(context,args||[])
-		}catch(e){}
+			funcToCheck.apply(context,args||[])
+		}catch(e){
+			// only looking for css errors
+		}finally{
+			consoleService.unregisterListener(this)
+		}
+		
 		//errorListener.reportError(t-Date.now())
-		consoleService.unregisterListener(this)
 	},
 }
 
@@ -101,33 +107,38 @@ errorListener={
 sheetTypes = {agent: sss.AGENT_SHEET, user: sss.USER_SHEET}
 dataStyleRegistrar={
 	initialize: function(){
-		Services.io.newURI('edit:@cssMirror`|_|.css', null, null)
+		Services.io.newURI('edit:@cssMirror`preview.css'+name, null, null)
 		$shadia.editGlue.setDataSource('cssMirror',  this.getCode)
 	},
+	activeURLList: {},
 	shutdown: function(){
-		$shadia.editGlue.removeDataSource('cssMirror');
-		var i
-		while(i = this.activeURLList.pop())
+		for each(var i in this.activeURLList)
 			this.unregister(i)
+		$shadia.editGlue.removeDataSource('cssMirror');
 	},
 	getCode:function(){
 		return codebox.session.getValue()
 	},
-	saveStyle: function(){
-	},
 	activeSheetType: sheetTypes.agent,
-	register:function(name){
+	fixupName: function(name){
 		if(!name)
-			name = '__default__.css'
+			return '__default__.css'
 		else if(name.slice(-4)!='.css')
-			name = name + '.css'
-
-		var i = Services.io.newURI('edit:@cssMirror`'+name, null, null)
-		this.unregister(i)
+			return name + '.css'		
+	},
+	addUri: function(name){
+		return this[name] = Services.io.newURI('edit:@cssMirror`'+name, null, null)
+	},
+	register:function(name){
+		name =this.fixupName(name)
+		var i = this.nameToUri(name)
+		this.unregister(name)
 		this.activeURLList.push(i)
 		sss.loadAndRegisterSheet(i, this.activeSheetType)
 	},
-	unregister:function(i){
+	unregister:function(name){
+		name =this.fixupName(name)
+		var i = this.nameToUri(name)
 		if (i && sss.sheetRegistered(i, this.activeSheetType))
 			sss.unregisterSheet(i, this.activeSheetType);
 	},
@@ -505,7 +516,7 @@ getDirEntries=function(uri){
 
 	return ans
 }
- function safeDecodeURIComponent(name){
+function safeDecodeURIComponent(name){
 	try{
 		return decodeURIComponent(name)
 	}catch(e){
@@ -599,6 +610,21 @@ cssMirror={
 		codebox = Firebug.Ace.win2.editor
 		this.editor = codebox
 		
+		//add shortcuts
+		codebox.addCommands({
+			execute: FBL.bind(this.preview, this),
+		});
+		aceWindow.canon.addCommand({
+			name: "unprevie",
+			bindKey: {
+				win: "Esc",
+				mac: "Esc",
+				sender: "editor"
+			},
+			exec: FBL.bind(this.unpreview, this)
+		});
+		
+		addCSSBehaviour(aceWindow.require, aceWindow.modeCache.get("css"))
 	},
 	
 	toggle: function(i){
@@ -659,5 +685,37 @@ cssMirror={
 		gstyle.dirty=true;
 		cssMirror.updateSaveButton()
 	}
+}
+
+
+
+/************************************************/
+addCSSBehaviour = function(require, mode){
+	mode.$behaviour = new (require("ace/mode/behaviour/cstyle").CstyleBehaviour)();
+	mode.$behaviour.add("important", "insertion", function (state, action, editor, session, text) {
+        if (text == '!') {
+            var cursor = editor.getCursorPosition();
+            var char = session.getLine(cursor.row)[cursor.column];
+            
+            return {
+                text: char == ';'?'!important': '!important;',
+                selection: false
+            }            
+        }
+	})
+
+	mode.$behaviour.add("important", "deletion", function (state, action, editor, session, range) {
+		var selected = session.doc.getTextRange(range);
+		dump(selected, range)
+		if (!range.isMultiLine() && selected == "!") {
+			var cursor = range.end;
+			var lineEnd = session.getLine(cursor.row);
+			if(lineEnd.substr(cursor.column, 9) == "important"){
+				range.end.column+=9
+				return range                
+			}
+		}
+		return false;
+	})
 }
 

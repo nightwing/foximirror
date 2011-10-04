@@ -35,7 +35,7 @@ function treeView(table) {
 
 /**************************************/
 Firebug.Ace.startAutocompleter = FBL.bind(function(editor) {
-    var type = editor.session.autocompletionType;
+    var type = editor.session.autocompletionType || editor.session.extension;
 
     if (type == 'console')
        this.autocompleter = this.JSAutocompleter;
@@ -605,12 +605,6 @@ Firebug.Ace.CSSAutocompleter =  FBL.extend(Firebug.Ace.BaseAutocompleter, {
     start: function(editor) {
         this.editor = editor || this.editor;
 
-        var cell = Firebug.Ace.win2.editor.session.getMode().getCurrentCell();
-        if(cell.cursor <= cell.headerEnd){
-            if (cell.coffeeText)
-                this.sayInBubble(cell.coffeeText)
-        }
-
         var $q = this.$q = backParse.css(this.editor);
         this.text = $q.nameFragment;
 
@@ -666,14 +660,14 @@ Firebug.Ace.CSSAutocompleter =  FBL.extend(Firebug.Ace.BaseAutocompleter, {
     },
     // *****************
     propName: function(fragment) {
-        if (!gCSSProperties) {
+        if (!this.gCSSProperties) {
             var table = [];
             for each(var i in getAllCSSPropertyNames()) {
                 table.push({name: i, comName: i.toLowerCase()});
             }
-            gCSSProperties = table;
+            this.gCSSProperties = table;
         }
-        return gCSSProperties;
+        return this.gCSSProperties;
     },
     propValue: function(fragment) {
         var table = [];

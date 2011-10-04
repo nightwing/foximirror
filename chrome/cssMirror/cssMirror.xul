@@ -19,36 +19,40 @@
 	<h:head>
 		<h:link rel="icon"        href="../turnoff.gif"/>
 		<h:link rel="stylesheet"  href="chrome://shadia/content/css/global.css" type="text/css" />
-		<h:link rel="stylesheet"  href="chromeMirror.css" type="text/css" />
+		<h:link rel="stylesheet"  href="../jsMirror/css.css" type="text/css" />
 	</h:head>
 
-	<popupset>
-		<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
-		<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
-			<stack id='autocomplatePanelStack' flex='1'>
-				<hbox>
-					<tree id="window-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
-							hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
-						<treechildren id="inspector-tree-body"/>
+<popupset>
+	<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
+	<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
+		<hbox>
+			<spacer flex='1'/>		
+			<label/>
+		</hbox>
+		<stack id='autocomplatePanelStack' flex='1'>
+			<hbox>
+				<tree id="window-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
+						hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
+					<treechildren id="inspector-tree-body"/>
 
-						<treecols>
-							<treecol id="name" hideheader="true" primary="true" flex="1" />
-							<splitter class="tree-splitter"/>
-							<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
-							<splitter class="tree-splitter"/>
-							<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
-						</treecols>
-					</tree>
-					<splitter/>
-					<textbox multiline='true' id='autocomplate-info-bubble' flex='1' wrap='off' width='200' hidden='true' />
-				</hbox>
-				<resizer element='autocomplatePanel' dir="bottomleft" left="0" bottom="0" width="16" height="16"/>
-				<resizer element='autocomplatePanel' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
-			</stack>
-		</panel>
+					<treecols>
+						<treecol id="name" hideheader="true" primary="true" flex="1" />
+						<splitter class="tree-splitter"/>
+						<treecol id="description" hideheader="true" primary="true" flex="3" hidden="true"/>
+						<splitter class="tree-splitter"/>
+						<treecol id="depth" hideheader="true" primary="true" flex="0" width='22'/>
+					</treecols>
+				</tree>
+				<splitter collapse="after" state="collapsed"><grippy/></splitter>
+				<textbox multiline='true' id='autocomplate-info-bubble' flex='1' wrap='off' width='200' />
+			</hbox>
+			<resizer element='autocomplatePanel' dir="bottomleft" left="0" bottom="0" width="16" height="16"/>
+			<resizer element='autocomplatePanel' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
+		</stack>
+	</panel>
 
-		<menupopup id='main-context' onpopupshowing='MenuUtils.onContextShowing(event)'/>
-	</popupset>
+	<menupopup id='main-context' onpopupshowing='MenuUtils.onContextShowing(event)'/>
+</popupset>
 
 	<toolbox id="viewSource-toolbox">
 		<menubar id="viewSource-main-menubar">
