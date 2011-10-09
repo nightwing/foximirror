@@ -90,7 +90,7 @@ Firebug.Ace.BaseAutocompleter = {
             posY -= panelH + 5;
         else
             posY += 20;
-
+dump(posX, posY)
         if (this.panel.state === 'open') {
             this.setView(0);
             this.panel.moveTo(posX, posY);
@@ -334,6 +334,7 @@ Firebug.Ace.BaseAutocompleter = {
     },
 
     finish: function(i) {
+	dump("--------------------------------------------------")
         if (this.hidden)
             return;
         for each(var i in this.$markers)
@@ -366,6 +367,10 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
         var cursor = this.editor.selection.getCursor();
         fr.end.column = fr.start.column = cursor.column;
         fr.end.row = fr.start.row = cursor.row;
+		
+		cursor.column--
+		this.$q.dotPosition = cursor
+		
         this.text = '';
         this.onEvalSuccess(o);
     },
@@ -488,7 +493,6 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
 
         var $q = this.$q;
         var range = $q.filterRange;
-
         if (isSpecial) {
             text=text.substr(1);
         } else if ($q.dotPosition){

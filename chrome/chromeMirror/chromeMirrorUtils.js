@@ -468,7 +468,7 @@ fileMap.prototype = {
 		var n = 0
 		while(right-left > 1 && n < 10000){
 			n++
-			var mid = Math.floor((left + right)/2);
+			var mid = (left + right) >> 1;
 			var pivot = list[mid]._rPath
 			if (_r < pivot) {
 				right = mid;
@@ -845,23 +845,40 @@ function empty(lm){
 }
 
 
-  //**********************************************************
- //* context menu
-//****/
 
-urlOperations=function(command){
-	var path=leftPane.currentURI()
-	if(path)
-	switch(command){
-		case 'view':    viewFileURI(path, leftPane.currentLine&&leftPane.currentLine());break
-		case 'launch':	getLocalFile(path).launch();break
-		case 'reveal':  getLocalFile(path).reveal();break
-		case 'copy':    gClipboardHelper.copyString(path);break
-	}
+function binarySearch(object, array, comparator) {
+    var first = 0;
+    var last = array.length - 1;
+
+    while (first <= last) {
+        var mid = (first + last) >> 1;
+        var c = comparator(object, array[mid]);
+        if (c > 0)
+            first = mid + 1;
+        else if (c < 0)
+            last = mid - 1;
+        else
+            return mid;
+    }
+
+    // Return the nearest lesser index, "-1" means "0, "-2" means "1", etc.
+    return -(first + 1);
 }
 
-function contextMenuPopupShowing(event){
-	dr=document.popupNode
-	dr2=event
-}
+Object.defineProperty(Array.prototype, "binaryIndexOf", { value: function(value, comparator) {
+    var result = binarySearch(value, this, comparator);
+    return result >= 0 ? result : -1;
+}});
 
+function insertionIndexForObjectInListSortedByFunction(anObject, aList, aFunction) {
+    var index = binarySearch(anObject, aList, aFunction);
+    if (index < 0)
+        // See binarySearch implementation.
+        return -index - 1;
+    else {
+        // Return the first occurance of an item in the list.
+        while (index > 0 && aFunction(anObject, aList[index - 1]) === 0)
+            index--;
+        return index;
+    }
+}

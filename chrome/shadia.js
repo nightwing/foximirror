@@ -166,30 +166,33 @@ shadowInspector.prototype={
                                                          
 		this.mWindow.addEventListener('popupshown', this.l3  = function(e){shadia.popupOpenListener(e)}, true);
 	},
+	getWindow: function(){
+		return this.mWindow? this.mWindow.get()||window: window;
+	},
 
 	finish: function(){
 		if(!this.on)
 			return;
 		this.on = false;
 		
-		var mWindow = this.mWindow?	this.mWindow.get(): window;
+		var window = this.getWindow();
 
-		mWindow.removeEventListener('mousemove',  this.l1,  true); this.l1=null;
-		mWindow.removeEventListener('mouseout',   this.l12, true); this.l12=null;
-		mWindow.removeEventListener('deactivate', this.l13, true); this.l13=null;
-		mWindow.removeEventListener('activate',   this.l14, true); this.l14=null;
+		window.removeEventListener('mousemove',  this.l1,  true); this.l1=null;
+		window.removeEventListener('mouseout',   this.l12, true); this.l12=null;
+		window.removeEventListener('deactivate', this.l13, true); this.l13=null;
+		window.removeEventListener('activate',   this.l14, true); this.l14=null;
 
-		mWindow.removeEventListener('keydown',    this.l2,  true); this.l2=null;
-		mWindow.removeEventListener('keypress',   this.l21, true); this.l21=null;
-		mWindow.removeEventListener('keyup',      this.l22, true); this.l22=null;
+		window.removeEventListener('keydown',    this.l2,  true); this.l2=null;
+		window.removeEventListener('keypress',   this.l21, true); this.l21=null;
+		window.removeEventListener('keyup',      this.l22, true); this.l22=null;
 
-		mWindow.removeEventListener('popupshown', this.l3,  true); this.l3=null;
+		window.removeEventListener('popupshown', this.l3,  true); this.l3=null;
 
 		/**clickselect listeners*/
-		mWindow.removeEventListener('mousedown',  this.lcs, true);
-		mWindow.removeEventListener('mouseup',    this.lcs, true);
-		mWindow.removeEventListener('click',      this.lcs, true);
-		mWindow.removeEventListener('mouseout',   this.lcs, true); this.lcs=null
+		window.removeEventListener('mousedown',  this.lcs, true);
+		window.removeEventListener('mouseup',    this.lcs, true);
+		window.removeEventListener('click',      this.lcs, true);
+		window.removeEventListener('mouseout',   this.lcs, true); this.lcs=null
 
 		this.hidePanel()
 		this.unLightElement(this.historyA[0]);
@@ -224,6 +227,7 @@ shadowInspector.prototype={
 	//catchNodes
 	$:[],
 	suspendMouse:function(){
+		var window = this.getWindow();
 		if(this.l1){
 			window.removeEventListener('mousemove',  this.l1, true);
 			window.removeEventListener('deactivate', this.l12, true);

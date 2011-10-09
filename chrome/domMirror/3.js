@@ -136,16 +136,17 @@ windowViewer={
 		this.fillWindowList()
 		this.tree.view=this.view
 		this.tree.view.selection.select(this.curWinIndex)
+		this.tree.treeBoxObject.ensureRowIsVisible(this.curWinIndex)
 	},
 	activate: function(){
-		this.rebuild()
-		//winService.addListener(this)
 		rightpane.setIndex(0)
 		this.tree.focus()
 		this.tree.parentNode.style.MozUserFocus='normal'
 		this.tree.setAttribute('onblur',' if(document.activeElement!=windowViewer.tree)windowViewer.deactivate()')
 		this.button.checked=!true
 		this.active=true
+		//winService.addListener(this)
+		this.rebuild()
 	},
 	deactivate: function(){
 		//winService.removeListener(this)
