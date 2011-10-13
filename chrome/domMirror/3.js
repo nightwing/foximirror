@@ -117,7 +117,8 @@ windowViewer={
 					else
 						inspwin(innerFrame,level+1)
 				}catch(e){Components.utils.reportError(e);
-				dump('--->why error in innerFrame.frames?',innerFrame.location)}//
+					dump('--->why error in innerFrame.frames?',innerFrame.location)
+				}//
 			}
 		}
 		var fWins=winService.getEnumerator('');
@@ -226,7 +227,7 @@ windowViewer={
 	},
 }
 	initializeables.push(windowViewer)
-
+// leftpane views
 domViewer={
 	initialize: function(aWindow){
 		this.hiddenTree = document.getElementById("domViewer-hidden-tree");
@@ -459,7 +460,6 @@ return
 				event.preventDefault();event.stopPropagation();
 				break
 			case KeyEvent.DOM_VK_RETURN:
-			ert=event
 				if(event.ctrlKey){
 					domViewer.setNode(mNode)
 					this.tree.focus()
@@ -680,14 +680,7 @@ return
 		var nsResolver = xpe.createNSResolver(aNode.ownerDocument == null ?aNode.documentElement : aNode.ownerDocument.documentElement);
 		return result = xpe.evaluate(path, aNode, nsResolver,  XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 	},
-	moveTreeSelection: function(direction){
-		var tree=this.tree,view=tree.view,c=view.selection.currentIndex
-		c+=direction
-		if(c>=view.rowCount)	c=-1
-		if(c<-1)				c=view.rowCount-1
-		view.selection.timedSelect(c, tree._selectDelay);
-		tree.treeBoxObject.ensureRowIsVisible(c)
-	},
+	moveTreeSelection: treeUtils.moveTreeSelection,
 	currentURI: domViewer.currentURI
 };
 	initializeables.push(domSearch)
@@ -754,7 +747,7 @@ stylesheetViewer={
 			this.tree.treeBoxObject.scrollToRow(this.state.row)
 			this.tree.view.selection.select(this.state.sel)
 		}
-		this.selectObjectInTree()
+		this.onSelect()
 
 		this.tree.columns[1].element.hidden=false
 		leftPane=this
@@ -777,7 +770,7 @@ stylesheetViewer={
 		var i=this.tree.currentIndex
 		return this.view.visibleData[i].frame//viewDoc.body.innerHTML=sayCSS()
 	},
-	selectObjectInTree: function(){
+	onSelect: function(){
 		var i=this.tree.currentIndex,l=this.view.visibleData.length
 		if(i>=l||i<0)i=0
 
@@ -860,7 +853,7 @@ chromeRegistryViewer={
 			this.tree.treeBoxObject.scrollToRow(this.state.row)
 			this.tree.view.selection.select(this.state.sel)
 		}
-		this.selectObjectInTree()
+		this.onSelect()
 		this.tree.columns[1].element.hidden=false
 		leftPane=this
 		this.active=true
@@ -881,7 +874,7 @@ chromeRegistryViewer={
 		var i=this.tree.currentIndex
 		return this.view.visibleData[i]//viewDoc.body.innerHTML=sayCSS()
 	},
-	selectObjectInTree: function(){
+	onSelect: function(){
 		var i=this.tree.currentIndex,l=this.view.visibleData.length
 		if(i>=l||i<0)i=0
 		var r=this.view.visibleData[i]
@@ -910,7 +903,11 @@ chromeRegistryViewer={
 }
 	initializeables.push(chromeRegistryViewer)
 
-
+domViewer.onSelect = domSearch.onSelect = function(){
+	mNode=leftPane.currentNode()
+	//subViewer.setNode
+	insertAddrs(mNode)
+}
    //**********************
   //*
  //******/
@@ -930,7 +927,7 @@ leftPaneSearch={
 		if(leftPane==domViewer||leftPane==domSearch)
 			domSearch.onIninput(xpath)
 		else
-			setTreeFilter(leftPane.view,leftPane.tree,xpath)
+			treeUtils.setTreeFilter(leftPane.view,leftPane.tree,xpath)
 	},
 	handleEvent: function(event){
 		if(leftPane==domViewer||leftPane==domSearch)
@@ -945,7 +942,6 @@ leftPaneSearch={
 				event.preventDefault();event.stopPropagation();
 				break
 			case KeyEvent.DOM_VK_RETURN:
-			ert=event
 				if(event.ctrlKey){
 					this.tree.changeOpenState(this.tree.currentIndex)
 					event.preventDefault();event.stopPropagation();
@@ -1197,178 +1193,7 @@ function domSearchView(table){
 	this.toggleOpenState= function(row){return}
 }
 
-function multiLevelTreeView(){
-}
-multiLevelTreeView.prototype = {
-	treeBox: null,
-	selection: null,
 
-	get rowCount()                     { return this.visibleData.length; },
-	setTree:     function(treeBox)     { this.treeBox = treeBox; },
-	getCellText: function(row, col) { return this.visibleData[row][col.id]; },
-	isContainer: function(row)         {
-		var t=this.visibleData[row]
-		/*if(typeof t.isContainer!='undefined'){
-			return t.isContainer
-		}dump('ss')t.isContainer=*/
-		var l=t.level,t1=this.childData[t.index+1]
-		return t1&&t.level<t1.level;
-	},
-	isContainerOpen:  function(row)    { var t=this.visibleData[row+1];return t&&t.index==this.visibleData[row].index+1; },
-	isContainerEmpty: function(row)    { return false; },
-	isSeparator: function(row)         { return false; },
-	isSorted:    function()            { return false; },
-	isEditable:  function(row, column) { return false; },
-
-	getParentIndex: function(row){
-		var item=this.visibleData[row],l=item.level
-		if(l!=0) l--
-		var i=row-1;
-		while(i>=0&&(item=this.visibleData[i])&&item.level!=l){
-			i--
-		}
-		return i
-	},
-	getLevel: function(row){
-		return this.visibleData[row].level;
-	},
-	hasNextSibling: function(row, after){
-		var thisLevel = this.getLevel(row);
-		for (var t = after + 1; t < this.visibleData.length; t++) {
-			var nextLevel = this.getLevel(t);
-			if (nextLevel == thisLevel) return true;
-			if (nextLevel < thisLevel) break;
-		}
-		return false;
-	},
-	toggleOpenState: function(row){
-		var  item=this.visibleData[row];
-
-		var thisLevel = item.level;
-		var deletecount = 0;
-		for (var t = row + 1; t < this.visibleData.length; t++) {
-			if (this.visibleData[t].level > thisLevel) deletecount++;
-			else break;
-		}
-		if(deletecount){
-			this.visibleData.splice(row + 1, deletecount);
-			this.treeBox.rowCountChanged(row + 1, -deletecount);
-		}else{//open
-			var index=item.index+1, a, l, splicePos=row
-			while((a=this.childData[index])&&(l=a.level)>thisLevel){
-				if(l==thisLevel+1){
-					splicePos++
-					this.visibleData.splice(splicePos, 0, a);
-				}
-				index++
-			}
-			this.treeBox.rowCountChanged(row+1, splicePos-row);
-		}
-		this.treeBox.invalidateRow(row);
-	},
-
-	getImageSrc: function(row, column) {},
-	getProgressMode : function(row,column) {},
-	getCellValue: function(row, column) {},
-	cycleHeader: function(col, elem) {},
-	selectionChanged: function() {},
-	cycleCell: function(row, column) {},
-	performAction: function(action) {},
-	performActionOnCell: function(action, index, column) {},
-	getRowProperties: function(row, prop) {
-		var pn=this.visibleData[row].rowProp
-		if(!pn)return
-		prop.AppendElement(atomService.getAtom(pn));
-	},
-	getCellProperties: function(row, column, prop) {
-		var pn=this.visibleData[row].cellProp
-		if(!pn)return
-		prop.AppendElement(atomService.getAtom(pn));
-	},
-	getColumnProperties: function(column, element, prop) {
-	},
-
-};
-
-//***************************************/
-//filtering trees
-setTreeFilter= function(view,tree,text){
-	if(!text){
-		view.visibleData=view.childData.concat()
-		tree.view=view
-	}
-	if(view.filter==text)
-		return
-	this.filter=text=text.toLowerCase()
-
-	var index=0,cd=view.childData
-	view.visibleData=[]
-	for(var i =0;i<cd.length;i++){
-		var k=cd[i]
-		if(k.rowProp=='head'||springyIndex(k.text,text)>-1){
-			view.visibleData.push(k)
-			//k.index=index;index++
-		}
-	}
-	tree.view=view
-}
-function springyIndex(val,filterText){
-	var lowVal=val.toLowerCase()
-	var priority=0,lastI=0,ind1=0;
-	if(lowVal.indexOf(filterText)===0){
-		return 0;//exact match
-	}
-	for(var j=0;j<filterText.length;j++){
-		lastI = lowVal.indexOf(filterText[j],ind1);
-		priority += lastI-ind1
-		ind1 = lastI+1;
-		if(lastI===-1)
-			break;//springy matches
-	}
-	if(lastI != -1){
-		return priority+1
-	}
-	return -1
-}
-function springyIndex(val,filterText){
-	var lowVal=val.toLowerCase()
-	var priority=0,lastI=0,ind1=0;
-	if(lowVal.indexOf(filterText)===0){
-		return 0;//exact match
-	}
-	for(var j=0;j<filterText.length;j++){
-		lastI = lowVal.indexOf(filterText[j],ind1);
-		priority += lastI-ind1
-		ind1 = lastI+1;
-		if(lastI===-1)
-			break;//springy matches
-	}
-	if(lastI != -1){
-		return priority+1
-	}
-	return -1
-}
-   /******************************************************************************/
-  ////** blends onselect and onmousedown
- /**************************/
- selectObjectInTreeTimeOuts={}
-function selectObjectInTree(treeID,immediate){
-	if(!immediate){
-		if(selectObjectInTreeTimeOuts[treeID]){
-			clearTimeout(selectObjectInTreeTimeOuts[treeID])
-		}
-		selectObjectInTreeTimeOuts[treeID]=setTimeout(function(){selectObjectInTree(treeID,true)},10)
-		return
-	}
-	//window[treeID].onSelect()
-	if(leftPane.selectObjectInTree){
-		leftPane.selectObjectInTree()
-		return
-	}
-	mNode=leftPane.currentNode()
-	//subViewer.setNode
-	insertAddrs(mNode)
-}
    //**************************
   //* browser viewer objects
  //******/
@@ -2224,14 +2049,11 @@ cssSearch={
 				event.preventDefault();event.stopPropagation();
 				break
 			case KeyEvent.DOM_VK_RETURN:
-			ert=event
 				if(event.ctrlKey){
 					cssSlate.sayRemainingRules()
 				}
 				content.focus()
 				event.preventDefault();event.stopPropagation();
-				break
-
 				break
 		}
 	},

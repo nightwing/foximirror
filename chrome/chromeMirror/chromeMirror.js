@@ -51,8 +51,6 @@ addonViewer={
 				mAddonData.file.QueryInterface(Ci.nsILocalFile).reveal()
 			},
 		})
-
-
         return items;
 	},
 	
@@ -73,6 +71,8 @@ addonViewer={
 		this.activate()
 		
 		this.tree.ownerPanel = this
+		
+		this.search = new treeUtils.searchBox("addonViewer-search", this)
 	},
 	activate:function(type){
 		this.mode=type
@@ -92,7 +92,7 @@ addonViewer={
 	},
 	onSelect:function(){
 		var i=this.tree.currentIndex
-		mAddonData=addonList[i]
+		mAddonData=this.view.visibleData[i]
 		
 		//viewDoc.body.textContent=this.mode=='chrome'?chromePaths[i].name:''
 		if(this.mode=='chrome'){
@@ -104,7 +104,7 @@ addonViewer={
 		}
 	},
 	getDirData:function(file){
-		getDirDisplayData(getDirEntries(addonList[i].file))
+		getDirDisplayData(getDirEntries(this.view.visibleData[i].file))
 	},
 	
 	//sort
@@ -210,8 +210,8 @@ dirViewer={
 		this.tree=document.getElementById('dirViewer')
 		this.view=new simpleView()
 		var b = document.getElementById('dirViewerButtons')
-		this.backButton = qa('[aID=back]', b)
-		this.forwardButton = qa('[aID=forward]', b)
+		this.backButton = qs('[aID=back]', b)
+		this.forwardButton = qs('[aID=forward]', b)
 		
 		this.tree.ownerPanel = this
 	},
@@ -484,7 +484,8 @@ slateViewer={
 			this.setDir(ans)
 		
 		
-		var chromeUri = indexOfURL(data.spec)[0]
+		var chromeUri = gChromeMap.getAliasList(data.spec)[0]
+		var addonUri = gChromeMap.getAliasList(data.spec)[0]
 		
 		
 		
@@ -516,7 +517,22 @@ slateViewer={
 	initializeables.push(slateViewer)
  
 
-
+urlbarPopup = {
+	showDetails: function(popup){
+		var uri = getCurrentURI()
+		var file = getLocalFile(uri)
+		var data = [
+			uri,
+			file.path,
+			gAddonMap.getAliasList(uri)[0],
+			gChromeMap.getAliasList(uri)[0],
+			"",
+			file.fileSize+"kb",
+			new Date(getLocalFile(uri).lastModifiedTime)
+		].join("\n")
+		popup.querySelector("textbox").value = data
+	}
+}
 /*
 
 //addonViewer.data[1].addon.userDisabled = true

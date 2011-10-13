@@ -61,12 +61,12 @@
 		</vbox>
 		<textbox type='' flex="1" id='urlbar' onchange='navigate(this.value)' clickSelectsAll="true"/>
 		<toolbarbutton type="menu" label="">
-			<panel onpopupshowing="suggestionPopupShowing(this)"  position="after_end">
-				<textbox multiline='true' rows='8' cols='180'/>
+			<panel onpopupshowing="urlbarPopup.showDetails(this)"  position="after_end">
+				<textbox multiline='true' rows='8' cols='100'/>
 			</panel>
 		</toolbarbutton>
 
-		<toolbarbutton oncommand='navigate(this.previousSibling.value)' label="go"/>
+		<toolbarbutton oncommand='navigate($("urlbar").previousSibling.value)' label="go"/>
 	</hbox>	
 	
 	<hbox flex="1">
@@ -80,7 +80,7 @@
 					<treechildren contextmenu='main-context' onmousedown="if(event.button==0)selectObjectInTree('addonViewer')" />
 				</tree>
 			</hbox>
-			<hbox>
+			<hbox id="addonViewer-search">
 				<textbox type="search" flex='1'/>
 				<toolbarbutton label='n' tooltiptext='name' type='checkbox'/>
 				<toolbarbutton label='d' tooltiptext='date' type='radio'/>
@@ -136,12 +136,13 @@
 	</hbox>
 </vbox>
 
-<script type="application/javascript" src="chromeMirrorUtils.js"/>
-<script type="application/javascript" src="chromeMirror.js"/>
-<script type="application/javascript" src="addonManager.js"/>
-<script type="application/javascript" src="build.xpi.js"/>
-<script type="application/javascript" src="../jsMirror/menuUtils.js"/>
 <script type="application/javascript" src="chrome://shadia/content/utils/prefUtils.js"/>
 <script type="application/javascript" src="chrome://shadia/content/utils/fileUtils.js"/>
+<script type="application/javascript" src="chrome://shadia/content/utils/treeUtils.js"/>
+<script type="application/javascript" src="chromeMirrorUtils.js"/>
+<script type="application/javascript" src="../jsMirror/menuUtils.js"/>
+<script type="application/javascript" src="addonManager.js"/>
+<script type="application/javascript" src="chromeMirror.js"/>
+<script type="application/javascript" src="build.xpi.js"/>
 
 </window>

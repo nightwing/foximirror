@@ -1,9 +1,13 @@
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-qa = function(x, el)(el||document).querySelector(x)
+
+function qs(x, el) (el||document).querySelector(x)
+function qsa(x, el) Array.slice((el||document).querySelectorAll(x))
+function $(id) document.getElementById(id)
+
 initServices=function(){
 	ios= Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
 	sss= Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService)
-	atomService=Cc["@mozilla.org/atom-service;1"].getService(Ci.nsIAtomService);
+	atomService = Cc["@mozilla.org/atom-service;1"].getService(Ci.nsIAtomService);
 	fileHandler = ios.getProtocolHandler("file").QueryInterface(Ci.nsIFileProtocolHandler);
 }
 
@@ -303,9 +307,11 @@ function doParseManifests(){
 	}
 
 
-	chromeMap = cs.chromeMap = cs.chromeMap.sort(dirSort)
+	gChromeMap = new fileMap(cs.chromeMap)
+	gAddonMap = new fileMap(addonList)
 }
-
+var gChromeMap
+var gAddonMap
 function getManifestsInDir(dir){
 	var manifests=[], mfRe = /\.manifest$/i
 	function addFile(file){
@@ -340,52 +346,6 @@ function getManifestsInDir(dir){
     return manifests;
 }
 
-function dirSort(a, b){
-	// make '/' less than everything (except null)
-    var tempA = a.realPath.toLowerCase();
-    var tempB = b.realPath.toLowerCase();
-    if(tempA < tempB)
-		return -1;
-    if(tempA > tempB)
-		return 1;
-    return 0;
-}
-
-function indexOfURL(href){
-	// binary search to find an url in the chromeDirTree
-	// make '/' less than everything (except null)
-	//.replace(/\x2f/g, "\x01").toLowerCase();
-	
-    var left = 0, right = chromeMap.length - 1;
-    href = href.toLowerCase();
-    var n = 0
-    while(right-left > 1 && n < 10000){
-		n++
-        var mid = Math.floor((left + right)/2);
-        var dataHref = chromeMap[mid].realPath.toLowerCase()
-		if (href < dataHref) {
-			right = mid;
-        } else if (href>dataHref) {
-			left = mid;
-		} else {
-			left = mid
-			break
-		}
-    }
-
-	if(href.indexOf(dataHref) != 0){
-		dataHref = chromeMap[left].realPath.toLowerCase()
-		if(href.indexOf(dataHref)!=0){
-            mid = right
-            dataHref = chromeMap[right].realPath.toLowerCase()
-		    if(href.indexOf(dataHref) != 0){
-            	return [href, -1]
-            }
-        }
-	}
-
-	return [chromeMap[left].aliasPath + href.substr(dataHref.length), mid]
-}
 
 uriFromFile=function(file){
 	return 'file:///'+(typeof file=='string'?file:file.path).replace(/\\/g, '\/').replace(/^\s*\/?/, '')//.replace(/\ /g, '%20');
@@ -463,7 +423,7 @@ fileMap.prototype = {
 		var _r = this.normalizeUri(href)
 		
 		var ans = [], list = this.aliasList
-		var left = 0, right = chromeMap.length - 1;
+		var left = 0, right = list.length - 1;
 		
 		var n = 0
 		while(right-left > 1 && n < 10000){
@@ -491,11 +451,13 @@ fileMap.prototype = {
 			}
 		}
 		
-		return [this.resolveAlias(href, list[left]), mid]
+		return [this.resolveAlias(_r, list[left], true), mid]
 	},
 	
 	// todo: doesn't belong here
-	resolveAlias: function(href, alias, normal){
+	resolveAlias: function(href, alias, isNormalized){
+		if(!isNormalized)
+			href = this.normalizeUri(href)
 		let p = alias.aliasPath || ('```'+alias.name+'```')
 		return p + href.substr(alias._rPath.length)
 	},
@@ -688,9 +650,17 @@ simpleView.prototype = {
 	treeBox: null,
 	selection: null,
 
-	get rowCount()                     { return this.data.length; },
+	get data() {return this.$data},
+	set data(val) { 
+		this.$data = val;
+		this.visibleData = val.concat()
+		this.childData = val.concat()
+		return val
+	},
+	
+	get rowCount()                     { return this.visibleData.length; },
 	setTree:     function(treeBox)     { this.treeBox = treeBox; },
-	getCellText: function(row, col)    { return this.data[row].name },
+	getCellText: function(row, col)    { return this.visibleData[row].name },
 	isContainer: function(row)         { return false; },
 
 	isContainerOpen:  function(row)    { return true },
@@ -704,7 +674,7 @@ simpleView.prototype = {
 	hasNextSibling: function(row, after){return true;},
 	toggleOpenState: function(row){},
 
-	getImageSrc: function(row, column) { return this.data[row].iconURL },
+	getImageSrc: function(row, column) { return this.visibleData[row].iconURL },
 	getProgressMode : function(row,column) {},
 	getCellValue: function(row, column) {},
 	cycleHeader: function(col, elem) {},
@@ -713,12 +683,12 @@ simpleView.prototype = {
 	performAction: function(action) {},
 	performActionOnCell: function(action, index, column) {},
 	getRowProperties: function(row, prop) {
-		var pn=this.data[row].rowProp
+		var pn=this.visibleData[row].rowProp
 		if(!pn)return
 		prop.AppendElement(atomService.getAtom(pn));
 	},
 	getCellProperties: function(row, column, prop) {
-		var pn=this.data[row].cellProp
+		var pn=this.visibleData[row].cellProp
 		if(!pn)return
 		prop.AppendElement(atomService.getAtom(pn));
 	},
@@ -727,87 +697,6 @@ simpleView.prototype = {
 
 };
 
-function treeView(table){
-	this.rowCount = table.length;
-	this.getCellText  = function(row, col){return table[row][col.id]}
-	this.getCellValue = function(row, col){}
-	this.setTree = function(treebox){this.treebox = treebox}
-	this.isEditable = function(row, col){return false}
-
-	this.isContainer = function(row){return false}
-	this.isContainerOpen = function(row){return false}
-	this.isContainerEmpty = function(row){return false }
-	this.getParentIndex = function(row){ return row?0:-1}
-	this.getLevel = function(row){return row?1:0}
-	this.hasNextSibling = function(row){return true}
-
-	this.isSeparator = function(row){return false}
-	this.isSorted = function(){ return false}
-	this.getImageSrc = function(row,col){return ''}// return "chrome://global/skin/checkbox/cbox-check.gif"; };
-	this.getRowProperties = function(row,props){
-	};
-	this.getCellProperties = function(row,col,props){};
-	this.getColumnProperties = function(colid,col,props){}
-	this.cycleHeader = function(col, elem){}
-	this.isSelectable=function(row,col){return true}
-	return this
-}
-
-//***************************************/
-//filtering trees
-setTreeFilter = function(view,tree,text){
-	if(!text){
-		view.visibleData=view.childData.concat()
-		tree.view=view
-	}
-	if(view.filter==text)
-		return
-	this.filter=text=text.toLowerCase()
-
-	var index=0,cd=view.childData
-	view.visibleData=[]
-	for(var i =0;i<cd.length;i++){
-		var k=cd[i]
-		if(k.rowProp=='head'||springyIndex(k.text,text)>-1){
-			view.visibleData.push(k)
-			//k.index=index;index++
-		}
-	}
-	tree.view=view
-}
-function springyIndex(val,filterText){
-	var lowVal=val.toLowerCase()
-	var priority=0,lastI=0,ind1=0;
-	if(lowVal.indexOf(filterText)===0){
-		return 0;//exact match
-	}
-	for(var j=0;j<filterText.length;j++){
-		lastI = lowVal.indexOf(filterText[j],ind1);
-		priority += lastI-ind1
-		ind1 = lastI+1;
-		if(lastI===-1)
-			break;//springy matches
-	}
-	if(lastI != -1){
-		return priority+1
-	}
-	return -1
-}
-
-   /******************************************************************************/
-  ////** blends onselect and onmousedown
- /**************************/
- selectObjectInTreeTimeOuts={}
-function selectObjectInTree(treeID,immediate){
-	if(!immediate){
-		if(selectObjectInTreeTimeOuts[treeID]){
-			clearTimeout(selectObjectInTreeTimeOuts[treeID])
-		}
-		selectObjectInTreeTimeOuts[treeID]=setTimeout(function(){selectObjectInTree(treeID, true)},10)
-		return
-	}
-	window[treeID].onSelect()
-}
    //**************************
   //*
  //******/

@@ -179,37 +179,7 @@
 	</vbox>
 </hbox>
 
+<script type="application/javascript" src="../utils/treeUtils.js"/>
 <script type="application/javascript" src="3.js"/>
 
 </window>
-
-
-<!-- 
-  <vbox id='i2'  style='position:absolute;background-color:blue' >
-       <vbox id='i1'  style='position:absolute;right:0px'>
-       <textbox value='5554' style='border:solid;width:20px;height:20px;max-width30px;' type='search'/>
-  </vbox></vbox>
-
-
-
-function asyncLoadDom(uri, callback){
-  let doc = Cc['@mozilla.org/appshell/window-mediator;1']
-              .getService(Ci.nsIWindowMediator)
-              .getMostRecentWindow("mail:3pane").document;
-  let frame = doc.createElement("iframe");
-  frame.setAttribute("type", "content");
-  frame.setAttribute("collapsed", "true");
-  doc.documentElement.appendChild(frame);
-  let ds = frame.webNavigation;
-  ds.allowPlugins = ds.allowJavascript = ds.allowImages = false;
-  ds.allowSubframes = false;
-  ds.allowMetaRedirects = true;
-  frame.addEventListener("load", function (event){
-    if(event.originalTarget.location.href == "about:blank") return;
-    callback(frame.contentDocument);
-    doc.documentElement.removeChild(frame);
-  }, true);
-  frame.contentDocument.location.href = uri;
-} 
-
--->

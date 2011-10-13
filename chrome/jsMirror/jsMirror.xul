@@ -27,7 +27,7 @@
 			<hbox>
 				<tree id="window-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
 						hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
-					<treechildren id="inspector-tree-body"/>
+					<treechildren id="inspector-tree-body" context="main-context"/>
 
 					<treecols>
 						<treecol id="name" hideheader="true" primary="true" flex="1" />
@@ -38,7 +38,10 @@
 					</treecols>
 				</tree>
 				<splitter/>
-				<textbox multiline='true' id='autocomplate-info-bubble' flex='1' wrap='off' width='200' />
+				<vbox flex='1'>
+					<textbox multiline='true' id='autocomplate-info-bubble' flex='1' wrap='off' width='200' />
+					<textbox id='' />
+				</vbox>
 			</hbox>
 			<resizer element='autocomplatePanel' dir="bottomleft" left="0" bottom="0" width="16" height="16"/>
 			<resizer element='autocomplatePanel' dir="bottomright" right="0" bottom="0" width="16" height="16"/>
@@ -55,9 +58,14 @@
 		<hbox width="10px"/>
 		<toolbar align="center">
 			<toolbarbutton id="targetWin" oncommand="codebox.focus();targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
-				<menupopup id="window-menu">
-					
-				</menupopup>
+				<panel id="window-menu" ignorekeys="true">
+					<tree id="window-tree" class="plain" flex='1' seltype="single" treelines="true" hidecolumnpicker='true'>
+						<treecols>
+						  <treecol id="text" hideheader="true" primary="true" flex="1" />          
+						</treecols>				
+						<treechildren contextmenu='globalContext'/>
+					</tree>	
+				</panel>
 			</toolbarbutton>
 		</toolbar>
 		<spacer flex='1'/>
@@ -87,6 +95,7 @@
 
 <script type="application/javascript" src="../utils/prefUtils.js"/>
 <script type="application/javascript" src="../utils/fileUtils.js"/>
+<script type="application/javascript" src="../utils/treeUtils.js"/>
 <script type="application/x-javascript" src="menuUtils.js"/>
 <script type="application/x-javascript" src="emulate-fb.js"/>
 

@@ -139,12 +139,7 @@ dump.trace = function dumpComponentsStack(from){
         msg.push(frame.filename + "#@" + frame.lineNumber +": "+frame.sourceLine  );
     dump(from+"\n has stack size:" +msg.length+'\n', msg.join('\n'));
 }
-dump.trace = function dumpComponentsStack(from){
-    var i = 0;
-    for (var frame = Components.stack.caller; frame; frame = frame.caller)
-        dump.reportLine(i++, frame.filename + "#@", frame.lineNumber);
-    
-}
+
 dump.clear = function(){
 	Services.console.reset()
 	Services.console.logStringMessage("");

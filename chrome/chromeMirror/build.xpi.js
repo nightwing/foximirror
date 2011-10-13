@@ -79,9 +79,9 @@ function makeXPI(contextFolder){
 		return
 	}
 	
+	log.start()
 	initIgnorePatterns(contextFolder)
 	
-	log.start()
 	packXPI(contextFolder, function(jar){
 		jar.QueryInterface(Ci.nsILocalFile).reveal()
 		log.end()

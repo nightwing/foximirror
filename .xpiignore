@@ -1,0 +1,4 @@
+exclude chrome/ace\+\+/ace/
+include chrome/ace\+\+/ace/build/src/theme-\.*
+include chrome/ace\+\+/ace/build/src/(theme|keybinding|ace)-\.*
+include chrome/ace\+\+/ace/build/src/mode-(html|xml|coffee|svg)\.*

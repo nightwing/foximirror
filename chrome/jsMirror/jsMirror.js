@@ -476,6 +476,7 @@ if(utils.getOuterWindowWithId){
 		return win
 	}
 	getOuterWindowID = function(window){
+		dump.trace()
 		return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
 	}
 	getOuterWindowWithId = function(id){
@@ -485,30 +486,23 @@ if(utils.getOuterWindowWithId){
 }
 else//old versions
 {
-	getTargetWindow=function(){
-		var win = targetWindowId
+	getTargetWindow = function(){
+		var win = targetWindowId.get()
 		if(!win||win.closed)
 			win = null
 		return win
 	}
 	getOuterWindowID = function(window){
-		return window
+		return Cu.getWeakReference(window)
 	}
 }
 
 var commandHistory = new Array();
 var currentCommandHistoryPos = 0;
-var allOpenWins = new Object();
-var cntTargetWinML = null;
-var cntContentWinCB = null;
 var codebox = null;
 var resultbox = null;
 var cntFunctionNameML = null;
 
-
-function byId(id){
-	return document.getElementById(id);
-}
 
 var initializeables = []
 function doOnload(){
@@ -539,12 +533,9 @@ function doOnUnload(){
 
 
 function initGlobals(){
-	cntTargetWinML = byId("targetWin")
-	//cntTargetWinML.editable=true
-	cntContentWinCB = byId("contentWinCB")
-	codebox = byId("jsCode")
-	resultbox = byId("result")
-	cntFunctionNameML = byId("functionName")
+	codebox = $("jsCode")
+	resultbox = $("result")
+	cntFunctionNameML = $("functionName")
 
 	commandHistory = ConfigManager.readHistory();
 	currentCommandHistoryPos = commandHistory.length
@@ -552,26 +543,6 @@ function initGlobals(){
 
 initTargetWindow = function(window){
 	windowViewer.setSelectedWinID(window)
-	if(!window){
-		var e=Services.wm.getZOrderDOMWindowEnumerator(null, 1)
-		window = e.getNext()
-		if(e.hasMoreElements())
-			window = e.getNext()
-	}
-	targetWindowId = getOuterWindowID(shadowInspector.getTopWindow(window))
-	
-	var opener=window.window//strange bug with weakref and mediator
-	var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
-	var resources = cntTargetWinML.menupopup.childNodes//[6].id
-	for(var i=0;i<resources.length;i++)
-		if(mediator.getWindowForResource(resources[i].id)==opener){
-			cntTargetWinML.selectedIndex = i;
-			var found=true
-			break
-		}
-	
-	found||(cntTargetWinML.selectedIndex=1);
-
 	targetWinChanged();
 }
 
@@ -678,10 +649,17 @@ jsExplore.reveal=function(){
 }
 jsExplore.eval=function(){
 	var f = autocompleter.selectedObject.object
-	if(typeof f == 'function')
-		autocompleter.sayInBubble(jn.inspect(f()), true)
-	else
-		autocompleter.sayInBubble('not a function', true)
+	var o = autocompleter.object
+	try{
+		if(typeof f == 'function')
+			var result = jn.inspect(f.call(o))
+		else
+			var result = 'not a function'
+	}catch(e){
+		result = e
+	}
+
+	autocompleter.sayInBubble(result, true)
 }
 
 jsExplore.getParent=function(){
@@ -998,11 +976,102 @@ var ConfigManager = {
  **********************************************************/
  
 windowViewer={
+	getContextMenuItems: function(_, target){
+        var items = []
+		var self = this
+		var uri = getCurrentURI()
+		var isJar = uri.slice(0,3) == 'jar'
+		var isJarJar = isJar && uri.slice(4,7) == 'jar'
+		
+        items.push({
+                label: "copy name",
+                command: function() {
+					var i = self.getSelectedItem()
+                    gClipboardHelper.copyString(i.name);
+                },
+            }, {
+                label: "rename",
+                command: function() {
+					var i = self.getSelectedItem()
+					var name = i.name
+					var newName = prompt('enter new name', name)
+					if(!newName || newName == name)
+						return
+                    renameLocaleUri(getCurrentURI(), newName);
+					self.reload()
+                },
+				disabled: isJar
+            },'-',{
+                label: ("delete"),
+                command: function() {
+					var lamb4Slaughter = getCurrentURI()
+					if(Services.prompt.confirm(
+						window,
+						"deleting file can't be undone",'do you really want to permanently delete '
+						+ decodeURIComponent(lamb4Slaughter)
+					)){
+						deleteLocaleUri(lamb4Slaughter);
+						self.reload()
+					}
+                },
+				disabled: isJarJar
+            }, "-", {
+                label: ("launch"),
+                command: function() {
+                    getCurrentFile().launch()
+                },
+            },{
+                label: ("reveal"),
+                command: function() {
+                    getCurrentFile().reveal()
+                },
+            },"-",{
+                label: "edit",
+                command: function() {
+                   npp1();
+                }
+            }
+        );
+		
+		
+		if(isJarJar)
+			var archiveUri = null
+		else if(isJar)
+			var archiveUri = uri
+		else if(/\.(jar|xpi|zip)/.test(uri))
+			var archiveUri = 'jar:'+uri+'!/'
+		
+		if(archiveUri)
+			items.push({
+				label: "extract",
+				command: function(){
+					// $shadia.extractRelative(Services.io.newURI(archiveUri, null, null), false).file
+					var file = getLocalFile(archiveUri)
+					var dir = file.parent
+					// do not add junk into extensions folder firefox doesn't like it
+					if (dir.leafName == 'extensions'){
+						dir = dir.parent
+						dir.append('extensions.unjarred')
+					}
+					dir.append(file.leafName.slice(0,-4))
+        
+					extractFiles(file, dir)
+        
+					dir.QueryInterface(Ci.nsILocalFile).reveal()				
+				}
+			})
+		
+		
+
+        return items;
+	},
+	
 	initialize: function(){
-		this.tree=document.getElementById('window-tree')
-		this.button=document.getElementById('windowViewerButton')
-		/*this.popup.setAttribute('onpopupshowing','windowViewer.start()')
-		this.popup.setAttribute('onpopuphiding','windowViewer.finish()')*/
+		this.tree=$('window-tree')
+		this.button=$('windowViewerButton')
+		this.popup=$("window-menu")
+		this.popup.setAttribute('onpopupshowing','windowViewer.start()')
+		this.popup.setAttribute('onpopuphiding','windowViewer.finish()')
 		this.view=new multiLevelTreeView()
 		//this.tree.onclick='windowViewer.startShadia()'
 		//this.tree.onselect=init2()
@@ -1010,10 +1079,12 @@ windowViewer={
 		this.tree.setAttribute('ondblclick','windowViewer.selectWindow()')
 
 		this.tree.addEventListener('keypress',this,true)
+		
+		this.tree.ownerPanel = this
 	},
 	fillWindowList: function(){
 		function toUp(el){
-			return domUtils.getParentForNode(el, true)||{};
+			return Services.domUtils.getParentForNode(el, true)||{};
 		}
 		var winTable=[],index=0,slf=this
 		function inspwin(w,level){
@@ -1040,7 +1111,7 @@ windowViewer={
 				sortedFrames.push(mWindow.frames[i])
 			}
 			sortedFrames.sort(function(a,b){
-				var o=toUp(a.document).compareDocumentPosition(toUp(b.document));
+				var o = toUp(a.document).compareDocumentPosition(toUp(b.document));
 				if((o|document.DOCUMENT_POSITION_FOLLOWING)==o)return -1
 				if((o|document.DOCUMENT_POSITION_PRECEDING)==o)return 1
 				return 0
@@ -1052,8 +1123,10 @@ windowViewer={
 						iterateInnerFrames(innerFrame,level+1)
 					else
 						inspwin(innerFrame,level+1)
-				}catch(e){Components.utils.reportError(e);
-				dump('--->why error in innerFrame.frames?',innerFrame.location)}//
+				}catch(e){
+					Components.utils.reportError(e);
+					dump('--->why! error in innerFrame.frames?',innerFrame.location)
+				}//
 			}
 		}
 		var fWins=winService.getEnumerator('');
@@ -1074,23 +1147,30 @@ windowViewer={
 		this.tree.view.selection.select(this.curWinIndex)
 	},
 	activate: function(){
-		this.rebuild()
 		//winService.addListener(this)
-		rightpane.setIndex(0)
+		this.showList(true)
 		this.tree.focus()
 		this.tree.parentNode.style.MozUserFocus='normal'
 		this.tree.setAttribute('onblur',' if(document.activeElement!=windowViewer.tree)windowViewer.deactivate()')
 		this.button.checked=!true
 		this.active=true
+		this.rebuild()
 	},
 	deactivate: function(){
 		//winService.removeListener(this)
 		this.tree.view=null
 		this.view.visibleData=this.view.childData=[]
-		rightpane.setIndex(1)
+		this.showList(false)
 
 		this.button.checked=!false
 		this.active=false
+	},
+	showList: function(show){
+		if(show){
+		
+		}else{
+			
+		}
 	},
 	setWindow:  function(useSameWin){
 		var i=this.tree.currentIndex,data=this.view.visibleData, topIndex=i, topWindow
@@ -1158,29 +1238,18 @@ windowViewer={
 
 	//window service
 	getSelectedWinID: function(){
+		return targetWindowId
 		var win
 		return getOuterWindowID(win)
 	},
 	setSelectedWinID: function(window) {
 		if(!window){
-			var e=Services.wm.getZOrderDOMWindowEnumerator(null, 1)
+			var e = Services.wm.getZOrderDOMWindowEnumerator(null, 1)
 			window = e.getNext()
-			if(e.hasMoreElements())
-				window = e.getNext()
 		}
 		targetWindowId = getOuterWindowID(shadowInspector.getTopWindow(window))
 		
-		var opener=window.window//strange bug with weakref and mediator
-		var mediator = Cc["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService(Ci.nsIWindowDataSource);
-		var resources = cntTargetWinML.menupopup.childNodes//[6].id
-		for(var i=0;i<resources.length;i++)
-			if(mediator.getWindowForResource(resources[i].id)==opener){
-				cntTargetWinML.selectedIndex = i;
-				var found=true
-				break
-			}
-		
-		found||(cntTargetWinML.selectedIndex=1);
+	
 
 		targetWinChanged();
 	},

@@ -3,35 +3,7 @@
 /*****************************************************************
  *  code completion utils
  *****************************************************************/
-function treeView(table) {
-    this.rowCount = table.length;
-    this.getCellText  = function(row, col) {return table[row][col.id];};
-    this.getCellValue = function(row, col) {return table[row][col.id];};
-    this.setTree = function(treebox) {this.treebox = treebox;};
-    this.isEditable = function(row, col) {return false;};
 
-    this.isContainer = function(row) {return false;};
-    this.isContainerOpen = function(row) {return false;};
-    this.isContainerEmpty = function(row) {return true;};
-    this.getParentIndex = function(row) { return 0;};
-    this.getLevel = function(row) {return 0;};
-    this.hasNextSibling = function(row) {return false;};
-
-    this.isSeparator = function(row) {return false;};
-    this.isSorted = function() {return false;};
-    this.getImageSrc = function(row, col) {}; // return "chrome://global/skin/checkbox/cbox-check.gif"; };
-    this.getRowProperties = function(row, props) {
-        //var aserv=Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
-        //props.AppendElement(aserv.getAtom(table[row].depth));
-        //props.AppendElement(aserv.getAtom('a'));
-    };
-    this.getCellProperties = function(row, col, props) {
-        var aserv=Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
-        props.AppendElement(aserv.getAtom('d'+table[row].depth));
-    };
-    this.getColumnProperties = function(colid, col, props) {};
-    this.cycleHeader = function(col, elem) {};
-}
 
 /**************************************/
 Firebug.Ace.startAutocompleter = FBL.bind(function(editor) {

@@ -41,52 +41,37 @@
 		<toolbar id='actionsp' hidden="true">	
 			<toolbarbutton label="vert" oncommand="toggleOrient()"/>	
 		</toolbar>      
-		<menubar align="center" hidden="true">
-			<label control="targetWin" accesskey="w" value="Target window" />
-			<menulist id="targetWin" oncommand="EJS_targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
-				<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
-					<template>
-						<rule>
-							<menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-						</rule>
-					</template>
-				</menupopup>
-			</menulist>
-			<checkbox id="contentWinCB" persist="checked" disabled="false" label="Content Window" accesskey="t" 
-				oncommand="EJS_targetWinChanged()" tabindex="2"/>
-		</menubar>
-		
+		<toolbar>
+			<tabs setfocus='false' oncommand="tabSelect(event.target.id)">
+				<tab label="main" id="main"/>
+				<tab label="binding" id="binding"/> 
+				<tab label="overlay" id="overlay"/> 
+			</tabs>
+			<spacer flex='1'/>
+			<shadiaglue/>
+			<toolbar> 
+				<toolbarbutton label="&#10227;" oncommand='updatePreview()'   />
+				<toolbarbutton type="checkbox" checked="true" label="autoupdate" oncommand='gAutoUpdate = this.checked;updatePreview()' />
+				<toolbarbutton  label="detach" oncommand="toggleDetach(this)"/>
+				
+				<spacer flex="1"/>
+				<toolbarbutton type="menu-button" label="load">
+					<menupopup onpopupshowing="Firebug.Ace.loadPopupShowing(this)"/>
+				</toolbarbutton>
+				<toolbarbutton type="menu-button" label="save" oncommand="if(event.target==this){cleanupDirtyState();saveTemplates()}">
+					<menupopup onpopupshowing="Firebug.Ace.savePopupShowing(this)"/>
+				</toolbarbutton>
+			</toolbar>	
+		</toolbar>
 		<box id='wrap' orient='horizontal' flex="1" >
 			<vbox flex='1' id='codebox' persist='height width'>
-				<hbox>
-				  <tabs setfocus='false' oncommand="tabSelect(event.target.id)">
-					<tab label="main" id="main"/>
-					<tab label="binding" id="binding"/> 
-					<tab label="overlay" id="overlay"/> 
-				  </tabs>
-				  <spacer flex='1'/>
-					<shadiaglue/>
-				</hbox>
 				<tabpanel flex='1' >
 					<iframe flex='1' id="code" context='main-context' type='content' src='chrome://shadia/content/ace++/simple-editor.html'/>
 				</tabpanel>
 			</vbox>
 			<splitter collapse="after" id="split"><grippy/></splitter>
 			<vbox flex='1' id='contentbox' persist='height width'>
-				<iframe id="content" flex='1'/>
-				<toolbar> 
-					<toolbarbutton label="&#10227;" oncommand='updatePreview()'   />
-					<toolbarbutton type="checkbox" checked="true" label="autoupdate" oncommand='gAutoUpdate = this.checked;updatePreview()' />
-					<toolbarbutton  label="detach" oncommand="toggleDetach(this)"/>
-					
-					<spacer flex="1"/>
-					<toolbarbutton type="menu-button" label="load">
-						<menupopup onpopupshowing="Firebug.Ace.loadPopupShowing(this)"/>
-					</toolbarbutton>
-					<toolbarbutton type="menu-button" label="save" oncommand="if(event.target==this){cleanupDirtyState();saveTemplates()}">
-						<menupopup onpopupshowing="Firebug.Ace.savePopupShowing(this)"/>
-					</toolbarbutton>
-				</toolbar>
+				<iframe id="content" flex='1'/>				
 			</vbox>
 		</box>
     </vbox>
