@@ -8,7 +8,9 @@
 		width="800" height="550" persist="screenX screenY width height sizemode"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml"
 		onload="doOnload()" onunload="doOnUnload()" sizemode="maximized" orient="horizontal" >
-
+	<html:style>
+		#contentbox{border-top: 1px solid threedshadow;;}
+	</html:style>
 	<popupset>
 		<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
 		<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
@@ -38,30 +40,18 @@
 	</popupset>
 
 	<vbox flex="1">
-		<toolbar id='actionsp' hidden="true">	
-			<toolbarbutton label="vert" oncommand="toggleOrient()"/>	
-		</toolbar>      
-		<toolbar>
-			<tabs setfocus='false' oncommand="tabSelect(event.target.id)">
-				<tab label="main" id="main"/>
-				<tab label="binding" id="binding"/> 
-				<tab label="overlay" id="overlay"/> 
+		<toolbar>				
+			<tabs id="tablist" setfocus='false' oncommand="templateList.selectTab(event.target.id)">
+				<tab label="overview" id="overview"/>
+				<!-- <separator class="groove" orient="vertical"/><toolbarbutton label="vert" oncommand="toggleOrient()"/> -->
 			</tabs>
 			<spacer flex='1'/>
-			<shadiaglue/>
-			<toolbar> 
-				<toolbarbutton label="&#10227;" oncommand='updatePreview()'   />
-				<toolbarbutton type="checkbox" checked="true" label="autoupdate" oncommand='gAutoUpdate = this.checked;updatePreview()' />
-				<toolbarbutton  label="detach" oncommand="toggleDetach(this)"/>
-				
-				<spacer flex="1"/>
-				<toolbarbutton type="menu-button" label="load">
-					<menupopup onpopupshowing="Firebug.Ace.loadPopupShowing(this)"/>
-				</toolbarbutton>
-				<toolbarbutton type="menu-button" label="save" oncommand="if(event.target==this){cleanupDirtyState();saveTemplates()}">
-					<menupopup onpopupshowing="Firebug.Ace.savePopupShowing(this)"/>
-				</toolbarbutton>
-			</toolbar>	
+			<toolbarbutton type="menu-button" label="load">
+				<menupopup onpopupshowing="Firebug.Ace.loadPopupShowing(this)"/>
+			</toolbarbutton>
+			<toolbarbutton type="menu-button" label="save" oncommand="if(event.target==this){cleanupDirtyState();saveTemplates()}">
+				<menupopup onpopupshowing="Firebug.Ace.savePopupShowing(this)"/>
+			</toolbarbutton>	
 		</toolbar>
 		<box id='wrap' orient='horizontal' flex="1" >
 			<vbox flex='1' id='codebox' persist='height width'>
@@ -74,6 +64,16 @@
 				<iframe id="content" flex='1'/>				
 			</vbox>
 		</box>
+		<toolbar> 
+
+			<shadiaglue/>
+			<toolbarbutton type="checkbox" label="debugself" oncommand="shadia.defWindow = this.checked?null:gBrowser"/>
+			<spacer flex="1"/>
+			
+			<toolbarbutton  label="detach" oncommand="toggleDetach(this)"/>
+			<toolbarbutton label="&#10227;" oncommand='updatePreview()'   />
+			<toolbarbutton type="checkbox" checked="true" label="autoupdate" oncommand='gAutoUpdate = this.checked;updatePreview()' />
+		</toolbar>	
     </vbox>
 	
 	

@@ -412,7 +412,7 @@ exports.launch = function(env, options) {
 		}
 	};
 	createSession = function(value, name, mimeType) {
-		var s = new EditSession(value);
+		var s = new EditSession(value||'');
 		s.setFileInfo(name.toLowerCase(), mimeType);
 		s.setMode(modeCache.get(s.extension));
 		s.setUndoManager(new UndoManager());
