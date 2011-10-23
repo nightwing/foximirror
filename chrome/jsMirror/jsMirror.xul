@@ -25,7 +25,7 @@
 		</hbox>
 		<stack id='autocomplatePanelStack' flex='1'>
 			<hbox>
-				<tree id="window-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
+				<tree id="autocomplete-tree" class="plain1" seltype="single" treelines="false" tabindex='-1'
 						hidecolumnpicker='true' style='-moz-user-focus:none' height='300' width='280'>
 					<treechildren id="inspector-tree-body" context="main-context"/>
 
@@ -49,25 +49,23 @@
 	</panel>
 
 	<menupopup id='main-context' onpopupshowing='MenuUtils.onContextShowing(event)'/>
+	
+	<panel id="window-menu" ignorekeys="true" width="500" height="400" position="after_start">
+		<tree id="window-tree" class="plain" flex='1' seltype="single" treelines="true" hidecolumnpicker='true'>
+			<treecols>
+			  <treecol id="text" hideheader="true" primary="true" flex="1" />          
+			</treecols>				
+			<treechildren contextmenu='globalContext'/>
+		</tree>	
+	</panel>
 </popupset>
 
 <vbox flex="1">
 	<toolbar id='actionsp'>
 		<toolbarbutton label="//" oncommand="codebox.focus();Firebug.Ace.win2.editor.execCommand('togglecomment')"/>
 		<toolbarbutton label="/*" oncommand="codebox.focus();Firebug.Ace.win2.editor.execCommand('toggleStreamComment')"/>
-		<hbox width="10px"/>
-		<toolbar align="center">
-			<toolbarbutton id="targetWin" oncommand="codebox.focus();targetWinChanged(event.target);" tabindex="1" maxwidth="300px" minwidth="100px">
-				<panel id="window-menu" ignorekeys="true">
-					<tree id="window-tree" class="plain" flex='1' seltype="single" treelines="true" hidecolumnpicker='true'>
-						<treecols>
-						  <treecol id="text" hideheader="true" primary="true" flex="1" />          
-						</treecols>				
-						<treechildren contextmenu='globalContext'/>
-					</tree>	
-				</panel>
-			</toolbarbutton>
-		</toolbar>
+		<separator orient = "vertical" width="10px"/>
+		<toolbarbutton id="targetWindow" popup="window-menu" maxwidth="300px" minwidth="100px" checked="true" type="menu"/>
 		<spacer flex='1'/>
 		<shadiaglue/>
 	</toolbar>

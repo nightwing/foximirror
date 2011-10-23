@@ -325,7 +325,7 @@ jn.bait= modernFox?(function(a){
 })():dump;
 
 jn.getScripts = function(window){
-	var document = window.document
+	var document = (window || getTargetWindow()).document
 	var bu = Services.io.newURI(document.baseURI, null, null)
 	var s = document.querySelectorAll('script')
 	s = Array.prototype.slice.call(s).map(function(x){
@@ -334,9 +334,21 @@ jn.getScripts = function(window){
 	return s
 }
 //sr=jn.getScripts(window)[4];jn.loadScript(sr, window)
-
 jn.loadScript = function(src, window){
-   return Services.scriptloader.loadSubScript(src+'?'+Date.now(), window, 'UTF-8')
+	var document = (window || getTargetWindow()).document
+	var s = document.querySelector("script[src='" + src + "']")
+	if(s)
+		s.parentNode.removeChild(s)
+
+	var s = document.createElementNS('http://www.w3.org/1999/xhtml', "html:script");
+	s.type = "text/javascript;version=1.8";
+	s.src = src//+'?'+Date.now();
+	document.documentElement.appendChild(s);
+		
+    return s
+}
+jn.loadScript2 = function(src, window){
+   return Services.scriptloader.loadSubScript(src+'?'+Date.now(), window || getTargetWindow(), 'UTF-8')
 }
 
 function getClass(x) {
@@ -542,15 +554,8 @@ function initGlobals(){
 }
 
 initTargetWindow = function(window){
-	windowViewer.setSelectedWinID(window)
-	targetWinChanged();
+	windowViewer.setWindow(window)
 }
-
-function targetWinChanged(){
-	//Set current target
-	targetWindowId = windowViewer.getSelectedWinID()
-}
-
 
 /***/
 function insertTimer(){
@@ -1068,14 +1073,14 @@ windowViewer={
 	
 	initialize: function(){
 		this.tree=$('window-tree')
-		this.button=$('windowViewerButton')
+		this.button=$('targetWindow')
 		this.popup=$("window-menu")
-		this.popup.setAttribute('onpopupshowing','windowViewer.start()')
-		this.popup.setAttribute('onpopuphiding','windowViewer.finish()')
+		this.popup.setAttribute('onpopupshown','if(event.target==this)windowViewer.activate()')
+		this.popup.setAttribute('onpopuphiding','windowViewer.deactivate()')
 		this.view=new multiLevelTreeView()
-		//this.tree.onclick='windowViewer.startShadia()'
 		//this.tree.onselect=init2()
-		this.tree.setAttribute('onselect','windowViewer.setWindow()')
+		this.tree.setAttribute('onselect','selectObjectInTree("windowViewer")')
+		this.tree.setAttribute('onmousedown','selectObjectInTree("windowViewer")')
 		this.tree.setAttribute('ondblclick','windowViewer.selectWindow()')
 
 		this.tree.addEventListener('keypress',this,true)
@@ -1093,8 +1098,6 @@ windowViewer={
 			var t=d.title.substring(0,40)
 			t= t.length==0? uri : t+'->'+uri//.substring(0,50)+'...'+uri.slice(-10)
 
-			if(w==mWindow)
-				slf.curWinIndex=index
 			winTable.push({
 				level: level,
 				text: t+ (level==0?'':' <'+domNodeSummary(toUp(d))),
@@ -1129,41 +1132,71 @@ windowViewer={
 				}//
 			}
 		}
-		var fWins=winService.getEnumerator('');
+		var fWins = Services.wm.getEnumerator('');
 		while(fWins.hasMoreElements()){
 			iterateInnerFrames(fWins.getNext(),0)
 		}
 		this.view.childData=winTable
 		this.view.visibleData=[]
-		for(var i=0;i<winTable.length;i++){
+		for (var i=0; i < winTable.length; i++) {
 			this.view.visibleData.push(winTable[i]);
 		}
 
 	},
+	updateVisibleList: function(showDepth){
+		var mWindow = getOuterWindowWithId(targetWindowId)
+		var winTable = this.view.childData
+		this.view.visibleData=[]
+		var lastTopWindow = 0
+		for (var i=0; i < winTable.length; i++) {
+			var w = winTable[i]
+			if(w.level <= showDepth){
+				lastTopWindow = i
+				this.view.visibleData.push(winTable[i]);
+			}
+			if(w.frame == mWindow){
+				if(w.level > showDepth){
+					while(lastTopWindow++ < i){
+						this.view.visibleData.push(winTable[lastTopWindow]);
+					}
+				}
+				this.curWinIndex = this.view.visibleData.length - 1
+				var lastLevel = w.level
+				w = winTable[i+1]
+				while(w && w.level > showDepth && w.level <= lastLevel){
+					i++
+					this.view.visibleData.push(w);
+					w = winTable[i+1]
+				}
+			}
+
+		}
+	},
 
 	rebuild: function(){
 		this.fillWindowList()
+		this.updateVisibleList(0)
 		this.tree.view=this.view
 		this.tree.view.selection.select(this.curWinIndex)
+		this.tree.treeBoxObject.ensureRowIsVisible(this.curWinIndex)
 	},
 	activate: function(){
-		//winService.addListener(this)
 		this.showList(true)
 		this.tree.focus()
-		this.tree.parentNode.style.MozUserFocus='normal'
-		this.tree.setAttribute('onblur',' if(document.activeElement!=windowViewer.tree)windowViewer.deactivate()')
+		//this.tree.parentNode.style.MozUserFocus='normal'
 		this.button.checked=!true
 		this.active=true
 		this.rebuild()
 	},
 	deactivate: function(){
-		//winService.removeListener(this)
 		this.tree.view=null
 		this.view.visibleData=this.view.childData=[]
 		this.showList(false)
 
 		this.button.checked=!false
 		this.active=false
+		
+		this.popup.hidePopup()
 	},
 	showList: function(show){
 		if(show){
@@ -1172,35 +1205,11 @@ windowViewer={
 			
 		}
 	},
-	setWindow:  function(useSameWin){
-		var i=this.tree.currentIndex,data=this.view.visibleData, topIndex=i, topWindow
-		useSameWin=true
-		if(leftPane==domViewer&&useSameWin){
-			topWindow=data[topIndex]
-			while(topWindow&&topWindow.level>0&&topWindow.frame!=mWindow){
-				topIndex=this.view.getParentIndex(topIndex)
-				topWindow=data[topIndex]
-			}
-			if(topWindow.frame!=mWindow){
-				topIndex=i
-			}
-		}
-		if(leftPane==domViewer){
-			if(data[topIndex].frame!=mWindow){
-				mWindow=data[topIndex].frame
-				domViewer.setWindow(mWindow)
-			}else{
-				domViewer.setNode(data[i].frame.document.documentElement)
-			}
-		}else{
-			mWindow=data[i].frame
-			leftPane.setWindow(mWindow)
-		}
-		//notify viewers that window was changed
-		if(leftPane!=domViewer)	domViewer.winMustChange=true
-		if(leftPane!=stylesheetViewer)	stylesheetViewer.winMustChange=true
-		//descripton of
-		this.updateButton()
+	onSelect:  function(){
+		var i = this.tree.currentIndex, data = this.view.visibleData
+		dump(data, i)
+		var mWindow = data[i].frame
+		this.setWindow(mWindow)		
 	},
 	toggle: function(){
 		if(this.active)this.deactivate()
@@ -1219,13 +1228,11 @@ windowViewer={
 	selectWindow: function(event){
 		if(this.active)
 			this.deactivate()
-		if(leftPane.textbox)
-			leftPane.textbox.focus()
-		else
-			leftPane.tree.focus()
+		if(codebox)
+			codebox.focus()
 	},
 
-	updateButton: function(){
+	updateButton: function(mWindow){
 		var t = mWindow.document.title
 		var uri = sayHrefEnd(mWindow.document.documentURI)
 
@@ -1242,16 +1249,14 @@ windowViewer={
 		var win
 		return getOuterWindowID(win)
 	},
-	setSelectedWinID: function(window) {
+	setWindow: function(window) {
 		if(!window){
 			var e = Services.wm.getZOrderDOMWindowEnumerator(null, 1)
 			window = e.getNext()
 		}
-		targetWindowId = getOuterWindowID(shadowInspector.getTopWindow(window))
-		
-	
-
-		targetWinChanged();
+		targetWindowId = getOuterWindowID(window)
+		//descripton of
+		this.updateButton(window)
 	},
 
 	currentURI: function(){
@@ -1261,3 +1266,66 @@ windowViewer={
 	},
 }
 	initializeables.push(windowViewer)
+
+function sayHrefEnd(href){
+		/*if(uri.substring(0,5)=='data:')
+			uri=uri.substring(0,uri.indexOf(','))
+		else {
+			var l=uri.lastIndexOf('/')
+			if(l!=-1)
+				uri=uri.substr(l)
+		}
+		try{uri=decodeURIComponent(uri)}catch(e){}*/
+	href=sayHref(href)
+	var l=href.lastIndexOf('/')
+	if(l==-1)l=0
+	return cropString( href.length>50?href:href.substr(l) )
+}
+function sayHref(href){
+	if(href.substring(0,5)=='data:')
+		return href.substring(0,href.indexOf(','))
+	try{href=decodeURIComponent(href)}catch(e){}
+	return href
+}
+cropString = function(text, limit){
+    // Make sure it's a string.
+    text = text + "";
+
+    // Use default limit if necessary.
+    if (!limit)
+        limit = 55;
+    if (text.length > limit){
+		var halfLimit = (limit / 2)-1;
+		return text.substr(0, halfLimit) + '\u22EF' + text.substr(text.length-halfLimit);
+	}
+    return text;
+}
+domNodeSummary= function(el){
+	var name=''
+	//typeof el==='object'
+	if(el.nodeType==7){
+		name+=el.target+' ->'+el.data
+	}else if(el.nodeType==9){
+		name+=el.nodeName+': '+el.title +'->'
+		name+=sayHref(el.documentURI)
+	}else{
+		if(el.nodeName)
+			name+=el.nodeName
+		if(el.id)
+			name+=" #"+el.id
+		if(el.className)
+			name+="."+el.className.toString().replace(" ",".",'g')
+		if(el.nodeValue)
+			name+="="+el.nodeValue
+		else if(el.value)
+			name+=" ="+el.value
+		else if(el.childElementCount==0&&el.textContent)
+			name+=' ="'+el.textContent.substring(0,100)+'"'
+		if(typeof el.hasAttribute=='function' &&el.hasAttribute('src'))
+			name+="->"+el.getAttribute('src')
+		if(el.nodeName=='key'){
+			name+=domViewerKeySummary(el)
+		}
+	}
+	return name
+}

@@ -141,12 +141,12 @@ multiLevelTreeView.prototype = {
 	getRowProperties: function(row, prop) {
 		var pn=this.visibleData[row].rowProp
 		if(!pn)return
-		prop.AppendElement(atomService.getAtom(pn));
+		prop.AppendElement(Services.atom.getAtom(pn));
 	},
 	getCellProperties: function(row, column, prop) {
 		var pn=this.visibleData[row].cellProp
 		if(!pn)return
-		prop.AppendElement(atomService.getAtom(pn));
+		prop.AppendElement(Services.atom.getAtom(pn));
 	},
 	getColumnProperties: function(column, element, prop) {
 	},
