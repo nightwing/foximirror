@@ -21,7 +21,7 @@ function transformPath(path) {
         }
     }
 
-    return aceRoot + path + '.js'
+    return aceRoot + path
 }
 
 loadScripts = function(deps, callback, lastUrl) {
@@ -133,7 +133,7 @@ var startAce = function(callback, options, deps) {
 			wordwrap: false,
 			highlightactiveline: true,
 			highlightselectedword: true,
-			validateasyoutype: true
+			validateasyoutype: false
 		};
     //"ace/theme/textmate" is built into ace.js so there's no need to load that
     if (!options.theme)

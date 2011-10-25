@@ -1683,10 +1683,9 @@ exports.shutdown = function() {
 });
 
 
-define('pilot/canon', ['require', 'exports', 'module' , 'pilot/console', 'pilot/stacktrace', 'pilot/oop', 'pilot/useragent', 'pilot/keys', 'pilot/event_emitter', 'pilot/typecheck', 'pilot/catalog', 'pilot/types', 'pilot/lang'], function(require, exports, module) {
+define('pilot/canon', ['require', 'exports', 'module' , 'pilot/console', 'pilot/oop', 'pilot/useragent', 'pilot/keys', 'pilot/event_emitter', 'pilot/typecheck', 'pilot/catalog', 'pilot/types', 'pilot/lang'], function(require, exports, module) {
 
 var console = require('pilot/console');
-var Trace = require('pilot/stacktrace').Trace;
 var oop = require('pilot/oop');
 var useragent = require('pilot/useragent');
 var keyUtil = require('pilot/keys');
@@ -12818,7 +12817,7 @@ exports.cssText = ".ace-tm .ace_editor {\
 }";
 
 });
-define('text!ace/css/editor.css', [], "\
+define('ace/requirejs/text!ace/css/editor.css', [], "\
 \
 .ace_editor {\
     position: absolute;\

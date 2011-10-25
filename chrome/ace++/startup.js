@@ -7,11 +7,6 @@ function HashHandler(config) {
 }
 
 (function() {
-    function splitSafe(s, separator, limit, bLowerCase) {
-        return (bLowerCase && s.toLowerCase() || s)
-            .replace(/(?:^\s+|\n|\s+$)/g, "")
-            .split(new RegExp("[\\s ]*" + separator + "[\\s ]*", "g"), limit || 999);
-    }
 	function splitSafe(s, separator, limit, bLowerCase) {
         return s.toLowerCase().split('-');
     }
@@ -147,13 +142,13 @@ var Gutter = function(parentEl) {
         var html = [];
         var i = config.firstRow;
         var lastRow = config.lastRow;
-        var fold = this.session.getNextFold(i);
+        var fold = this.session.getNextFoldLine(i);
         var foldStart = fold ? fold.start.row : Infinity;
 
         while (true) {
             if(i > foldStart) {
                 i = fold.end.row + 1;
-                fold = this.session.getNextFold(i);
+                fold = this.session.getNextFoldLine(i);
                 foldStart = fold ?fold.start.row :Infinity;
             }
             if(i > lastRow)
@@ -200,6 +195,7 @@ exports.Gutter = Gutter;
 define('fbace/startup', function(require, exports, module) {
 
 exports.launch = function(env, options) {
+    acebugOptions = options
     // requires
     event = require("pilot/event");
     Editor = require("ace/editor").Editor;
@@ -566,7 +562,7 @@ exports.launch = function(env, options) {
         startAutocompleter: "Ctrl-Space|Ctrl-.|Alt-.",
         execute: "Ctrl-Return",
 		dirExecute: "Ctrl-Shift-Return",
-        duplicate: "Ctrl-D|Alt-D",
+        duplicate: "Ctrl-D",
 		beautify: "Ctrl-Shift-B"
     };
 
@@ -713,7 +709,7 @@ exports.launch = function(env, options) {
             sender: "editor"
         },
         exec: function(env) {
-			
+			aceManager.saveFile(env.editor, true)
         }
     });
     canon.addCommand({
@@ -724,7 +720,7 @@ exports.launch = function(env, options) {
             sender: "editor"
         },
         exec: function(env) {
-
+			aceManager.saveFile(env.editor, false)
         }
     });
 
@@ -754,10 +750,10 @@ exports.launch = function(env, options) {
         }
     });
 	
-	
+
 	function onGutterClick(e) {
 		var editor = env.editor, s = editor.session, row = e.row;
-		var className = e.htmlEvent.target.className
+		var className =  e.htmlEvent.target.className
 		if (className.indexOf('ace_fold-widget') < 0) {
 			if(className.indexOf("ace_gutter-cell") != -1 && editor.isFocused())
 				s[s.$breakpoints[row]?'clearBreakpoint':'setBreakpoint'](row);
