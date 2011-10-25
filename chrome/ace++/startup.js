@@ -713,7 +713,7 @@ exports.launch = function(env, options) {
             sender: "editor"
         },
         exec: function(env) {
-
+			
         }
     });
     canon.addCommand({
@@ -754,109 +754,7 @@ exports.launch = function(env, options) {
         }
     });
 	
-	canon.addCommand({
-        name: "fold",
-        bindKey: {
-            win: "Alt-L",
-            mac: "Alt-L",
-            sender: "editor"
-        },
-        exec: function(env) {
-            toggleFold(env, false)
-        }
-    });
-
-    canon.addCommand({
-        name: "unfold",
-        bindKey: {
-            win: "Alt-Shift-L",
-            mac: "Alt-Shift-L",
-            sender: "editor"
-        },
-        exec: function(env) {
-            toggleFold(env, true)
-        }
-    });
-
-    function isCommentRow(row) {
-        var session = env.editor.session;
-        var token;
-        var tokens = session.getTokens(row, row)[0].tokens;
-        var c = 0;
-        for (var i = 0; i < tokens.length; i++) {
-            token = tokens[i];
-            if (/^comment/.test(token.type)) {
-                return c;
-            } else if (!/^text/.test(token.type)) {
-                return false;
-            }
-            c += token.value.length;
-        }
-        return false;
-    };
-
-    function toggleFold(env, tryToUnfold) {
-        var session = env.editor.session;
-        var selection = env.editor.selection;
-        var range = selection.getRange();
-        var addFold;
-
-        if(range.isEmpty()) {
-            var br = session.findMatchingBracket(range.start);
-            var fold = session.getFoldAt(range.start.row, range.start.column);
-            var column;
-
-            if(fold) {
-                session.expandFold(fold);
-                selection.setSelectionRange(fold.range)
-            } else if(br) {
-                if(range.compare(br.row,br.column) == 1)
-                    range.end = br;
-                else
-                    range.start = br;
-                addFold = true;
-            } else if ((column = isCommentRow(range.start.row)) !== false) {
-                var firstCommentRow = range.start.row;
-                var lastCommentRow = range.start.row;
-                var t;
-                while ((t = isCommentRow(firstCommentRow - 1)) !== false) {
-                    firstCommentRow --;
-                    column = t;
-                }
-                while (isCommentRow(lastCommentRow + 1) !== false) {
-                    lastCommentRow ++;
-                }
-                range.start.row = firstCommentRow;
-                range.start.column = column + 2;
-                range.end.row = lastCommentRow;
-                range.end.column = session.getLine(lastCommentRow).length - 1;
-                addFold = true;
-            }
-        } else {
-            var folds = session.getFoldsInRange(range);
-            if(tryToUnfold && folds.length)
-                session.expandFolds(folds);
-            else if(folds.length == 1 ) {
-                var r1 = folds[0].range
-                if (r1.start.row == range.start.row &&
-                      r1.end.row ==  range.end.row &&
-                      r1.start.column == range.start.column &&
-                      r1.end.column == range.end.column)
-                    session.expandFold(folds[0]);
-                else
-                    addFold = true;
-            } else
-                addFold = true;
-        }
-        if(addFold) {
-            var placeHolder = session.getTextRange(range);
-            if(placeHolder.length < 3)
-                return;
-            placeHolder = "...";
-            session.addFold(placeHolder, range);
-        }
-    }
-
+	
 	function onGutterClick(e) {
 		var editor = env.editor, s = editor.session, row = e.row;
 		var className = e.htmlEvent.target.className

@@ -4,32 +4,23 @@ if (!window.console) {
     console.log = console.error = function() {};
 }
 
+var aceRoot = './res/ace/';
+var PATHS = {
+	'ace/theme/'              :  aceRoot + 'theme-',
+	'ace/keyboard/keybinding/':  aceRoot + 'keybinding-',
+	'ace/mode/'               :  aceRoot + 'mode-',
+	'fbace/'                  :  '',
+	'res/'                    :  'res/',
+	'shadia/'                 :  '../'
+}
+
 function transformPath(path) {
-    var aceRoot = './res/ace/';
-    var sub = 'ace/theme/';
-    if (path.indexOf(sub) === 0) {
-        return aceRoot + 'theme-' + path.substr(sub.length) + '.js';
+	for (var sub in PATHS){
+        if(path.indexOf(sub) === 0) {
+			return PATHS[sub] + path.substr(sub.length) + '.js';
+        }
     }
-    sub = 'ace/keyboard/keybinding/';
-    if (path.indexOf(sub) === 0) {
-        return aceRoot + 'keybinding-' + path.substr(sub.length) + '.js';
-    }
-    sub = 'ace/mode/';
-    if (path.indexOf(sub) === 0) {
-        return aceRoot + 'mode-' + path.substr(sub.length) + '.js';
-    }
-    sub = 'fbace/';
-    if (path.indexOf(sub) === 0) {
-        return path.substr(sub.length) + '.js';
-    }
-    sub = 'res/';
-    if (path.indexOf(sub) === 0) {
-        return path + '.js';
-    }
-	var sub = 'shadia/'
-	if(path.indexOf(sub)==0){
-		return '../' + path.substr(sub.length) + '.js'
-	}
+
     return aceRoot + path + '.js'
 }
 

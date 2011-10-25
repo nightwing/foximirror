@@ -38,7 +38,7 @@ var ScrollBar = function(parent) {
 
     parent.appendChild(this.element);
 
-    this.width = dom.scrollbarWidth();
+    this.width = dom.scrollbarWidth(document);
     this.element.style.width = this.width + 'px';	
 	this.buttonSize = Math.max(this.width-4, 4)
     
