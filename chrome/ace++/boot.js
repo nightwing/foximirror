@@ -5,7 +5,7 @@ if (!window.console) {
 }
 
 function transformPath(path) {
-    var aceRoot = './ace/build/src/';
+    var aceRoot = './res/ace/';
     var sub = 'ace/theme/';
     if (path.indexOf(sub) === 0) {
         return aceRoot + 'theme-' + path.substr(sub.length) + '.js';
