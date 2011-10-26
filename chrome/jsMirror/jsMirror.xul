@@ -50,12 +50,12 @@
 
 	<menupopup id='main-context' onpopupshowing='MenuUtils.onContextShowing(event)'/>
 	
-	<panel id="window-menu" ignorekeys="true" width="500" height="400" position="after_start">
+	<panel id="window-menu" ignorekeys="true" width="600" height="600" position="after_start" >
 		<tree id="window-tree" class="plain" flex='1' seltype="single" treelines="true" hidecolumnpicker='true'>
 			<treecols>
 			  <treecol id="text" hideheader="true" primary="true" flex="1" />          
 			</treecols>				
-			<treechildren contextmenu='globalContext'/>
+			<treechildren contextmenu='main-context'/>
 		</tree>	
 	</panel>
 </popupset>
@@ -65,9 +65,10 @@
 		<toolbarbutton label="//" oncommand="codebox.focus();Firebug.Ace.win2.editor.execCommand('togglecomment')"/>
 		<toolbarbutton label="/*" oncommand="codebox.focus();Firebug.Ace.win2.editor.execCommand('toggleStreamComment')"/>
 		<separator orient = "vertical" width="10px"/>
-		<toolbarbutton id="targetWindow" popup="window-menu" maxwidth="300px" minwidth="100px" checked="true" type="menu"/>
+		<toolbarbutton id="targetWindow" popup="window-menu" maxwidth="300px" minwidth="100px" checked="true" type="menu-button" context='main-context'/>
 		<spacer flex='1'/>
-		<shadiaglue/>
+		<toolbarbutton id="scriptlist" label="scripts" popup="window-menu" type="menu" context='main-context'/>
+		<shadiaglue buttons="log,reload,reopen"/>
 	</toolbar>
 	<vbox flex="10">
 		<iframe id="jsCode" context='main-context'

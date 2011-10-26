@@ -480,40 +480,30 @@ jn.$x = function(xpath){
 
 var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
 var targetWindowId 
-if(utils.getOuterWindowWithId){
-	getTargetWindow=function(){
-		var win = getOuterWindowWithId(targetWindowId)
-		if(!win||win.closed)
-			win = null
+getTargetWindow=function(){
+	var win = getOuterWindowWithId(targetWindowId)
+	if(win && !win.closed)
 		return win
-	}
-	getOuterWindowID = function(window){
-		dump.trace()
+}
+getOuterWindowID = function(window){
+	try{
 		return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID
+	}catch(e){
+		return Cu.getWeakReference(window)		
 	}
-	getOuterWindowWithId = function(id){
+}
+getOuterWindowWithId = function(id){
+	if(typeof id == 'number')
 		return utils.getOuterWindowWithId(id)
-	}
-/***/
+	else
+		return targetWindowId.get()
 }
-else//old versions
-{
-	getTargetWindow = function(){
-		var win = targetWindowId.get()
-		if(!win||win.closed)
-			win = null
-		return win
-	}
-	getOuterWindowID = function(window){
-		return Cu.getWeakReference(window)
-	}
-}
+
 
 var commandHistory = new Array();
 var currentCommandHistoryPos = 0;
 var codebox = null;
 var resultbox = null;
-var cntFunctionNameML = null;
 
 
 var initializeables = []
@@ -547,7 +537,6 @@ function doOnUnload(){
 function initGlobals(){
 	codebox = $("jsCode")
 	resultbox = $("result")
-	cntFunctionNameML = $("functionName")
 
 	commandHistory = ConfigManager.readHistory();
 	currentCommandHistoryPos = commandHistory.length
@@ -699,7 +688,7 @@ Firebug.evaluate = function(code, onSuccess, onerror){
 		//remove jn
 		jn.$useResultBuffer = false
 		//if(win.location.href!=window.location.href)
-		if(/^http/.test(win.location.href))
+		if(!win.location || /^http/.test(win.location.href))
 			win.jn=''
 		if(jn.resultBuffer.length){
 			appendToConsole2(jn.resultBuffer.map(jn.inspect).join('\n'))
@@ -790,8 +779,8 @@ Firebug.jsMirror = {
 
 		//add shortcuts
 		editor.addCommands({
-			execute: function()Firebug.jsMirror.enter(true, false),
-			dirExecute: function()Firebug.jsMirror.enter(true, true)
+			execute: function(env)Firebug.jsMirror.enter(true, false, env.editor),
+			dirExecute: function(env)Firebug.jsMirror.enter(true, true, env.editor)
 		});
 		window.canon.addCommand({
 			name: "toggleEditorFocus",
@@ -811,7 +800,6 @@ Firebug.jsMirror = {
 		resultbox = Firebug.Ace.win1.editor
 		var data = $shadia.$jsMirrorData
 		if(data && data.newTarget){
-dump('--------------', data.newTarget.code)
 			initTargetWindow(data.newTarget.winRef.get())
 			codebox.session.doc.setValue(data.newTarget.code||'')
 			//data.newTarget = null
@@ -855,10 +843,19 @@ dump('--------------', data.newTarget.code)
 
 	// * * * * * * * * * * * * * * * * * * * * * *
 	enter: function(runSelection, dir, text) {
+		var editor, cell
 		this.$useConsoleDir = dir;
-		var editor = editor || Firebug.Ace.win2.editor;
-		var cell = editor.session.getMode().getCurrentCell();
-		this.cell = cell;
+		if(typeof text == "object"){
+			editor = text
+			text = ""
+		} else {
+			editor = Firebug.Ace.win2.editor;
+		}
+		var mode = editor.session.getMode()
+		if (mode.getCurrentCell)
+			cell = this.cell = mode.getCurrentCell();
+		else
+			cell = this.cell = {body: editor.getCopyText()};
 
 		if (runSelection)
 			var text = editor.getCopyText();
@@ -982,91 +979,39 @@ var ConfigManager = {
  
 windowViewer={
 	getContextMenuItems: function(_, target){
-        var items = []
-		var self = this
-		var uri = getCurrentURI()
-		var isJar = uri.slice(0,3) == 'jar'
-		var isJarJar = isJar && uri.slice(4,7) == 'jar'
-		
+		var items = []
         items.push({
-                label: "copy name",
+                label: "focus",
                 command: function() {
-					var i = self.getSelectedItem()
-                    gClipboardHelper.copyString(i.name);
-                },
-            }, {
-                label: "rename",
-                command: function() {
-					var i = self.getSelectedItem()
-					var name = i.name
-					var newName = prompt('enter new name', name)
-					if(!newName || newName == name)
-						return
-                    renameLocaleUri(getCurrentURI(), newName);
-					self.reload()
-                },
-				disabled: isJar
-            },'-',{
-                label: ("delete"),
-                command: function() {
-					var lamb4Slaughter = getCurrentURI()
-					if(Services.prompt.confirm(
-						window,
-						"deleting file can't be undone",'do you really want to permanently delete '
-						+ decodeURIComponent(lamb4Slaughter)
-					)){
-						deleteLocaleUri(lamb4Slaughter);
-						self.reload()
-					}
-                },
-				disabled: isJarJar
-            }, "-", {
-                label: ("launch"),
-                command: function() {
-                    getCurrentFile().launch()
+					getTargetWindow().focus()
                 },
             },{
-                label: ("reveal"),
+                label: "copy location",
                 command: function() {
-                    getCurrentFile().reveal()
+					gClipboardHelper.copyString(getTargetWindow().location.href);
+                },
+            },'-', {
+                label: "reopen",
+                command: function() {
+					$shadia.openWindow(getTargetWindow().location.href)
+                },
+            }, {
+                label: "reload",
+                command: function() {
+					getTargetWindow().location.reload()
                 },
             },"-",{
                 label: "edit",
                 command: function() {
-                   npp1();
+                   $shadia.externalEditors.edit(getTargetWindow().location.href);
+                }
+            },{
+                label: "inspect",
+                command: function() {
+                   shadia.inspect(getTargetWindow().document.documentElement);
                 }
             }
         );
-		
-		
-		if(isJarJar)
-			var archiveUri = null
-		else if(isJar)
-			var archiveUri = uri
-		else if(/\.(jar|xpi|zip)/.test(uri))
-			var archiveUri = 'jar:'+uri+'!/'
-		
-		if(archiveUri)
-			items.push({
-				label: "extract",
-				command: function(){
-					// $shadia.extractRelative(Services.io.newURI(archiveUri, null, null), false).file
-					var file = getLocalFile(archiveUri)
-					var dir = file.parent
-					// do not add junk into extensions folder firefox doesn't like it
-					if (dir.leafName == 'extensions'){
-						dir = dir.parent
-						dir.append('extensions.unjarred')
-					}
-					dir.append(file.leafName.slice(0,-4))
-        
-					extractFiles(file, dir)
-        
-					dir.QueryInterface(Ci.nsILocalFile).reveal()				
-				}
-			})
-		
-		
 
         return items;
 	},
@@ -1074,6 +1019,7 @@ windowViewer={
 	initialize: function(){
 		this.tree=$('window-tree')
 		this.button=$('targetWindow')
+		this.button.setAttribute("oncommand", "windowViewer.$hidePopupOnClick=true")
 		this.popup=$("window-menu")
 		this.popup.setAttribute('onpopupshown','if(event.target==this)windowViewer.activate()')
 		this.popup.setAttribute('onpopuphiding','windowViewer.deactivate()')
@@ -1081,11 +1027,13 @@ windowViewer={
 		//this.tree.onselect=init2()
 		this.tree.setAttribute('onselect','selectObjectInTree("windowViewer")')
 		this.tree.setAttribute('onmousedown','selectObjectInTree("windowViewer")')
+		this.tree.setAttribute('onclick','windowViewer.onClick(event)')
 		this.tree.setAttribute('ondblclick','windowViewer.selectWindow()')
 
 		this.tree.addEventListener('keypress',this,true)
 		
 		this.tree.ownerPanel = this
+		this.button.ownerPanel = this
 	},
 	fillWindowList: function(){
 		function toUp(el){
@@ -1137,29 +1085,63 @@ windowViewer={
 			iterateInnerFrames(fWins.getNext(),0)
 		}
 		this.view.childData=winTable
-		this.view.visibleData=[]
-		for (var i=0; i < winTable.length; i++) {
-			this.view.visibleData.push(winTable[i]);
-		}
+
 
 	},
+	
+	addBootstrapScopes: function(){	
+		var XPIProviderBP = Components.utils.import("resource://gre/modules/XPIProvider.jsm")
+		var index = this.view.childData.length
+		this.view.childData.push({
+			level: 0,
+			text: "bootstrapped addons",
+			parent: null,
+			frame: XPIProviderBP,
+			index: index++,
+			rowProp: 'head',
+			showChildren: true
+		})
+		var bs = XPIProviderBP.XPIProvider.bootstrapScopes
+		for(var i in bs){
+			if(!bs[i].id)
+				bs[i].id = i
+			this.view.childData.push({
+				level: 1,
+				text: i + ' :Sandbox',
+				parent: null,
+				frame: bs[i],
+				index: index++,
+				cellProp: 'DOCUMENT_TYPE_NODE'
+			})
+		
+		}
+		var t=XPIProviderBP.XPIProvider.bootstrapScopes["right@context.a.am"]
+	},
+	
 	updateVisibleList: function(showDepth){
 		var mWindow = getOuterWindowWithId(targetWindowId)
 		var winTable = this.view.childData
 		this.view.visibleData=[]
-		var lastTopWindow = 0
+		var lastAdded = 0
+		var showChildren = false
 		for (var i=0; i < winTable.length; i++) {
 			var w = winTable[i]
+			i
 			if(w.level <= showDepth){
-				lastTopWindow = i
-				this.view.visibleData.push(winTable[i]);
+				showChildren = w.showChildren
+				lastAdded = i
+				this.view.visibleData.push(winTable[i]);				
+			}else if(showChildren){
+				lastAdded = i
+				this.view.visibleData.push(winTable[i]);	
 			}
-			if(w.frame == mWindow){
-				if(w.level > showDepth){
-					while(lastTopWindow++ < i){
-						this.view.visibleData.push(winTable[lastTopWindow]);
-					}
+			
+			if(w.frame == mWindow){				
+				while(lastAdded < i){
+					lastAdded++
+					this.view.visibleData.push(winTable[lastAdded]);
 				}
+				
 				this.curWinIndex = this.view.visibleData.length - 1
 				var lastLevel = w.level
 				w = winTable[i+1]
@@ -1175,6 +1157,7 @@ windowViewer={
 
 	rebuild: function(){
 		this.fillWindowList()
+		this.addBootstrapScopes()
 		this.updateVisibleList(0)
 		this.tree.view=this.view
 		this.tree.view.selection.select(this.curWinIndex)
@@ -1184,16 +1167,20 @@ windowViewer={
 		this.showList(true)
 		this.tree.focus()
 		//this.tree.parentNode.style.MozUserFocus='normal'
-		this.button.checked=!true
+		this.button.checked=false
+		this.button.setAttribute('open', true)
 		this.active=true
 		this.rebuild()
 	},
 	deactivate: function(){
+		this.$hidePopupOnClick = false
+		
 		this.tree.view=null
 		this.view.visibleData=this.view.childData=[]
 		this.showList(false)
 
-		this.button.checked=!false
+		this.button.checked=true
+		this.button.setAttribute('open', false)
 		this.active=false
 		
 		this.popup.hidePopup()
@@ -1205,9 +1192,19 @@ windowViewer={
 			
 		}
 	},
-	onSelect:  function(){
+	onClick: function(event){
+		if (!this.$hidePopupOnClick || event.button != 0)
+			return;
+	
+		var row = {}, col = {}, obj = {};
+		this.tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, obj);
+		
+		if (obj.value == 'text'){
+			this.popup.hidePopup()
+		}
+	},
+	onSelect: function(){
 		var i = this.tree.currentIndex, data = this.view.visibleData
-		dump(data, i)
 		var mWindow = data[i].frame
 		this.setWindow(mWindow)		
 	},
@@ -1233,13 +1230,16 @@ windowViewer={
 	},
 
 	updateButton: function(mWindow){
-		var t = mWindow.document.title
-		var uri = sayHrefEnd(mWindow.document.documentURI)
-
+		if(mWindow.document)try{
+			var t = mWindow.document.title		
+			var uri = sayHrefEnd(mWindow.document.documentURI)
+			if(!t)
+				t = uri
+			else if(t != uri)
+				t += ' '  + uri
+		}catch(e){}
 		if(!t)
-			t = uri
-		else if(t != uri)
-			t += ' '  + uri
+			t = jn.inspect(mWindow)
 		this.button.label = t
 	},
 

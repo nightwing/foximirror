@@ -16,9 +16,26 @@ treechildren{-moz-binding:url("chrome://shadia/content/bindings/tree.xml#treebod
 /*treerows{-moz-binding: url("chrome://shadia/content/bindings/tree.xml#treerows");}*/
 shadiaglue{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")}
 tree{
-	-moz-appearance:none
+	-moz-appearance:none;
+	background-color: -moz-field;
+	color: -moz-fieldtext;
 }
 /*treechildren::-moz-tree-row(hover) { background-color: #FFFFAA!important ;color:red}*/
+
+treechildren::-moz-tree-row{
+	border: 1px solid transparent;
+	min-height: 18px;
+	height: 1.3em;
+} 
+
+/*treechildren::-moz-tree-row(hover) { background-color: #FFFFAA!important ;color:red}
+
+
+treechildren::-moz-tree-row(selected) { background-color: #97C6E7; }
+treechildren::-moz-tree-row(odd) { background-color: #FAFAFA; }
+treechildren::-moz-tree-row(odd, selected) { background-color: #97C6E7; }
+treechildren::-moz-tree-cell-text(selected) { color: #000000; }
+treechildren::-moz-tree-cell-text(odd, selected) { color: #000000; }*/
 
 treechildren::-moz-tree-row(odd){
 	background-color: #FAFAFA;
@@ -103,36 +120,49 @@ treechildren::-moz-tree-cell-text(blue){
 
 
 
+/***************************************
+ *
+ **/
 
+/*@import url("chrome://inspector/skin");
 
 /* :::::::: node type color coding :::::::: */
 
 treechildren::-moz-tree-cell-text(ACCESSIBLE_NODE) {
-	font-weight: bold;
+  font-weight: bold;
 }
+
 treechildren::-moz-tree-cell-text(ELEMENT_NODE) {
-	color: #000000;
+  color: #000000;
 }
+
 treechildren::-moz-tree-cell-text(ATTRIBUTE_NODE) {
-	color: #556b2f;
+  color: #556b2f;
 }
-treechildren::-moz-tree-cell-text(CDATA_SECTION_NODE),treechildren::-moz-tree-cell-text(TEXT_NODE) {
-	color: #0000AA;
+
+treechildren::-moz-tree-cell-text(CDATA_SECTION_NODE),
+treechildren::-moz-tree-cell-text(TEXT_NODE) {
+  color: #0000AA;
 }
+
 treechildren::-moz-tree-cell-text(COMMENT_NODE) {
-	color: #228b22;
+  color: #228b22;
 }
+
 treechildren::-moz-tree-cell-text(DOCUMENT_NODE) {
-	color: #800080;
+  color: #800080;
 }
+
 treechildren::-moz-tree-cell-text(DOCUMENT_TYPE_NODE) {
-	color: #606000;
+  color: #606000;
 }
+
 treechildren::-moz-tree-cell-text(PROCESSING_INSTRUCTION_NODE) {
-	color: #808080;
+  color: #808080;
 }
+
 treechildren::-moz-tree-cell-text(anonymous) {
-	color: #2595A9;
+  color: #2595A9;
 }
 /*
 treechildren::-moz-tree-cell-text(selected, focus) {
@@ -147,4 +177,3 @@ treechildren::-moz-tree-column(dnd-insert-before) {
 
 treechildren::-moz-tree-column(dnd-insert-after) {
   border-right: 2px solid #000000;
-}

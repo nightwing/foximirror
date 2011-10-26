@@ -55,7 +55,7 @@ var aceRoot = 'file:///C:/Users/LED/Desktop/00/ace/'
 var PATHS = {'ace/':'lib/ace/', 'pilot/':'support/pilot/lib/pilot/', 'build/': "build/src/"}
 
 function transformPath(path) {
-	for (var sub in PATHS){
+    for (var sub in PATHS){
         if(path.indexOf(sub) === 0) {
 			return aceRoot + PATHS[sub] + path.substr(sub.length);
         }
