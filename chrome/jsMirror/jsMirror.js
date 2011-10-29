@@ -470,6 +470,12 @@ jn.$x = function(xpath){
 	return jn.getElementsByXPath(FBL.unwrapObject(context.baseWindow.document), xpath);
 };
  
+ 
+initJANE = function(){
+	jn.codebox = codebox
+	jn.resultbox = jn.resultbox
+}
+ 
   /********************************************************/
  /**   ***/
 /**/
@@ -805,6 +811,7 @@ Firebug.jsMirror = {
 			//data.newTarget = null
 			codebox.selectAll();
 		}
+		initJANE()
 		codebox.focus()
 	},
 
@@ -855,7 +862,7 @@ Firebug.jsMirror = {
 		if (mode.getCurrentCell)
 			cell = this.cell = mode.getCurrentCell();
 		else
-			cell = this.cell = {body: editor.getCopyText()};
+			cell = this.cell = {body: editor.getCopyText().split('\n'),headerText:''};
 
 		if (runSelection)
 			var text = editor.getCopyText();

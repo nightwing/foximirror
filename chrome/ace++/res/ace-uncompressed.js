@@ -8744,11 +8744,11 @@ var Tokenizer = function(rules) {
         var state = this.rules[currentState];
         var mapping = this.matchMappings[currentState];
         var re = this.regExps[currentState];
-        re.lastIndex = 0;
+		dump = Components.utils.import("resource://shadia/main.js").dump
+		dump(currentState,Object.keys(this.regExps))
         
         var match, tokens = [];
         
-        var lastIndex = 0;
         
         var token = {
             type: null,
@@ -8756,13 +8756,22 @@ var Tokenizer = function(rules) {
         };
         
 		var n = line.length;
-        if (n > 250){
+        if (n > 250 || !re) {
 			token.type = 'text'
-			if(n > 1500)
-				token.value = line.slice(0, 1500) + '------unable-----to----display-----too-----long-----';
-			else
+			// if(n > 1500)
+				// token.value = line.slice(0, 1500) + '------unable-----to----display-----too-----long-----';
+			// else
 				token.value = line;
-        } else while (match = re.exec(line)) {
+			return {
+				tokens : [token],
+				state : currentState
+			};
+        }
+		
+        var lastIndex = 0;
+		
+        re.lastIndex = 0;
+		while (match = re.exec(line)) {
        
             var type = "text";
             var rule = null;

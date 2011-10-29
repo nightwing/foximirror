@@ -55,35 +55,29 @@ function goToErrorLine(a, b){
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 errorListener={
-	reportError:function(message){
-		var errors = document.getElementById("errors");
-		errors.style.display = "block";
-		errors=errors.firstChild
+	errors:[],
+	reportError:function(message){		
 		try{
 			var error=message.QueryInterface(Components.interfaces.nsIScriptError);
 		}catch(e){
 			var error={lineNumber:0, columnNumber:0, errorMessage:message}
 		}
-		var label = document.createElementNS("http://www.w3.org/1999/xhtml","div");
-		label.setAttribute('onclick','hig(this.a,this.b)')
-		label.className='error'
-		label.textContent= error.lineNumber + ":" + error.columnNumber + " " + error.errorMessage;
-		errors.appendChild(label);
-		label.a=error.lineNumber
-		label.b=error.columnNumber
+		this.errors.push({
+			row: error.lineNumber,
+			column: error.columnNumber,
+			text: error.errorMessage,
+			type: error.flags&error.errorFlag?'error':"warning",
+			lint: 'error'
+		})
 	},
 	clearErrors:function(){
-		
-		var errors = document.getElementById("errors");
-		errors.style.display = "none";
-		errors=errors.firstChild
-		while (errors.hasChildNodes()) {
-			errors.removeChild(errors.lastChild);
-		}
+		this.errors = []		
 	},
 	QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener, Ci.nsISupports]),
 	observe: function(message) {
-		this.reportError(message)
+		try{
+			this.reportError(message)
+		}catch(e){}
 	},
 	
 	checkForErrors:function(context,funcToCheck,args){
@@ -106,63 +100,55 @@ errorListener={
 
 sheetTypes = {agent: sss.AGENT_SHEET, user: sss.USER_SHEET}
 dataStyleRegistrar={
-	initialize: function(){
-		Services.io.newURI('edit:@cssMirror`preview.css'+name, null, null)
+	initialize: function() {
 		$shadia.editGlue.setDataSource('cssMirror',  this.getCode)
+		this.uri = ios.newURI('edit:@cssMirror`preview.css',null,null)
 	},
 	activeURLList: {},
-	shutdown: function(){
-		for each(var i in this.activeURLList)
-			this.unregister(i)
+	shutdown: function() {
+		this.unregister()
 		$shadia.editGlue.removeDataSource('cssMirror');
 	},
-	getCode:function(){
+	getCode:function() {
 		return codebox.session.getValue()
 	},
 	activeSheetType: sheetTypes.agent,
-	fixupName: function(name){
-		if(!name)
-			return '__default__.css'
-		else if(name.slice(-4)!='.css')
-			return name + '.css'		
-	},
-	addUri: function(name){
+	
+	addUri: function(name) {
 		return this[name] = Services.io.newURI('edit:@cssMirror`'+name, null, null)
 	},
-	register:function(name){
-		name =this.fixupName(name)
-		var i = this.nameToUri(name)
-		this.unregister(name)
-		this.activeURLList.push(i)
-		sss.loadAndRegisterSheet(i, this.activeSheetType)
+	register:function() {
+		this.unregister()
+		sss.loadAndRegisterSheet(this.uri, this.activeSheetType)
 	},
-	unregister:function(name){
-		name =this.fixupName(name)
-		var i = this.nameToUri(name)
-		if (i && sss.sheetRegistered(i, this.activeSheetType))
-			sss.unregisterSheet(i, this.activeSheetType);
+	unregister:function(name) {
+		if (this.uri && sss.sheetRegistered(this.uri, this.activeSheetType))
+			sss.unregisterSheet(this.uri, this.activeSheetType);
 	},
-	changeSheetType: function(aType){
-		if (this.activeURL&&sss.sheetRegistered(this.activeURL, this.activeSheetType)){
-			sss.unregisterSheet(this.activeURL, this.activeSheetType);
+	changeSheetType: function(aType) {
+		if (this.uri&&sss.sheetRegistered(this.uri, this.activeSheetType)){
+			sss.unregisterSheet(this.uri, this.activeSheetType);
 			this.activeSheetType=aType
-			sss.loadAndRegisterSheet(this.activeURL, this.activeSheetType)
+			sss.loadAndRegisterSheet(this.uri, this.activeSheetType)
 		} else
 			this.activeSheetType=aType
 	},
-	preview:function(){
+	preview:function() {
 		//t=Date.now()
 		errorListener.clearErrors()
 		errorListener.checkForErrors(this, this.register)
-		setTimeout("document.getElementById('unpreview-button').hidden=false", 200)
+		
+		setTimeout(function() {
+			$('unpreview-button').hidden=false;
+			codebox.session.setAnnotations(errorListener.errors);
+		}, 200)
 	},
-	unpreview:function(){
+	unpreview:function() {
 		this.unregister()
 		errorListener.clearErrors()
-		setTimeout("document.getElementById('unpreview-button').hidden=true", 200)
-
+		setTimeout(function()$('unpreview-button').hidden=true, 200)
 	},
-	getDataUrl: function(){
+	getDataUrl: function() {
 		var code=this.getCode()
 		if (!code)
 			return null;
