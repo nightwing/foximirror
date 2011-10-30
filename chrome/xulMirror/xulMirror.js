@@ -81,23 +81,20 @@ xulMirror = {
 
 	shutdown: function() {
 		$shadia.editGlue.removeDataSource("xulMirror")
-		if(currentTemplateChanged() && gTemplateName[gTemplateName.length-1]!='\u2217')
-			gTemplateName += 
-		
 		saveTemplates()
 	},
 
 };
 //-----------------------------------------------------------------------------
 updatePreview_inBrowser = function(){
-	content.location = 'edit:@xulMirror`'+templateList.currentTemplate.defaultName
+	content.location = 'edit:@xulMirror`'+templateList.currentTemplate.defaultTabName
 }
 var dWin
 updatePreview_detached = function(){
 	if(!dWin || dWin.closed){
-		dWin = $shadia.openWindow('edit:@xulMirror`'+templateList.currentTemplate.defaultName)
+		dWin = $shadia.openWindow('edit:@xulMirror`'+templateList.currentTemplate.defaultTabName)
 	}else
-		dWin.location = 'edit:@xulMirror`'+templateList.currentTemplate.defaultName
+		dWin.location = 'edit:@xulMirror`'+templateList.currentTemplate.defaultTabName
 }
 updatePreview = updatePreview_inBrowser
 toggleDetach = function(button){
@@ -116,26 +113,38 @@ toggleDetach = function(button){
 	updatePreview()
 }
 //-----------------------------------------------------------------------------
-var changeTimeout = null, tabChangeTimeout = null, gSessionId = null, gAutoUpdate = true
-onChange = function(){
-	if(gSessionId == "overview"){
+updateTitle = function(isClean) {
+	var tpl = templateList.currentTemplate
+	isClean = tpl.isModified()
+	document.title = 'XULMirror - ' + (isClean ? tpl.name : tpl.name + '*' )
+	gCleanTitle = isClean
+}
+
+var changeTimeout = null, tabChangeTimeout = null, gSessionId = null, gAutoUpdate = true, gCleanTitle = true
+onChange = function() {
+	if (gCleanTitle == true) {
+		gCleanTitle = false
+		clearTimeout(updateTitle.timeout)
+		updateTitle.timeout = setTimeout(updateTitle, 700, gCleanTitle)	
+	}
+	if (gSessionId == "overview") {
 		codeCache = {}
 		clearTimeout(tabChangeTimeout)
 		tabChangeTimeout = setTimeout(function(){
 			templateList.currentTemplate.updateSessions()
 			templateList.updateTabs()
 		}, 10, null)		
-	}else
+	} else
 		codeCache[gSessionId] = ''
 	
-	if(!gAutoUpdate)
+	if (!gAutoUpdate)
 		return
 	clearTimeout(changeTimeout)
 	changeTimeout = setTimeout(updatePreview, 700, null)	
 }
 
 
-function Template(txt){
+function Template(txt) {
 	txt = txt||'emptyTemplete\n!@!===main.xul {\n\n\n}\n!@!===binding.xml {\n\n\n}\n!@!===overlay.xml {\n\n\n}\n'
 	var im = txt.split("\n!>>===================>*-*<====================<<!")
 	if(im[1])
@@ -148,7 +157,7 @@ function Template(txt){
 }
 Template.prototype = {
 	//Object.defineProperty(this, "overviewSession", {value:s, configurable:true,enumerable:true})
-	createOverviewSession: function(){
+	createOverviewSession: function() {
 		delete this.overviewSession
 		var s = Firebug.Ace.win2.createSession(this.toLongString(), "overview.js")
 		s.on("change", onChange)
@@ -156,10 +165,10 @@ Template.prototype = {
 	},	
 	sessions: {},
 	fullCode: "",
-	defaultName: "",
+	defaultTabName: "",
 	//sessionNames: [],
 	shortNameMap: null,
-	updateSessions: function(txt){
+	updateSessions: function(txt) {
 		if(!txt)
 			txt = this.overviewSession.getValue()
 
@@ -167,7 +176,12 @@ Template.prototype = {
 		this.shortNameMap = {}
 		this.sessions = {}
 		var a = txt.split(/!@!===/)
-		this.defaultName = ""
+		
+		var m = a[0].match(/\!\s+(.*?)\s*/)
+		if (m){
+			dump(m[1],a[0])
+		}
+		this.defaultTabName = ""
 		
 		for(var i = 1; i < a.length; i++){
 			var s = a[i]
@@ -177,50 +191,54 @@ Template.prototype = {
 			var i2 = s.lastIndexOf('}')
 			
 			var body = s.substring(i1 + 1, i2).trim()
-			var name = s.substring(0, i1).trim()
+			var tabName = s.substring(0, i1).trim()
 			
-			if(!name)
+			if(!tabName)
 				continue
-			var i1 = name.lastIndexOf(".")
-			var shortName = i1 < 0 ? name : name.substring(0, i1)
-			this.shortNameMap[shortName] = name
+			var i1 = tabName.lastIndexOf(".")
+			var shortName = i1 < 0 ? tabName : tabName.substring(0, i1)
+			this.shortNameMap[shortName] = tabName
 
-			if(!this.defaultName)
-				this.defaultName = name
+			if(!this.defaultTabName)
+				this.defaultTabName = tabName
 			
-			var	os = oldSessions[name]
-			if(typeof os == "object"){
+			var	os = oldSessions[tabName]
+			if(typeof os == "object") {
 				if(os.getValue() != body)
 					os.doc.setValue(body)
-				this.sessions[name] = os
+				this.sessions[tabName] = os
 			}else
-				this.sessions[name] = body
+				this.sessions[tabName] = body
 		}
 		if(!this.sessionName || !this.sessions[this.sessionName])
-			this.sessionName = this.defaultName
+			this.sessionName = this.defaultTabName
 	},
-	updateOverview: function(){
+	updateOverview: function() {
 		var txt = this.toLongString()
-		if(txt!=this.overviewSession.getValue())
+		if(txt != this.overviewSession.getValue())
 			this.overviewSession.doc.setValue(txt)
 	},
-	addSession: function(){
+	addSession: function() {
 		
 	},
-	getSession: function(name){
+	getSession: function(name) {
 		if(typeof this.sessions[name] == 'string'){
 			this.sessions[name] = Firebug.Ace.win2.createSession(this.sessions[name], name)
 			this.sessions[name].on("change", onChange)
 		}
 		return this.sessions[name]
 	},
-	displayName: function(){
-		
+	displayName: function() {
+		return this.isModified()?this.name+'*':this.name
 	},
-	isModified: function(){
+	setName: function(name) {
+		this.name = name.trim()||this.name
+		updateTitle()
+	},
+	isModified: function() {
 		return this.toLongString() != this.fullCode
 	},
-	toLongString: function(nameModifier){
+	toLongString: function(nameModifier) {
 		var str = "!>>!\t" + this.name + (nameModifier||'') + "\n"
 		for(var s in this.sessions){
 			str += "!@!=== " + s + "{\n\n" +
@@ -229,7 +247,7 @@ Template.prototype = {
 		}
 		return str
 	},
-	toSaveString: function(){
+	toSaveString: function() {
 		return "\n!>>===================>*-*<====================<<!" +this.fullCode
 	}
 }
@@ -256,22 +274,47 @@ templateList = {
 		file.append("xulMirrorTemplate.json")
 		var txt = file.exists()?readEntireFile(file):""
 		
-		if(txt){
+		if (txt) {
 			gTemplateName = txt.substring(0, txt.indexOf("\n")).trim()
 			var a = txt.split(/^!>>!/m)
 			for(var i = 1; i < a.length; i++){
 				var s = a[i]
 				if(s){
-					var t = new Template(s)
-					this._userList[t.name] = t
+					this._userList.push(new Template(s))
 				}
 			}
 		}
 		
 		this.set(gTemplateName)
 	},
+	addNewTemplate: function(name, newName) {
+		name = name.trim()
+		var tpl = this._defaultList[name];
+		if (tpl){
+			tpl = new Template(tpl.toLongString())
+			name = name.replace('new_', '')
+		}else
+			tpl = new Template('')
+		
+		newName = name || newName
+			
+
+		var names = this._userList.map(function(x)x.name)
+		
+		var i = 0
+		name = newName
+		while (names.indexOf(newName)!=-1) {
+			newName = name + '_' + i
+			i++
+		}
+		
+		tpl.name = newName
+		this._userList.push(tpl)
+		this.set(newName)
+		return tpl
+	},
 	_defaultList: {},
-	_userList: {},
+	_userList: [],
 	updateTabs: function(){
 		var t = this.currentTemplate
 		var ch = this.tabList.children
@@ -291,18 +334,35 @@ templateList = {
 			this.tabList.removeChild(ch[j])
 		}
 	},
-	set: function(name){
+	set: function(name) {
 		gTemplateName = name
 		codeCache = {}
 		
-		this.currentTemplate = this._defaultList[name]
-			||this._userList[name] || new Template("", "")
+		this.currentTemplate = this.getUserTemplate(name) || new Template('')
+		updateTitle(this.currentTemplate.isModified())
 		
-		var name = this.currentTemplate.sessionName
+		var tabName = this.currentTemplate.sessionName
 		
 		this.updateTabs()
-		this.tabList.selectedItem = this.tabList.querySelector("#" + name.replace(".","\\."))
-		this.selectTab(name)
+		this.tabList.selectedItem = this.tabList.querySelector("#" + tabName.replace(".","\\."))
+		this.selectTab(tabName)
+	},
+	getUserTemplate: function(name){
+		return this._userList[this.getIndex(name)]
+	},
+	getIndex: function(name){
+		for(var i in this._userList){
+			if(this._userList[i].name == name)
+				return i
+		}
+		return -1
+	},
+	remove: function(name){
+		var i = this.getIndex(name)
+		if(i==-1)
+			return false
+		this._userList.splice(i, 1)
+		return true		
 	},
 	selectTab: function(name){
 		if(!name)
@@ -327,70 +387,33 @@ templateList = {
 	
 
 
-currentTemplateChanged = function(){
-	var t = Templates[gTemplateName]
-	if(!t)
-		return true
-	
-	for(var i in sessions){
-		if(t[i] != sessions[i].getValue())
-			return true		
-	}
-	return false
-}
 
-loadTemplate =  function(name){
-	gTemplate = Templates[name]
-	gTemplateName = name
-	
-	winTitle.update(name)
-	for(var i in sessions){
-		codeCache[i] = gTemplate[i] || ""
-		sessions[i].setValue(codeCache[i])
-		winTitle.track(sessions[i])
-	}
-}
 saveTemplates = function(){
 	var str = gTemplateName + "\n"
-	for each(var t in templateList._defaultList){
-		if(t.isModified())
-			str += t.toLongString('-edited')		
-	}
-	dump(str)
+	
 	for each(var t in templateList._userList){		
 		str += t.toLongString()
 		if(t.isModified())
 			str += t.toSaveString('*')//'\u2217'
 	}
+	
 	file = Firebug.Ace.getUserFile("foxiMirror")
 	file.append("xulMirrorTemplate.json")
 	writeToFile(file, str)
 }
-cleanupDirtyState = function(){
-	delete Templates[gTemplateName]
-	gTemplateName = winTitle.clearName(gTemplateName)
-	winTitle.update(gTemplateName)
-	delete Templates[gTemplateName]
-	
-	for(var i in sessions){
-		winTitle.track(sessions[i])
-	}
-}
+
 deleteTemplete = function(name){
 	name = prompt('are yo sure you want to delete', name)
 	if(!name)
 		return
 		
-	delete Templates[name]
-	if(gTemplateName == name){
-		for(var i in Templates)
-			break				
-		gTemplateName = i || 'newTemplate'
-		
-		loadTemplate(gTemplateName)
+	templateList.remove(name)
+	if (gTemplateName == name) {
+		var i = templateList._userList[0]
+		gTemplateName = i? i.name : '_'		
+		templateList.set(gTemplateName)
 	}
 	saveTemplates()
-	
 }
 
 // save and load
@@ -426,7 +449,9 @@ Firebug.Ace.savePopupShowing = function(popup) {
 }
 
 Firebug.Ace.loadPopupShowing = function(popup) {
+	popup = popup || $("load-button").firstChild
 	FBL.eraseNode(popup)
+	popup.ownerPanel = templateLoader
 	var load = function(){
 		templateList.set(this.label)
 		updatePreview()
@@ -436,64 +461,84 @@ Firebug.Ace.loadPopupShowing = function(popup) {
 				a[i].removeAttribute("checked")
 		}				
 	}
+	
+	FBL.createMenuItem(popup, "-")
+	for each(var t in templateList._userList){
+		FBL.createMenuItem(popup, {
+			label: t.name,
+			command: load,
+			type: 'checkbox',
+			checked: t.name == gTemplateName,
+			option: 'context'
+		});
+	}
+	FBL.createMenuItem(popup, "-")
+	
+	var add = function(){
+		templateList.addNewTemplate(this.label)
+		updatePreview()
+		
+		Firebug.Ace.loadPopupShowing(this.parentNode)
+	}
 	for(var i in templateList._defaultList){
 		FBL.createMenuItem(popup, {
 			label: i,
-			command: load,
-			type: 'checkbox',
-			checked: i == gTemplateName
+			command: add,
+			closemenu: 'none'		
 		});
 	}
+
 	FBL.createMenuItem(popup, "-")
-	for(var i in templateList._userList){
-		FBL.createMenuItem(popup, {
-			label: i,
-			command: load,
-			type: 'checkbox',
-			checked: i == gTemplateName
-		});
+	FBL.createMenuItem(popup, {
+		label: 'load a File',
+		command: function(){
+			Firebug.Ace.loadFile(codebox)
+		}
+	});
+}
+
+templateLoader = {
+	getContextMenuItems: function(_, target){
+		if (!target.getAttribute('option'))
+			return
+		
+		return [{
+			label: 'rename ' + target.label,
+			option: target.label,
+			command: function() {
+				var origName = this.getAttribute('option')
+				var name = prompt('are yo sure you want to delete', origName)
+				
+				name = name&&name.trim()
+				
+				if(!name || name == this.label)
+					return
+				if(templateList.getIndex(name)!=-1){
+					var name2 = prompt('are yo sure you want to delete', name).trim()
+					name2 = name2&&name2.trim()
+					if(!name2 || name2 == this.label)
+						return
+					if(name2 == name)
+						templateList.remove(name)
+				}
+
+				templateList.getUserTemplate(origName).setName(name)
+				
+				Firebug.Ace.loadPopupShowing()
+			},
+			closemenu: 'none'
+		},{
+			label: 'delete ' + target.label,
+			option: target.label,
+			command: function(){
+				var name = this.getAttribute('option')
+				deleteTemplete(name)
+				Firebug.Ace.loadPopupShowing()
+			},
+			closemenu: 'none'
+		}]
 	}
-	FBL.createMenuItem(popup, "-")
-	FBL.createMenuItem(popup, {
-		label: 'new Template',
-			command: function(){
-				var newName = prompt('enter name')				
-				gTemplateName = newName.trim()
-				templateList._userList[gTemplateName] = new Template()
-				loadTemplate(gTemplateName)
-				saveTemplates()
-			}
-		});
-	FBL.createMenuItem(popup, {
-		label: 'load File',
-			command: function(){
-				Firebug.Ace.loadFile(codebox)
-			}
-		});
+	
 }
-
-
-
-winTitle = {
-	update: function(name){
-		document.title = 'XULMirror - ' + name
-	},
-	clearName: function(name){
-		if(name[name.length-1]=='\u2217'){
-			name = name.slice(0, -1)
-		}
-		
-		return name
-	},
-	track: function(session){
-		var l = function(){
-		
-			session.removeEventListener(l)
-			winTitle.update(winTitle.clearName(gTemplateName)+'\u2217')
-		}
-		session.on("change", l)
-	},
-}
-
 
 

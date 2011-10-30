@@ -46,10 +46,11 @@
 				<!-- <separator class="groove" orient="vertical"/><toolbarbutton label="vert" oncommand="toggleOrient()"/> -->
 			</tabs>
 			<spacer flex='1'/>
-			<toolbarbutton type="menu-button" label="load">
+			<toolbarbutton type="menu-button" label="load" context='main-context' id="load-button">
 				<menupopup onpopupshowing="Firebug.Ace.loadPopupShowing(this)"/>
 			</toolbarbutton>
-			<toolbarbutton type="menu-button" label="save" oncommand="if(event.target==this){cleanupDirtyState();saveTemplates()}">
+			<toolbarbutton type="menu-button" label="save" id="save-button"
+					oncommand="if(event.target==this){cleanupDirtyState();saveTemplates()}" context='main-context'>
 				<menupopup onpopupshowing="Firebug.Ace.savePopupShowing(this)"/>
 			</toolbarbutton>	
 		</toolbar>

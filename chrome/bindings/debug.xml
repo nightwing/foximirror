@@ -73,6 +73,7 @@ this.actions={//external
 	,cssMirror:function()   {toOpenWindowByType('shadia:cssMirror', "chrome://shadia/content/cssMirror/cssMirror.xul")}
 	,xulMirror:function()   {toOpenWindowByType('shadia:xulMirror', "chrome://shadia/content/xulMirror/xulMirror.xul")}
 	,prefMirror:function()  {toOpenWindowByType('shadia:prefMirror', "chrome://shadia/content/prefMirror/prefMirror.xul")}
+	,idleMirror:function()  {toOpenWindowByType('shadia:idleMirror', "chrome://shadia/content/idleMirror/idleMirror.xul")}
 	,magnifier:function()   {$shadia.getLocalFile('chrome://shadia/content/magnifier.ahk').launch()}
 	,restartApp:function()  {
 		if(typeof Application=='object') Application.restart()

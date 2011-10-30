@@ -132,9 +132,9 @@ Firebug.Ace = {
         var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker),
             ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
         if (mode == 'save')
-            fp.init(window, $ACESTR("acebug.saveas"), Ci.nsIFilePicker.modeSave);
+            fp.init(window, "save as", Ci.nsIFilePicker.modeSave);
         else
-            fp.init(window, $ACESTR("acebug.selectafile"), Ci.nsIFilePicker.modeOpen);
+            fp.init(window, "select a file", Ci.nsIFilePicker.modeOpen);
 
         // try to set initial file
         if (path) {

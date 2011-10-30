@@ -8744,11 +8744,8 @@ var Tokenizer = function(rules) {
         var state = this.rules[currentState];
         var mapping = this.matchMappings[currentState];
         var re = this.regExps[currentState];
-		dump = Components.utils.import("resource://shadia/main.js").dump
-		dump(currentState,Object.keys(this.regExps))
         
-        var match, tokens = [];
-        
+        var match, tokens = [];        
         
         var token = {
             type: null,
