@@ -351,6 +351,40 @@ jn.loadScript2 = function(src, window){
    return Services.scriptloader.loadSubScript(src+'?'+Date.now(), window || getTargetWindow(), 'UTF-8')
 }
 
+/******************/
+jn.unwrap = function(o){
+	try{
+		return XPCNativeWrapper.unwrap(o)
+	}catch(e){
+		if(o && 'wrappedJSObject' in o)
+			return o.wrappedJSObject||o
+	}
+	return o
+};
+jn.cloneArray = function(o){
+	var ans=[]
+	for(var i=0,ii=o.length;i<ii;i++)
+		ans.push(o[i])
+	return ans
+};
+jn.$ = function(id, doc){
+	doc = doc || getTargetWindow().document
+	return jn.unwrap(doc).getElementById(id);
+};
+jn.qs = function(selector, doc){
+	doc = doc || getTargetWindow().document
+	return jn.unwrap(doc).querySelector(selector);
+};
+jn.$$ = jn.qsa = function(selector, doc){
+	doc = doc || getTargetWindow().document
+	var result = jn.unwrap(doc).querySelectorAll(selector);
+	return jn.cloneArray(result);
+};
+jn.$x = function(xpath){
+	return jn.getElementsByXPath(FBL.unwrapObject(context.baseWindow.document), xpath);
+};
+ 
+
 function getClass(x) {
 	/* if(x == null) return String(x); */
 	return Object.prototype.toString.call(x).slice(8,-1)
@@ -443,37 +477,11 @@ jn.getSourceLink = function(fn){
 		return {href: s.fileName, line:s.baseLineNumber}
 	}
 }
-/******************/
-jn.unwrap = function(o){
-	try{
-		return XPCNativeWrapper.unwrap(o)
-	}catch(e){
-		if(o && 'wrappedJSObject' in o)
-			return o.wrappedJSObject||o
-	}
-	return o
-};
-jn.cloneArray = function(o){
-	var ans=[]
-	for(var i=0,ii=o.length;i<ii;i++)
-		ans.push(o[i])
-	return ans
-};
-jn.$ = function(id){
-	return jn.unwrap(document).getElementById(id);
-};
-jn.$$ = function(selector){
-	var result = jn.unwrap(document).querySelectorAll(selector);
-	return jn.cloneArray(result);
-};
-jn.$x = function(xpath){
-	return jn.getElementsByXPath(FBL.unwrapObject(context.baseWindow.document), xpath);
-};
- 
+
  
 initJANE = function(){
 	jn.codebox = codebox
-	jn.resultbox = jn.resultbox
+	jn.resultbox = resultbox
 }
  
   /********************************************************/
@@ -1027,8 +1035,9 @@ windowViewer={
 		this.tree=$('window-tree')
 		this.button=$('targetWindow')
 		this.button.setAttribute("oncommand", "windowViewer.$hidePopupOnClick=true")
+		this.button.setAttribute("onmousedown", "windowViewer.popup.viewer=windowViewer")
 		this.popup=$("window-menu")
-		this.popup.setAttribute('onpopupshown','if(event.target==this)windowViewer.activate()')
+		this.popup.setAttribute('onpopupshown','if(event.target==this)this.viewer.activate()')
 		this.popup.setAttribute('onpopuphiding','windowViewer.deactivate()')
 		this.view=new multiLevelTreeView()
 		//this.tree.onselect=init2()
@@ -1087,13 +1096,20 @@ windowViewer={
 				}//
 			}
 		}
+		
+		winTable.push({
+			level: 0,
+			text: "windows",
+			parent: null,
+			frame: window,
+			index: index++,
+			rowProp: 'head'
+		})
 		var fWins = Services.wm.getEnumerator('');
 		while(fWins.hasMoreElements()){
-			iterateInnerFrames(fWins.getNext(),0)
+			iterateInnerFrames(fWins.getNext(), 1)
 		}
 		this.view.childData=winTable
-
-
 	},
 	
 	addBootstrapScopes: function(){	
@@ -1101,7 +1117,7 @@ windowViewer={
 		var index = this.view.childData.length
 		this.view.childData.push({
 			level: 0,
-			text: "bootstrapped addons",
+			text: "bootstrapped addon scopes",
 			parent: null,
 			frame: XPIProviderBP,
 			index: index++,
@@ -1165,7 +1181,7 @@ windowViewer={
 	rebuild: function(){
 		this.fillWindowList()
 		this.addBootstrapScopes()
-		this.updateVisibleList(0)
+		this.updateVisibleList(1)
 		this.tree.view=this.view
 		this.tree.view.selection.select(this.curWinIndex)
 		this.tree.treeBoxObject.ensureRowIsVisible(this.curWinIndex)
@@ -1336,3 +1352,5 @@ domNodeSummary= function(el){
 	}
 	return name
 }
+
+
