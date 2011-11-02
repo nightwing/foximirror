@@ -115,17 +115,19 @@ toggleDetach = function(button){
 //-----------------------------------------------------------------------------
 updateTitle = function(isClean) {
 	var tpl = templateList.currentTemplate
-	isClean = tpl.isModified()
+	isClean = !tpl.isModified()
 	document.title = 'XULMirror - ' + (isClean ? tpl.name : tpl.name + '*' )
 	gCleanTitle = isClean
+}
+updateTitle.schedule = function(t){
+	clearTimeout(updateTitle.timeout)
+	updateTitle.timeout = setTimeout(updateTitle, t||200)	
 }
 
 var changeTimeout = null, tabChangeTimeout = null, gSessionId = null, gAutoUpdate = true, gCleanTitle = true
 onChange = function() {
 	if (gCleanTitle == true) {
-		gCleanTitle = false
-		clearTimeout(updateTitle.timeout)
-		updateTitle.timeout = setTimeout(updateTitle, 700, gCleanTitle)	
+		updateTitle.schedule()
 	}
 	if (gSessionId == "overview") {
 		codeCache = {}
@@ -178,8 +180,10 @@ Template.prototype = {
 		var a = txt.split(/!@!===/)
 		
 		var m = a[0].match(/\!\s+(.*?)\s*/)
-		if (m){
+		if (m && this.name != m[1]){
 			dump(m[1],a[0])
+			this.name = m[1]
+			updateTitle.schedule()
 		}
 		this.defaultTabName = ""
 		
@@ -215,11 +219,12 @@ Template.prototype = {
 	},
 	updateOverview: function() {
 		var txt = this.toLongString()
-		if(txt != this.overviewSession.getValue())
-			this.overviewSession.doc.setValue(txt)
-	},
-	addSession: function() {
-		
+		if(txt != this.overviewSession.toString()){
+			if(this.overviewSession.doc)
+				this.overviewSession.doc.setValue(txt)
+			else
+				this.overviewSession = txt
+		}
 	},
 	getSession: function(name) {
 		if(typeof this.sessions[name] == 'string'){
@@ -233,10 +238,14 @@ Template.prototype = {
 	},
 	setName: function(name) {
 		this.name = name.trim()||this.name
+		this.updateOverview()
 		updateTitle()
 	},
 	isModified: function() {
 		return this.toLongString() != this.fullCode
+	},
+	clearDirtyState: function() {
+		this.fullCode = this.toLongString()
 	},
 	toLongString: function(nameModifier) {
 		var str = "!>>!\t" + this.name + (nameModifier||'') + "\n"
@@ -285,7 +294,7 @@ templateList = {
 			}
 		}
 		
-		this.set(gTemplateName)
+		this.setUserTemplate(gTemplateName)
 	},
 	addNewTemplate: function(name, newName) {
 		name = name.trim()
@@ -310,7 +319,7 @@ templateList = {
 		
 		tpl.name = newName
 		this._userList.push(tpl)
-		this.set(newName)
+		this.setUserTemplate(newName)
 		return tpl
 	},
 	_defaultList: {},
@@ -334,12 +343,12 @@ templateList = {
 			this.tabList.removeChild(ch[j])
 		}
 	},
-	set: function(name) {
+	setUserTemplate: function(name) {
 		gTemplateName = name
 		codeCache = {}
 		
 		this.currentTemplate = this.getUserTemplate(name) || new Template('')
-		updateTitle(this.currentTemplate.isModified())
+		updateTitle()
 		
 		var tabName = this.currentTemplate.sessionName
 		
@@ -411,9 +420,14 @@ deleteTemplete = function(name){
 	if (gTemplateName == name) {
 		var i = templateList._userList[0]
 		gTemplateName = i? i.name : '_'		
-		templateList.set(gTemplateName)
+		templateList.setUserTemplate(gTemplateName)
 	}
 	saveTemplates()
+}
+
+cleanupDirtyState = function(){
+	templateList.currentTemplate.clearDirtyState()
+	updateTitle()
 }
 
 // save and load
@@ -425,6 +439,7 @@ Firebug.Ace.savePopupShowing = function(popup) {
 				Firebug.Ace.saveFile(codebox)
 			}
 		});
+	FBL.createMenuItem(popup, "-");
 	FBL.createMenuItem(popup, {
 		label: 'save "' + gTemplateName + '"',
 			command: function(){
@@ -432,14 +447,14 @@ Firebug.Ace.savePopupShowing = function(popup) {
 				saveTemplates()
 			}
 		});
-	FBL.createMenuItem(popup, {
+	/* FBL.createMenuItem(popup, {
 		label: 'save "' + gTemplateName  + '" As',
 			command: function(){
 				var newName = prompt('enter name')
 				gTemplateName = newName.trim()
 				saveTemplates()
 			}
-		});
+		}); */
 	FBL.createMenuItem(popup, {
 		label: 'delete "' + gTemplateName + '""',
 			command: function(){
@@ -453,7 +468,7 @@ Firebug.Ace.loadPopupShowing = function(popup) {
 	FBL.eraseNode(popup)
 	popup.ownerPanel = templateLoader
 	var load = function(){
-		templateList.set(this.label)
+		templateList.setUserTemplate(this.label)
 		updatePreview()
 		var a = this.parentNode.querySelectorAll("[checked]")
 		for(var i = a.length; i--;){
