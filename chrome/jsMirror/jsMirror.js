@@ -288,7 +288,7 @@ jn.getParent=function(a){
 }
 jn.bait= modernFox?(function(a){
 	var desc = {configurable:true,enumerable:true,value:null,writable:true}
-	var toString = function()"[object jane's bait proxy]"
+	var toString = function() "[object janes' bait proxy]"
 	var pr = {
 		getOwnPropertyDescriptor: function(name) desc,
 		getPropertyDescriptor: function(name) desc,	   
@@ -1353,4 +1353,28 @@ domNodeSummary= function(el){
 	return name
 }
 
+
+scriptList={
+	initialize: function(){
+		this.tree=$('window-tree')
+		this.button=$('targetWindow')
+		this.button.setAttribute("oncommand", "windowViewer.$hidePopupOnClick=true")
+		this.button.setAttribute("onmousedown", "windowViewer.popup.viewer=windowViewer")
+		this.popup=$("window-menu")
+		this.popup.setAttribute('onpopupshown','if(event.target==this)this.viewer.activate()')
+		this.popup.setAttribute('onpopuphiding','windowViewer.deactivate()')
+		this.view=new multiLevelTreeView()
+		//this.tree.onselect=init2()
+		this.tree.setAttribute('onselect','selectObjectInTree("windowViewer")')
+		this.tree.setAttribute('onmousedown','selectObjectInTree("windowViewer")')
+		this.tree.setAttribute('onclick','windowViewer.onClick(event)')
+		this.tree.setAttribute('ondblclick','windowViewer.selectWindow()')
+
+		this.tree.addEventListener('keypress',this,true)
+		
+		this.tree.ownerPanel = this
+		this.button.ownerPanel = this
+	},
+}
+	initializeables.push(windowViewer)
 

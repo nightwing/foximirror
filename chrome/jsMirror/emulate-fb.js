@@ -127,14 +127,14 @@ Firebug.Ace = {
 		return null;
 	},
 
-	   // save and load
+    // save and load
     initFilePicker: function(mode, path, ext) {
         var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker),
             ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
         if (mode == 'save')
-            fp.init(window, "save as", Ci.nsIFilePicker.modeSave);
+            fp.init(window, ("saveas"), Ci.nsIFilePicker.modeSave);
         else
-            fp.init(window, "select a file", Ci.nsIFilePicker.modeOpen);
+            fp.init(window, ("selectafile"), Ci.nsIFilePicker.modeOpen);
 
         // try to set initial file
         if (path) {
@@ -165,14 +165,15 @@ Firebug.Ace = {
     $pickFile: function(session, mode, path) {
 		var ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
 		var file, result;
-		if ((path == undefined && mode == 'save') ||
-		    (path == false && mode == 'open'))
+		if (path == "session")
 			path = session.filePath;
+		else if (path = "picker" || typeof path != "string")
+			path = ""
 		
 		if (path) {
 			try {
 				file = ios.newURI(path, null, null).QueryInterface(Ci.nsIFileURL).file;
-				if (file.exists())
+				if (mode == "save" || file.exists())
 					result = {status: Ci.nsIFilePicker.returnOK, file: file};
 			} catch(e){}
 		}
@@ -189,19 +190,19 @@ Firebug.Ace = {
 		return result
 	},
 	
-	loadFile: function(editor, usePath, keepOldPath) {
+	loadFile: function(editor, usePath, keepCurrentPath) {
 		var session = editor.session, ext = session.extension			
 		var fpResult = this.$pickFile(session, 'open', usePath);
 
 		if (fpResult.status == Ci.nsIFilePicker.returnOK) {
 			session.doc.setValue(readEntireFile(fpResult.file));
-			keepOldPath || session.setFileInfo(fpResult.path);
+			keepCurrentPath || session.setFileInfo(fpResult.path);
 		}
 	},
 
-	saveFile: function(editor, usePath, keepOldPath) {
+	saveFile: function(editor, path, keepCurrentPath) {
 		var session = editor.session, ext = session.extension;
-		var fpResult = this.$pickFile(session, 'save', usePath);
+		var fpResult = this.$pickFile(session, 'save', path);
 		
 		var file = fpResult.file;
 		if (fpResult.status == Ci.nsIFilePicker.returnOK) {
@@ -213,11 +214,11 @@ Firebug.Ace = {
 			}
 
 			writeToFile(file, session.getValue());
-			keepOldPath || session.setFileInfo(fpResult.path);
+			keepCurrentPath || session.setFileInfo(fpResult.path);
 		}
 		else if (fpResult.status == Ci.nsIFilePicker.returnReplace) {
 			writeToFile(file, session.getValue());
-			keepOldPath || session.setFileInfo(fpResult.path);
+			keepCurrentPath || session.setFileInfo(fpResult.path);
 		}
 	},
 

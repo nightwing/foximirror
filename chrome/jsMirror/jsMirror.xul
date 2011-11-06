@@ -66,8 +66,8 @@
 		<toolbarbutton label="/*" oncommand="codebox.focus();Firebug.Ace.win2.editor.execCommand('toggleStreamComment')"/>
 		<separator orient = "vertical" width="10px"/>
 		<toolbarbutton id="targetWindow" popup="window-menu" maxwidth="300px" minwidth="100px" checked="true" type="menu-button" context='main-context'/>
-		<spacer flex='1'/>
 		<toolbarbutton id="scriptlist" label="scripts" popup="window-menu" type="menu" context='main-context'/>
+		<spacer flex='1'/>
 		<shadiaglue buttons="log,reload,reopen"/>
 	</toolbar>
 	<vbox flex="10">
