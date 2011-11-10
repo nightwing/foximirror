@@ -7,16 +7,14 @@
 <statusbar id="status-bar">
 	<statusbarpanel id="shadiaButton" onclick="shadowInspector.browserPopup(event,null)" context="_child">
         <image src="chrome://shadia/content/turnon.gif"/>
-			<menupopup id="window-menu" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
-				<menuitem label="start inspector"/>
-				<menuitem label="help"/>
-				<menuseparator/>
-				<template>
-				    <rule>
-				        <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-				    </rule>
-				</template>	
-			</menupopup>
+		<menupopup>
+			<menuitem label="start inspector"/>
+			<menuitem label="help"/>
+			<menuseparator/>
+			<shadiaglue insertbefore='appmenu_webDeveloper'
+					buttons='log,jsMirror,cssMirror,chromeMirror'
+					style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")'/>
+		</menupopup>
 	</statusbarpanel>
 </statusbar>
  

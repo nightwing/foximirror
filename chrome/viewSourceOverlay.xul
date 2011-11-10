@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+
+<overlay id="shadia-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+ <script type="application/x-javascript">
+	if (!window.arguments)
+		window.arguments = ["view-source:chrome://shadia/content/viewSourceOverlay.xul","","",7]
+	var onLoadContent_orig = onLoadContent
+	window.onLoadContent = function(){
+		content.document.body.firstChild.id="line1"
+		onLoadContent_orig()
+		document.getElementById("textbox").value = content.location.href
+	}
+	openLocation = function(valt){
+		var row = parseInt(valt.match(/\d*$/))
+		if (valt.replace(/[#\:]\d+$/, "") == content.location.href){
+			goToLine(row)
+			return
+		}
+
+		arguments[0]=valt.replace(/^view-source:/,"").replace(/[#\:]\d+$/, "")
+		arguments[3]=row
+		viewSource(arguments[0])		
+	}
+	edit = function(){
+		var url = content.location.href.replace(/^view-source:/,"")
+		var m = document.getElementById("statusbar-line-col").label.match(/(\d+).*?(\d+)/)
+		Components.utils.import("resource://shadia/main.js").externalEditors.edit(url, m[1], m[2])
+	}
+ </script> 
+ <menubar id='viewSource-main-menubar'>
+	<separator orient="horizontal"/>
+	<textbox id="textbox" style="background:rgba(250,250,250,0.5);-moz-appearance: none;border:none;color:graytext"
+		onkeypress="if(event.keyCode==13)openLocation(this.value)" flex="1" 
+		onblur="clearTimeout(this.tmo);this.tmo=setTimeout(openLocation,10,this.value)"/>
+	<toolbarbutton label="edit" oncommand="edit()" />
+ </menubar>
+<!-- <statusbar id="status-bar">
+	<shadiaglue style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")'/>
+ </statusbar>  -->
+ 
+</overlay>

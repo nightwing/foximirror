@@ -101,6 +101,11 @@ dump(posX, posY)
     },
 
     $selectionListener: function(e) {
+		if (!this.editor){
+			dump.trace("asdasdasd")
+			this.finish()
+		}
+
         var point = this.editor.selection.getCursor();
         var range = this.$q.filterRange
         if(range.compare(point.row, point.column) < 0 || this.hidden)
@@ -398,6 +403,8 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
     },
 
     start: function(editor) {
+		if (!this.editor && !editor)
+			return
         this.editor = editor || this.editor;
 
         var cell = Firebug.Ace.win2.editor.session.getMode().getCurrentCell();
