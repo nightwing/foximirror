@@ -1,7 +1,7 @@
 define('fbace/consoleOutputMode', function(require, exports, module) {
 // rules
-var oop = require("pilot/oop");
-var lang = require("pilot/lang");
+var oop = require("ace/lib/oop");
+var lang = require("ace/lib/lang");
 var unicode = require("ace/unicode");
 var TextHighlightRules = require("ace/mode/text_highlight_rules").TextHighlightRules;
 

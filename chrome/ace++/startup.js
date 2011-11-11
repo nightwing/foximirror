@@ -1,6 +1,6 @@
 define('ace/keyboard/hash_handler', function(require, exports, module) {
 
-var keyUtil  = require("pilot/keys");
+var keyUtil  = require("ace/lib/keys");
 
 function HashHandler(config) {
     this.setConfig(config);
@@ -78,7 +78,7 @@ exports.HashHandler = HashHandler;
 
 /************************************************************************************/
 define('ace/layer/gutter', function(require, exports, module) {
-var dom = require("pilot/dom");
+var dom = require("ace/lib/dom");
 
 var Gutter = function(parentEl) {
     this.element = dom.createElement("div");
@@ -197,7 +197,7 @@ define('fbace/startup', function(require, exports, module) {
 exports.launch = function(env, options) {
     acebugOptions = options
     // requires
-    event = require("pilot/event");
+    event = require("ace/lib/event");
     Editor = require("ace/editor").Editor;
     Renderer = require("ace/virtual_renderer").VirtualRenderer;
 
@@ -318,7 +318,7 @@ exports.launch = function(env, options) {
 	/**************************** initialize ****************************************************/
     // fix event addCommandKeyListener
     event.addCommandKeyListener = function(el, callback) {
-        var keys = require("pilot/keys");
+        var keys = require("ace/lib/keys");
         var lastKeyDownKeyCode = null;
         el.addEventListener("keydown", function(e) {
             lastKeyDownKeyCode = e.keyCode in keys.MODIFIER_KEYS? 0: e.keyCode;
@@ -538,8 +538,9 @@ exports.launch = function(env, options) {
         });
     };
     /**********  handle keyboard *****/
-    env.canon = canon = require("pilot/canon");
-
+    env.canon = canon = env.editor.commands;
+	canon.getCommand = function(name){return this.commands[name]}
+	
     env.setKeybinding(options.keybinding);
 
     editor.addCommands = function(commandSet) {
@@ -698,7 +699,7 @@ exports.launch = function(env, options) {
 
     var com = canon.getCommand('removeline')
     com.bindKey.win = com.bindKey.mac = 'Alt-D'
-    canon.removeCommand('removeline')
+    //canon.removeCommand('removeline')
     canon.addCommand(com)
 
     canon.addCommand({
