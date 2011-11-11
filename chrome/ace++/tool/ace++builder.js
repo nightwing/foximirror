@@ -123,6 +123,8 @@ function finishReq(){
 }
 
 pending = ["ace/lib/fixoldbrowsers", "ace/editor", "ace/virtual_renderer", "ace/undomanager", "ace/theme/textmate"]
+
+loaded = {"ace/worker/worker_client":true,"ace/layer/gutter":true}
 req()
 
 #>>
