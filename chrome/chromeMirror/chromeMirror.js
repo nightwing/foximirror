@@ -138,6 +138,7 @@ dirViewer={
 						return
                     renameLocaleUri(getCurrentURI(), newName);
 					self.reload()
+					self.select(newName)
                 },
 				disabled: isJar
             },'-',{

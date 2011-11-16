@@ -160,10 +160,11 @@ function renameLocaleUri(href, newName){
 		let newFile = file.parent.clone()
 		newFile.append(newName)
 		
-		if(file.exists())
-			return
+		if(newFile.exists())
+			return false
 		
-		file.moveTo(file.parent, newName)		
+		file.moveTo(file.parent, newName)
+		return
 	}
 	
 	if(uri.scheme == 'jar') {

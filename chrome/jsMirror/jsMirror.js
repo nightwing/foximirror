@@ -336,6 +336,9 @@ jn.getScripts = function(window){
 //sr=jn.getScripts(window)[4];jn.loadScript(sr, window)
 jn.loadScript = function(src, window){
 	var document = (window || getTargetWindow()).document
+	if (!document)
+		return jn.loadSubScript(src, window)
+		
 	var s = document.querySelector("script[src='" + src + "']")
 	if(s)
 		s.parentNode.removeChild(s)
@@ -347,9 +350,25 @@ jn.loadScript = function(src, window){
 		
     return s
 }
-jn.loadScript2 = function(src, window){
+jn.loadSubScript = function(src, window){
    return Services.scriptloader.loadSubScript(src+'?'+Date.now(), window || getTargetWindow(), 'UTF-8')
 }
+
+/******************/
+jn.setScope = function(window){
+	if ('eval' in window){
+		windowViewer.setWindow(window)
+		return window
+	}
+	window = jn.getParent(window)
+	
+	jn.say("setting parent")
+	if ('eval' in window)
+		windowViewer.setWindow(window)
+	else
+		jn.say("not a scope!!!")
+}
+
 
 /******************/
 jn.unwrap = function(o){

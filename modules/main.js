@@ -338,7 +338,8 @@ var externalEditors = {
 					file = extractRelative(uri, true).file
 				else
 					file = result.file
-			}
+			}else
+				file = result.file
 		}
 
 		if(!file || !file.exists())
