@@ -1,4 +1,122 @@
+#>>
+var _define = function(module, deps, payload) {
+    if (typeof module !== 'string') {
+        if (_define.original)
+            _define.original.apply(window, arguments);
+        else {
+            console.error('dropping module because define wasn\'t a string.');
+            console.trace();
+        }
+        return;
+    }
 
+    if (arguments.length == 2)
+        payload = deps;
+
+    if (!define.modules)
+        define.modules = {};
+        
+    define.modules[module] = payload;
+};
+if (global.define)
+    _define.original = global.define;
+    
+global.define = _define;
+
+
+/**
+ * Get at functionality define()ed using the function above
+ */
+var _require = function(parentId, module, callback) {
+    if (Object.prototype.toString.call(module) === "[object Array]") {
+        var params = [];
+        for (var i = 0, l = module.length; i < l; ++i) {
+            var dep = lookup(parentId, module[i]);
+            if (!dep && _require.original)
+                return _require.original.apply(window, arguments);
+            params.push(dep);
+        }
+        if (callback) {
+            callback.apply(null, params);
+        }
+    }
+    else if (typeof module === 'string') {
+        var payload = lookup(parentId, module);
+        if (!payload && _require.original)
+            return _require.original.apply(window, arguments);
+        
+        if (callback) {
+            callback();
+        }
+    
+        return payload;
+    }
+    else {
+        if (_require.original)
+            return _require.original.apply(window, arguments);
+    }
+};
+
+if (global.require)
+    _require.original = global.require;
+    
+global.require = _require.bind(null, "");
+global.require.packaged = true;
+
+var normalizeModule = function(parentId, moduleName) {
+    // normalize plugin requires
+    if (moduleName.indexOf("!") !== -1) {
+        var chunks = moduleName.split("!");
+        return normalizeModule(parentId, chunks[0]) + "!" + normalizeModule(parentId, chunks[1]);
+    }
+    // normalize relative requires
+    if (moduleName.charAt(0) == ".") {
+        var base = parentId.split("/").slice(0, -1).join("/");
+        var moduleName = base + "/" + moduleName;
+        
+        while(moduleName.indexOf(".") !== -1 && previous != moduleName) {
+            var previous = moduleName;
+            var moduleName = moduleName.replace(/\/\.\//, "/").replace(/[^\/]+\/\.\.\//, "");
+        }
+    }
+    
+    return moduleName;
+}
+
+
+/**
+ * Internal function to lookup moduleNames and resolve them by calling the
+ * definition function if needed.
+ */
+var lookup = function(parentId, moduleName) {
+
+    moduleName = normalizeModule(parentId, moduleName);
+
+    var module = define.modules[moduleName];
+    if (module == null) {
+        return null;
+    }
+
+    if (typeof module === 'function') {
+        var exports = {};
+        module(_require.bind(this, moduleName), exports, { id: moduleName, uri: '' });
+        // cache the resulting module object for next time
+        define.modules[moduleName] = exports;
+        return exports;
+    }
+
+    return module;
+};
+
+
+
+
+
+
+
+
+
+#>>
 
 function stripComments(str){
     if(str.slice(0,2)=='/*'){
@@ -12,25 +130,26 @@ function textModuleDefine(str){
     str='define("'+str+'");'
     return str
 }
-function getPath(rel, abs){
-    var p1 = rel.split("/")
-    var p2 = abs.split("/")
-    var p =[]
-    if (p1[0] == "."){
-        p1.shift()
-        p2.pop()
-    }else if (p1[0] == ".."){
-        p1.shift()
-        p2.pop()
-        p2.pop()
-    }else{
-        p2=[]
+function normalizeModule(parentId, moduleName) {
+    // normalize plugin requires
+    if (moduleName.indexOf("!") !== -1) {
+        var chunks = moduleName.split("!");
+        return normalizeModule(parentId, chunks[0]) + "!" + normalizeModule(parentId, chunks[1]);
     }
-    var p = Array.concat(p2, p1)
-    return p.join("/")
+    // normalize relative requires
+    if (moduleName.charAt(0) == ".") {
+        var base = parentId.split("/").slice(0, -1).join("/");
+        var moduleName = base + "/" + moduleName;
+        
+        while(moduleName.indexOf(".") !== -1 && previous != moduleName) {
+            var previous = moduleName;
+            var moduleName = moduleName.replace(/\/\.\//, "/").replace(/[^\/]+\/\.\.\//, "");
+        }
+    }
+    
+    return moduleName;
 }
-
-function getDeps(str,name){
+function getDeps(str,name) {
     var m = str.match(/^.*?require\(\"[^"]+"\)/gm)
     if (!m)
         return []
@@ -42,7 +161,7 @@ function getDeps(str,name){
     }
     return m1.map(function(r){        
         r=r.slice(r.indexOf("(")+2, -2)
-        r = getPath(r, name)
+        r = normalizeModule(name, r)
         return r
     })
 }
@@ -53,7 +172,6 @@ function stripPluginStr(name){
 		name = name.substr(pluginStr.length)
 	return name
 }
-
 function makeExplicitDefine(name){
     var str = stripComments(modules[name]||"")
 	
@@ -63,12 +181,11 @@ function makeExplicitDefine(name){
         var i = r.indexOf("(")
         var rel=r.slice(i+2, -2)
         rel = stripPluginStr(rel)
-        var abs = getPath(rel, name)
+        var abs = normalizeModule(name, rel)
         return r.slice(0, i+2)+abs+r.slice(-2)
     })
 	return str.replace('define(', 'define("'+name + '",'+ depStr + ', ')
 }
-
 function processModule(name, text){
 	var moduleName = stripPluginStr(name)
 	if (moduleName != name) {
@@ -99,7 +216,6 @@ function processModule(name, text){
 	else
 		finishReq()
 }
-
 function req() {
     var name = pending[0]
 	var url = pluginStr + stripPluginStr(name)	
@@ -113,19 +229,23 @@ function req() {
     }
     
 }
-
 function finishReq(){
     var str = ""
     for (var mn in modules){
-        str+=makeExplicitDefine(mn)
+        str+=makeExplicitDefine(mn).trim()+"\n\n"
     }
     env.editor.session.setValue(str)
 }
 
 pending = ["ace/lib/fixoldbrowsers", "ace/editor", "ace/virtual_renderer", "ace/undomanager", "ace/theme/textmate"]
 
-loaded = {"ace/worker/worker_client":true,"ace/layer/gutter":true}
-req()
+loaded = {"ace/layer/gutter":true}
+files = {}
+files.aceUncompressed = req()
+#>>
+modules={}
+pending = ["ace/mode/html"]
+files["mode-html"] = req()
 
 #>>
 
@@ -136,11 +256,4 @@ getDeps(modules["ace/virtual_renderer"],"***")
 require(pluginStr+"ace/virtual_renderer")
 #>>
 
-env.editor.commands.addCommand
-#>>
-
-
-startAce()
-#>>
-
-editor.renderer.$textLayer.element.textContent
+env.editor.commands.

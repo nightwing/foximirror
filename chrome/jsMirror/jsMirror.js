@@ -882,18 +882,27 @@ Firebug.jsMirror = {
 				return;
 			} else if (cell.coffeeText) {
 				text = cell.coffeeText
-			} else
+			} else {
 				text = cell.body.map(function(x, i) {
-					if (bp[i + cell.bodyStart]) {
-						// strip comments and ;
-						x = x.replace(/\/\/.*$/, '')
-							 .replace(/;\s*$/, '')
-							 .replace(/^\s*var\s+/g, '')
+                    var index = i + cell.bodyStart
+					if (bp[index]) {
+                        // strip comments and ;
+                        x = x.replace(/\/\/.*$/, '')
+                             .replace(/;\s*$/, '')
+                             .replace(/^\s*var\s+/g, '')
 						if(x)
-							x = 'jn.say(' + x + ')'
-					}
-					return x;
-				}).join('\n');
+							try {
+								Function('console.log(' + x + ')')
+								x = 'jn.say(' + x + ')'
+								bp[index] = 'valid'
+							}catch(e){
+								bp[index] = 'invalid'
+							}
+                    }
+                    return x;
+                }).join('\n');
+				editor.session.setBreakpoints(bp)
+			}
 			//Firebug.commandHistory.appendToHistory(cell.body.join('\n'));
 		}
 		text = text.replace(/[\.,:]\s*$/, '').replace(/^\s*[\.,:]/, '');

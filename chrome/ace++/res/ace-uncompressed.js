@@ -3880,7 +3880,7 @@ exports.isOldIE = exports.isIE && exports.isIE < 9;
 exports.isGecko = exports.isMozilla = window.controllers && window.navigator.product === "Gecko";
 
 /** oldGecko == rev < 2.0 **/
-exports.isOldGecko = exports.isGecko && /rv\:1/.test(navigator.userAgent);
+exports.isOldGecko = exports.isGecko && parseInt((navigator.userAgent.match(/rv\:([0-9]+)/) || [])[1]) < 4;
 
 /** Is this Opera */
 exports.isOpera = window.opera && Object.prototype.toString.call(window.opera) == "[object Opera]";
@@ -7973,10 +7973,7 @@ var Text = function(parentEl) {
                 screenColumn += tabSize - 1;
                 return self.$tabStrings[tabSize];
             } else if (c == "&") {
-                if (useragent.isOldGecko)
-                    return "&";
-                else
-                    return "&amp;";
+                return "&amp;";
             } else if (c == "<") {
                 return "&lt;";
             } else if (c == "\u3000") {

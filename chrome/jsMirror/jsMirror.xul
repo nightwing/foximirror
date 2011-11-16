@@ -11,7 +11,7 @@
 
 <popupset>
 	<!-- <tooltip id='autocomplate-bubble' noautofocus="true" noautohide="true"/> -->
-	<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true'>
+	<panel id="autocomplatePanel" noautofocus="true" noautohide="true" ignorekeys='true' backdrag='true'>
 		<hbox>
 			<toolbarbutton label='qi'  tooltiptext="query all interfaces" accesskey='q' onclick='jsExplore.qi()'/>
 			<toolbarbutton label='si'  tooltiptext="list supported interfaces" accesskey='s' onclick='jsExplore.si()'/>
