@@ -354,15 +354,17 @@ defaultFileComponent={
 		
 	},
 	createStyle: function(){
-		var name = 'untitled'//prompt('name for new style')
+		var name = prompt('name for new style')
 		if(!name)
 			return
+		if (!/\.css$/.test(name))
+			name = name + ".css"
 		gstyle={
-				name: name,
-				spec: getCssMirrorJarPath()+name
-			}
+			name: name,
+			spec: getCssMirrorJarPath()+name
+		}
 
-		codebox.value=''
+		codebox.setSession(Firebug.Ace.win2.createSession("", name))
 		styleList.push(gstyle)
 		this.resetView()
 	},
@@ -378,7 +380,7 @@ defaultFileComponent={
 		this.tree.view=new plainFilterView(styleList)
 	},
 	saveStyle: function(style){
-		style.code=codebox.value
+		style.code=codebox.session.getValue()
 		writeData(style.code, style.name)
 		style.dirty=false
 	},
@@ -664,10 +666,10 @@ cssMirror={
 		saveButton=document.getElementById('save-button')
 		saveButton.disabled=!gstyle.dirty
 		if(!gstyle.dirty)
-			codebox.addEventListener('input',cssMirror.saveButtonListener,false)
+			codebox.addEventListener('change',cssMirror.saveButtonListener,false)
 	},
 	saveButtonListener: function(){		
-		codebox.removeEventListener('input',cssMirror.saveButtonListener,false)
+		codebox.removeEventListener('change',cssMirror.saveButtonListener,false)
 		gstyle.dirty=true;
 		cssMirror.updateSaveButton()
 	}
