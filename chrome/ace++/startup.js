@@ -631,55 +631,11 @@ exports.launch = function(env, options) {
 	
 
 	function onGutterClick(e) {
-		var editor = editor, s = editor.session, row = e.row;
+		s = editor.session, row = e.row;
 		var className =  e.htmlEvent.target.className
 		if (className.indexOf('ace_fold-widget') < 0) {
 			if(className.indexOf("ace_gutter-cell") != -1 && editor.isFocused())
 				s[s.$breakpoints[row]?'clearBreakpoint':'setBreakpoint'](row);
-		} else {
-			var line = s.getLine(row)
-			var match = line.match(/(\{|\[)\s*(\/\/.*)?$/)
-			if (match) {
-				var i = match.index
-				var fold = s.getFoldAt(row, i+1, 1)
-				if (fold) {
-					s.expandFold(fold)
-					//editor.renderer.scrollCursorIntoView()
-					//editor.renderer.scrollToRow(row)
-				} else {
-					var start = {row:row,column:i+1}
-					var end = s.$findClosingBracket(match[1], start)
-					if (end)
-						s.addFold("...", Range.fromPoints(start, end));
-				}
-				return
-			}
-			var mode = s.$mode
-			if (!mode.delimiter)
-				return
-
-			if (line.substr(0, mode.dl) == mode.delimiter) {
-				var fold = s.getFoldAt(row, 0, 1)
-				if (!fold){
-					var foldLine = s.getFoldLine(row);
-					if(foldLine && foldLine.start.row != foldLine.end.row) {
-						s.expandFolds(foldLine.folds)
-						return
-					}
-				}
-				
-				if (fold) {
-					s.expandFold(fold)
-					//editor.renderer.scrollCursorIntoView()
-				} else {
-					var cell = mode.getCellBounds(row)
-					var start = {row: row, column: 0};
-					var end = {row: cell.bodyEnd, column: s.getLine(cell.bodyEnd).length};
-					var placeholder = s.getLine(cell.headerStart).slice(0,10) + "=====================";
-					s.addFold(placeholder, Range.fromPoints(start, end));
-				}
-				return
-			}
 		}
 	}
 	editor.renderer.on('gutterclick', onGutterClick)

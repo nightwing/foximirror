@@ -1192,9 +1192,9 @@ var VirtualRenderer = function(container, theme) {
 //    dom.importCssString(editorCss, "ace_editor", container.ownerDocument);
     
     // Chrome has some strange rendering issues if this is not done async
-    setTimeout(function() {
+
         dom.addCssClass(container, "ace_editor");
-    }, 0)
+
 
     this.setTheme(theme);
 
@@ -10012,7 +10012,7 @@ function Folding() {
         var range = this.getFoldWidgetRange(row);
         if (range) {
             if (!onlySubfolds)
-                this.addFold("...", range);
+                this.addFold(range.placeholder||"...", range);
 
             if (addSubfolds)
                 this.foldAll(range.start.row + 1, range.end.row);
