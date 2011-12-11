@@ -152,7 +152,6 @@ var Tokenizer = require("ace/tokenizer").Tokenizer;
 
 var MatchingBraceOutdent = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent;
 var Range = require("ace/range").Range;
-var WorkerClient = require("ace/worker/worker_client").WorkerClient;
 var CstyleBehaviour = require("ace/mode/behaviour/cstyle").CstyleBehaviour;
 
 var Mode = function() {
