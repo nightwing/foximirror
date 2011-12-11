@@ -127,13 +127,6 @@ shadowInspector.prototype={
 	start: function(mWindow){
 		if(!this.infoPanel)
 			this.createInfoPanel()
-		if(!this.fm){
-			this.fm=Cc["@mozilla.org/focus-manager;1"]
-			if(this.fm)//prior 3.6 we dont have focusmanager
-				this.fm=this.fm.getService(Ci.nsIFocusManager);
-			else
-				this.fm={get activeWindow() {return Services.wm.getMostRecentWindow(null)}}
-		}
 			
 		this.isSheetRegistered||this.register()
 		this.finish()
@@ -262,15 +255,15 @@ shadowInspector.prototype={
 		this.light=this.lcs?'click':'lime'
 	},
 	updateLight: function(event){
-		var istop = this.fm.activeWindow == window
-		if(istop) {
+		var isTop = Services.fm.activeWindow == window
+		if(isTop) {
 			this.windowActive=true
 			this.light=this.lcs?'click':'lime'
 		} else {
 			this.windowActive=false
 			this.light='off'
 		}
-		return istop
+		return isTop
 	},
 	mouseMoveListener: function(event) {
 		this.infoPanelBo.moveTo(event.screenX+10,event.screenY+10)
@@ -281,6 +274,17 @@ shadowInspector.prototype={
 	targetType: 'originalTarget',
 	changeDepth: function(){
 		this.targetType=this.targetType=='originalTarget'?'target':'originalTarget'
+	},
+	
+	$ignorekeys: function(e){
+		var name
+		if (
+			!e.ctrlKey&&!e.altKey&&!e.metaKey
+			&& /textarea|input|tree/i.test(name = Services.fm.focusedElement.nodeName)
+		){
+			this.fillPanel("key forwarded to "+name+" press with ctrl|alt|meta")
+			return true
+		}
 	},
 
 	keydownListener: function(event){
@@ -307,16 +311,16 @@ shadowInspector.prototype={
 
 				case KeyEvent.DOM_VK_NUMPAD9  :this.copySelector(obj);obj=null;break;
 
-				case KeyEvent.DOM_VK_RIGHT    :if(this.ignorekeys)return
+				case KeyEvent.DOM_VK_RIGHT    :if(this.$ignorekeys(event))return
 				case KeyEvent.DOM_VK_NUMPAD3  :obj=this.toRight(obj);break;
 
-				case KeyEvent.DOM_VK_LEFT     :if(this.ignorekeys)return
+				case KeyEvent.DOM_VK_LEFT     :if(this.$ignorekeys(event))return
 				case KeyEvent.DOM_VK_NUMPAD1  :obj=this.toLeft(obj);break;
 
-				case KeyEvent.DOM_VK_UP       :if(this.ignorekeys)return
+				case KeyEvent.DOM_VK_UP       :if(this.$ignorekeys(event))return
 				case KeyEvent.DOM_VK_NUMPAD5  :obj=this.toUp(obj);break;
 
-				case KeyEvent.DOM_VK_DOWN     :if(this.ignorekeys)return
+				case KeyEvent.DOM_VK_DOWN     :if(this.$ignorekeys(event))return
 				case KeyEvent.DOM_VK_NUMPAD2  :obj=this.toDown(obj);break;
 				
 				case KeyEvent.DOM_VK_DELETE   :if(!event.ctrlKey) return;

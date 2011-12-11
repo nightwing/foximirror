@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyGetter(Services, "chromeReg", function () {
 		.QueryInterface(Ci.nsIXULOverlayProvider)
 		.QueryInterface(Ci.nsIXULChromeRegistry);
 });
+
+XPCOMUtils.defineLazyServiceGetter(Services, "fm", "@mozilla.org/focus-manager;1", "nsIFocusManager");
 XPCOMUtils.defineLazyServiceGetter(Services, "domUtils", "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 XPCOMUtils.defineLazyServiceGetter(Services, "sss", "@mozilla.org/content/style-sheet-service;1", "nsIStyleSheetService");
 XPCOMUtils.defineLazyServiceGetter(Services, "atom", "@mozilla.org/atom-service;1", "nsIAtomService");
