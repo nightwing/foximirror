@@ -1147,115 +1147,56 @@ var getNodeNamesInDoc = function(doc) {
 
 var modernFox = !!Object.getOwnPropertyNames;
 /**============-=========-================**/
-var getProps;
-if (!modernFox) { //for old versions
-    getProps = function(targetObj) { //var t=Date.now()
-        var i, o, d;
+var getProps = function(targetObj) {
+	if (!targetObj)
+		return [];
 
-        if (!targetObj)
-            return [];
-        var data = [];
-        var x = targetObj.wrappedJSObject;
-        if (x) {
-            //data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
-            targetObj = x;
-        }
+	var d, o, x = targetObj
+	var data = [], protoList = [], depth = 0, allProps = [];
 
-        var protoList = [targetObj];
-        var p = targetObj;
-        if (typeof p !== "xml") {
-            while(p = p.__proto__) {
-                protoList.push(p);
-            }
-        }
+	if (typeof x !== "object" && typeof x !== "function")
+		x = x.constructor.prototype;
 
-        for(i in targetObj) {
-            for(var depth in protoList) {
-                try {
-                    if (protoList[depth].hasOwnProperty(i))
-                        break;
-                } catch(e) {
-                    Cu.reportError(depth+protoList+i);
-                }
-            }
+	if (typeof x === "xml")
+		return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
 
-            try{
-                o = targetObj[i];
-                d = '---slacking---'//jn.inspect(o);
-            } catch(e) {
-                d = e.message;
-                o = "error";
-            }
-            data.push({name:i, comName: i.toLowerCase(), description: d, depth: depth, object: o});
-        }
-        //special cases
-        try{
-            if ('QueryInterface' in targetObj) {
-                i = "QueryInterface";
+	if (typeof targetObj === "object") {
+		x = XPCNativeWrapper.unwrap(targetObj)
 
-                try{
-                    d = jn.inspect(targetObj[i]);
-                } catch(e) {
-                    d = e.message;
-                }
-                data.push({name: i, comName: i.toLowerCase(), description: d, depth: 0});
-            }
-        } catch(e) {}
+		if (targetObj != x) {
+			data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
+			targetObj = x
+		}
+	}
 
-        return data;
-    };
-}
-else {//4.0b2+
-    getProps = function(targetObj) {
-        if (!targetObj)
-            return [];
+	var maxProtoDepth = 20
+	while(x) {
+		var props = Object.getOwnPropertyNames(x);
+		innerloop: for each(var i in props) {
+			if (allProps.indexOf(i) > -1)
+				continue innerloop;
 
-        var d, o, x = targetObj
-        var data = [], protoList = [], depth = 0, allProps = [];
+			try {
+				o = targetObj[i];
+				d = '---slacking---'//jn.inspect(o);
+			} catch(e) {
+				o = "error";
+				d = e.message;
+			}
+			data.push({name: i, comName: i.toLowerCase(), description: d, depth:depth, object: o});
+		}
+		protoList.push(x);
+		// some objects (XML, Proxy) may have infinite list of __proto__
+		if(!maxProtoDepth--)
+			break;
+		x = Object.getPrototypeOf(x);
+		depth++;
+		allProps = allProps.concat(props);
+	}
 
-        if (typeof x !== "object" && typeof x !== "function")
-            x = x.constructor.prototype;
+	return data;
+};
 
-        if (typeof x === "xml")
-            return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
-
-        if (typeof targetObj === "object") {
-            x = XPCNativeWrapper.unwrap(targetObj)
-
-            if (targetObj != x) {
-                data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
-                targetObj = x
-            }
-        }
-
-        var maxProtoDepth = 20
-        while(x) {
-            var props = Object.getOwnPropertyNames(x);
-            innerloop: for each(var i in props) {
-                if (allProps.indexOf(i) > -1)
-                    continue innerloop;
-
-                try {
-                    o = targetObj[i];
-                    d = '---slacking---'//jn.inspect(o);
-                } catch(e) {
-                    o = "error";
-                    d = e.message;
-                }
-                data.push({name: i, comName: i.toLowerCase(), description: d, depth:depth, object: o});
-            }
-            protoList.push(x);
-            // some objects (XML, Proxy) may have infinite list of __proto__
-            if(!maxProtoDepth--)
-                break;
-            x = x.__proto__;
-            depth++;
-            allProps = allProps.concat(props);
-        }
-
-        return data;
-    };
-}
 
 var namespaces = [
     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -1474,7 +1415,7 @@ var compareWithPrototype = {
     },
 
     compare: function(object) {
-        return jn.compare(object, object.__proto__);
+        return jn.compare(object, Object.getPrototypeOf(object));
     }
 };
 

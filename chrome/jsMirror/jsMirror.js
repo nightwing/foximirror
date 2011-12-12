@@ -5,86 +5,53 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 var modernFox=!!Object.getOwnPropertyNames
 /**============-=========-===============**/
-if(!modernFox)//for old versions
-	var getProps=function(targetObj){var t=Date.now()
-		var data=[],x=targetObj.wrappedJSObject
-		if(x){
+var getProps = function(targetObj) {
+	if (!targetObj)return [];
+
+	var d, o, x = targetObj
+	var data = [], protoList = [], depth = 0, allProps = [];
+
+	if (typeof x !== "object" && typeof x !== "function")
+		x = x.constructor.prototype;
+
+	if (typeof x === "xml")
+		return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
+
+	if (typeof targetObj === "object") {
+		x = XPCNativeWrapper.unwrap(targetObj)
+
+		if (targetObj != x) {
 			data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
-			targetObj=x
+			targetObj = x
 		}
-
-		var protoList=[targetObj]
-		var p=targetObj
-		if(typeof p!='xml')
-			while(p=p.__proto__)
-				protoList.push(p)
-		for(var i in targetObj){
-			for(var depth in protoList){
-				try{if(protoList[depth].hasOwnProperty(i))
-					break
-				}catch(e){Cu.reportError(depth+protoList+i)}
-			}
-			/* data.push({name:i, comName: i.toLowerCase(),get description
-function(){dump(this.name); delete this.description; this.description=jn.inspect(autocompleter.object[this.name]); return this.description}
-			, depth:depth}) */
-			try{var o=targetObj[i];d=jn.inspect(o)}catch(e){var d=e.message,o='error'}
-			data.push({name:i, comName: i.toLowerCase(), description:d, depth:depth, object:o})
-		}//dump('-----------------------------**',t-Date.now())
-		//special cases
-		try{if('QueryInterface' in targetObj){i='QueryInterface'
-			try{var d=jn.inspect(targetObj[i])}catch(e){var d=e.message}
-			data.push({name:i, comName: i.toLowerCase(),description:d, depth:0})
-		}}catch(e){}
-		return data;
 	}
-else//4.0b2+
-	var getProps = function(targetObj) {
-		if (!targetObj)return [];
 
-		var d, o, x = targetObj
-		var data = [], protoList = [], depth = 0, allProps = [];
-
-		if (typeof x !== "object" && typeof x !== "function")
-			x = x.constructor.prototype;
-
-		if (typeof x === "xml")
-			return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
-
-		if (typeof targetObj === "object") {
-			x = XPCNativeWrapper.unwrap(targetObj)
-
-			if (targetObj != x) {
-				data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
-				targetObj = x
-			}
+	var maxProtoDepth = 20;
+	while(x){
+		var props = Object.getOwnPropertyNames(x);
+		innerloop: for each(var i in props) {
+			if (allProps.indexOf(i) > -1)
+				continue innerloop;
+			try{o=targetObj[i];d=jn.inspect(o);}catch(e){d=e.message;o="error";}
+			
+			data.push({name: i, comName: i.toLowerCase(), description: d, depth:depth, object: o});
 		}
-
-		var maxProtoDepth = 20;
-		while(x){
-			var props = Object.getOwnPropertyNames(x);
-			innerloop: for each(var i in props) {
-				if (allProps.indexOf(i) > -1)
-					continue innerloop;
-				try{o=targetObj[i];d=jn.inspect(o);}catch(e){d=e.message;o="error";}
-				
-				data.push({name: i, comName: i.toLowerCase(), description: d, depth:depth, object: o});
-			}
-			protoList.push(x);
-			// some objects (XML, Proxy) may have infinite list of __proto__
-			if(!maxProtoDepth--)
-				break;
-			x = x.__proto__;depth++;allProps = allProps.concat(props);
-		}
-		return data;
-		
-		// sometimes these are not found by previous code
-		i = 'QueryInterface'
-		if(i in x && allProps.indexOf(i) == -1)
-			data.push({name:i, comName: i.toLowerCase(),description:'', depth:-1})
-		i = 'Components'
-		if(i in x && allProps.indexOf(i) == -1)
-			data.push({name:i, comName: i.toLowerCase(),description:'', depth:-1})
-	};
+		protoList.push(x);
+		// some objects (XML, Proxy) may have infinite list of __proto__
+		if(!maxProtoDepth--)
+			break;
+		x = Object.getPrototypeOf(x);depth++;allProps = allProps.concat(props);
+	}
+	return data;
+	
+	// sometimes these are not found by previous code
+	i = 'QueryInterface'
+	if(i in x && allProps.indexOf(i) == -1)
+		data.push({name:i, comName: i.toLowerCase(),description:'', depth:-1})
+	i = 'Components'
+	if(i in x && allProps.indexOf(i) == -1)
+		data.push({name:i, comName: i.toLowerCase(),description:'', depth:-1})
+};
 
 /**======================-==-======================*/
 
@@ -644,7 +611,7 @@ jsExplore._p=function(){
 	var protoList=[autocompleter.object]
 	var p = protoList[0]
 	var n = 20 
-	while((p = p.__proto__) && n--)
+	while((p = Object.getPrototypeOf(p)) && n--)
 		protoList.push(p)
 	autocompleter.sayInBubble(
 		'__proto__ chain for'+(n<=0?'truncated at'+n:'')+'\n'+
