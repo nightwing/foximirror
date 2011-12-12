@@ -1,0 +1,38 @@
+
+function cloneArray(array, fn)
+{
+   var newArray = [];
+
+   if (fn)
+       for (var i = 0; i < array.length; ++i)
+           newArray.push(fn(array[i]));
+   else
+       for (var i = 0; i < array.length; ++i)
+           newArray.push(array[i]);
+
+   return newArray;
+}
+function arrayInsert(array, index, other)
+{
+   for (var i = 0; i < other.length; ++i)
+       array.splice(i+index, 0, other[i]);
+
+   return array;
+}
+
+
+this.getBind = function(f){
+	var bind = function()  // fn, thisObject, args => thisObject.fn(arguments, args);
+	{
+	   var args = cloneArray(arguments),
+
+	   fn = args.shift(),
+	   object = args.shift();
+	   
+	   return function bind() { 
+	   dump.trace(fn)
+	   f()
+	   return fn.apply(object, arrayInsert(cloneArray(args), 0, arguments)); }
+	};
+	return bind
+}

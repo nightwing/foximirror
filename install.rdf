@@ -8,11 +8,11 @@
 	<em:version>2.0</em:version>
 	
     <!-- front-end metadata -->  
-	<em:name>Shadia the light inspector</em:name>
+	<em:name>foxiMirror</em:name>
     <em:description> see how firefox works from inside</em:description> 
 	<em:optionsURL>chrome://shadia/content/options.xul</em:optionsURL>
-	<em:homepageURL>http://code.google.com/p/foximirror/</em:homepageURL>
-    <em:creator>blackadder</em:creator>
+	<em:homepageURL>https://github.com/nightwing/foximirror</em:homepageURL>
+    <em:creator></em:creator>
     
 	<em:unpack>true</em:unpack>
 	<em:type>2</em:type>
