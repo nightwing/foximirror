@@ -725,7 +725,7 @@ exports.MatchingBraceOutdent = MatchingBraceOutdent;
 define("ace/mode/behaviour/cstyle",[], function(require, exports, module) {
 
 var oop = require("ace/lib/oop");
-var Behaviour = require('ace/mode/behaviour').Behaviour;
+var Behaviour = require("ace/mode/behaviour").Behaviour;
 
 var CstyleBehaviour = function () {
 

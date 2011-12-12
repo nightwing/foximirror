@@ -1192,9 +1192,7 @@ var VirtualRenderer = function(container, theme) {
 //    dom.importCssString(editorCss, "ace_editor", container.ownerDocument);
     
     // Chrome has some strange rendering issues if this is not done async
-
         dom.addCssClass(container, "ace_editor");
-
 
     this.setTheme(theme);
 
@@ -2116,8 +2114,8 @@ exports.cssText = ".ace-tm .ace_editor {\
 }\
 \
 .ace-tm .ace_line .ace_invalid {\
-  background-color: rgb(153, 0, 0);\
-  color: white;\
+  background-color: rgba(255, 0, 0, 0.1);\
+  color: red;\
 }\
 \
 .ace-tm .ace_line .ace_support.ace_function {\
@@ -4064,10 +4062,6 @@ var EditSession = function(text, mode) {
                 arr.push(SPACE);
             } else if((c > 39 && c < 48) || (c > 57 && c < 64)) {
                 arr.push(PUNCTUATION);
-            }
-            // full width characters
-            else if (c >= 0x1100 && isFullWidth(c)) {
-                arr.push(CHAR, CHAR_EXT);
             } else {
                 arr.push(CHAR);
             }
@@ -4100,10 +4094,6 @@ var EditSession = function(text, mode) {
             // tab
             if (c == 9) {
                 screenColumn += this.getScreenTabSize(screenColumn);
-            }
-            // full width characters
-            else if (c >= 0x1100 && isFullWidth(c)) {
-                screenColumn += 2;
             } else {
                 screenColumn += 1;
             }
@@ -4414,45 +4404,6 @@ var EditSession = function(text, mode) {
 
         return screenRows;
     }
-
-    // For every keystroke this gets called once per char in the whole doc!!
-    // Wouldn't hurt to make it a bit faster for c >= 0x1100
-    function isFullWidth(c) {
-        if (c < 0x1100)
-            return false;
-        return c >= 0x1100 && c <= 0x115F ||
-               c >= 0x11A3 && c <= 0x11A7 ||
-               c >= 0x11FA && c <= 0x11FF ||
-               c >= 0x2329 && c <= 0x232A ||
-               c >= 0x2E80 && c <= 0x2E99 ||
-               c >= 0x2E9B && c <= 0x2EF3 ||
-               c >= 0x2F00 && c <= 0x2FD5 ||
-               c >= 0x2FF0 && c <= 0x2FFB ||
-               c >= 0x3000 && c <= 0x303E ||
-               c >= 0x3041 && c <= 0x3096 ||
-               c >= 0x3099 && c <= 0x30FF ||
-               c >= 0x3105 && c <= 0x312D ||
-               c >= 0x3131 && c <= 0x318E ||
-               c >= 0x3190 && c <= 0x31BA ||
-               c >= 0x31C0 && c <= 0x31E3 ||
-               c >= 0x31F0 && c <= 0x321E ||
-               c >= 0x3220 && c <= 0x3247 ||
-               c >= 0x3250 && c <= 0x32FE ||
-               c >= 0x3300 && c <= 0x4DBF ||
-               c >= 0x4E00 && c <= 0xA48C ||
-               c >= 0xA490 && c <= 0xA4C6 ||
-               c >= 0xA960 && c <= 0xA97C ||
-               c >= 0xAC00 && c <= 0xD7A3 ||
-               c >= 0xD7B0 && c <= 0xD7C6 ||
-               c >= 0xD7CB && c <= 0xD7FB ||
-               c >= 0xF900 && c <= 0xFAFF ||
-               c >= 0xFE10 && c <= 0xFE19 ||
-               c >= 0xFE30 && c <= 0xFE52 ||
-               c >= 0xFE54 && c <= 0xFE66 ||
-               c >= 0xFE68 && c <= 0xFE6B ||
-               c >= 0xFF01 && c <= 0xFF60 ||
-               c >= 0xFFE0 && c <= 0xFFE6;
-    };
 
 }).call(EditSession.prototype);
 
@@ -6876,10 +6827,15 @@ var Text = function(parentEl) {
 
     this.$renderToken = function(stringBuilder, screenColumn, token, value) {        
         var self = this;
-        var replaceReg = /\t|&|<|( +)|([\v\f \u00a0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000])|[\u1100-\u115F]|[\u11A3-\u11A7]|[\u11FA-\u11FF]|[\u2329-\u232A]|[\u2E80-\u2E99]|[\u2E9B-\u2EF3]|[\u2F00-\u2FD5]|[\u2FF0-\u2FFB]|[\u3000-\u303E]|[\u3041-\u3096]|[\u3099-\u30FF]|[\u3105-\u312D]|[\u3131-\u318E]|[\u3190-\u31BA]|[\u31C0-\u31E3]|[\u31F0-\u321E]|[\u3220-\u3247]|[\u3250-\u32FE]|[\u3300-\u4DBF]|[\u4E00-\uA48C]|[\uA490-\uA4C6]|[\uA960-\uA97C]|[\uAC00-\uD7A3]|[\uD7B0-\uD7C6]|[\uD7CB-\uD7FB]|[\uF900-\uFAFF]|[\uFE10-\uFE19]|[\uFE30-\uFE52]|[\uFE54-\uFE66]|[\uFE68-\uFE6B]|[\uFF01-\uFF60]|[\uFFE0-\uFFE6]/g;
+        var replaceReg = /\t|&|<|( +)|([\v\f\u00a0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000]+)/g;
         var replaceFunc = function(c, a, b, tabIdx, idx4) {
-            if (c.charCodeAt(0) == 32) {
-                return new Array(c.length+1).join("&#160;");
+            if (a) {
+				if (self.showInvisibles) {
+                    var space = new Array(a.length+1).join(self.SPACE_CHAR);
+                    return "<span class='ace_invisible'>" + space + "</span>";
+                } else {
+					return new Array(a.length+1).join("&#160;");
+                }
             } else if (c == "\t") {
                 var tabSize = self.session.getScreenTabSize(screenColumn + tabIdx);
                 screenColumn += tabSize - 1;
@@ -6891,26 +6847,9 @@ var Text = function(parentEl) {
                     return "&amp;";
             } else if (c == "<") {
                 return "&lt;";
-            } else if (c == "\u3000") {
-                // U+3000 is both invisible AND full-width, so must be handled uniquely
-                var classToUse = self.showInvisibles ? "ace_cjk ace_invisible" : "ace_cjk";
-                var space = self.showInvisibles ? self.SPACE_CHAR : "";
-                screenColumn += 1;
-                return "<span class='" + classToUse + "' style='width:" +
-                    (self.config.characterWidth * 2) +
-                    "px'>" + space + "</span>";
-            } else if (c.match(/[\v\f \u00a0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000]/)) {
-                if (self.showInvisibles) {
-                    var space = new Array(c.length+1).join(self.SPACE_CHAR);
-                    return "<span class='ace_invisible'>" + space + "</span>";
-                } else {
-                    return "&#160;";
-                }
-            } else {
-                screenColumn += 1;
-                return "<span class='ace_cjk' style='width:" +
-                    (self.config.characterWidth * 2) +
-                    "px'>" + c + "</span>";
+            } else if (b) {
+                var space = new Array(b.length+1).join(self.SPACE_CHAR);
+                return "<span class='ace_invisible ace_invalid'>" + space + "</span>";
             }
         };
 
@@ -10012,7 +9951,7 @@ function Folding() {
         var range = this.getFoldWidgetRange(row);
         if (range) {
             if (!onlySubfolds)
-                this.addFold(range.placeholder||"...", range);
+                this.addFold("...", range);
 
             if (addSubfolds)
                 this.foldAll(range.start.row + 1, range.end.row);
