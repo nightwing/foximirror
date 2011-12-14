@@ -97,7 +97,7 @@
 			<statusbar id="status-bar" class="chromeclass-status">
 
 				<toolbarbutton label='preview' oncommand='cssMirror.preview()'>preview</toolbarbutton>
-				<toolbarbutton id='unpreview-button'  label='unpreview' oncommand='cssMirror.unpreview()'></toolbarbutton>
+				<toolbarbutton id='unpreview-button' hidden="true" label='unpreview' oncommand='cssMirror.unpreview()'></toolbarbutton>
 				<toolbaritem id="ToggleEnabledItem">
 					<checkbox id="ToggleEnabled" label="Enabled" 
 						tooltiptext="Enable or disable the style when you save it" oncommand='cssMirror.toggle()'/>
