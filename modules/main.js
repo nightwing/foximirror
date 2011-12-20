@@ -146,6 +146,19 @@ dump.clear = function(){
 	Services.console.reset()
 	Services.console.logStringMessage("");
 }
+
+dump.dir = function(ob){
+	var aMessage="";
+	try {
+		for each(var i in Object.keys(ob)){
+			aMessage += i +": "+ ob[i] + ",\n"
+		}
+	}catch(e){aMessage = e}
+	var stack = Components.stack.caller
+	var consoleMessage = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+	consoleMessage.init(aMessage, stack.filename, null, stack.lineNumber, 0, 9, "component javascript");
+	Services.console.logMessage(consoleMessage);
+}
 /*
 
     XPConnect JavaScript

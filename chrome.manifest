@@ -1,6 +1,8 @@
 resource shadia modules/
 content  shadia  chrome/
 
+override  chrome://e/dit/ed             edit:@e/dit/ed
+
 overlay  chrome://browser/content/browser.xul             chrome://shadia/content/browserOverlay.xul
 overlay  chrome://global/content/viewSource.xul           chrome://shadia/content/viewSourceOverlay.xul
 

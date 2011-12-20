@@ -105,7 +105,9 @@ editProtocolHandler.prototype = {
 	
 	protocolFlags: Ci.nsIProtocolHandler.URI_NORELATIVE
 				 | Ci.nsIProtocolHandler.URI_IS_UI_RESOURCE    //URI_DANGEROUS_TO_LOAD
-				 | Ci.nsIProtocolHandler.URI_NON_PERSISTABLE,
+				 | Ci.nsIProtocolHandler.URI_NON_PERSISTABLE
+				 | Ci.nsIProtocolHandler.URI_IS_LOCAL_FILE
+				 | Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE,
 	allowPort: function(port, scheme) false,
 	
 	get chromePrincipal() {
@@ -223,3 +225,24 @@ u=Services.io.newURI('edit:~1', null, null)
 u.resolve('#as')
 */
 dump = $shadia.dump
+$shadia.loadSubscript = function(text, context, encoding) {
+	$shadia.editGlue.setDataSource("e/dit/ed", text)
+	if (!$shadia.loadSubscript.used) {
+		$shadia.loadSubscript.used = true
+		Services.chromeReg.checkForNewChrome()
+	}
+	Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+	return Services.scriptloader.loadSubScript("chrome://e/dit/ed", context, encoding)	
+}
+/*
+<x></x>.toString()
+c={i:1,say:jn.say.bind(jn)}
+//Services.scriptloader.loadSubScript("edit:@f", c)
+//Services.scriptloader.loadSubScript("chrome://edit/at/f", c)
+
+u=makeURI("edit:@f")
+u=makeURI("chrome://e/dit/ed")
+
+c=Services.io.newChannelFromURI(u)
+
+*/
