@@ -3,6 +3,7 @@ define("ace/mode/coffee",[], function(require, exports, module) {
 var Tokenizer = require("ace/tokenizer").Tokenizer;
 var Rules = require("ace/mode/coffee_highlight_rules").CoffeeHighlightRules;
 var Outdent = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent;
+var PythonFoldMode = require("ace/mode/folding/pythonic").FoldMode;
 var Range = require("ace/range").Range;
 var TextMode = require("ace/mode/text").Mode;
 var oop = require("ace/lib/oop");
@@ -10,6 +11,7 @@ var oop = require("ace/lib/oop");
 function Mode() {
     this.$tokenizer = new Tokenizer(new Rules().getRules());
     this.$outdent   = new Outdent();
+    this.foldingRules = new PythonFoldMode("=|=>|->|\\s*class [^#]*");
 }
 
 oop.inherits(Mode, TextMode);
@@ -254,5 +256,33 @@ define("ace/mode/coffee_highlight_rules",[], function(require, exports, module) 
     }
 
     exports.CoffeeHighlightRules = CoffeeHighlightRules;
+});
+
+define("ace/mode/folding/pythonic",[], function(require, exports, module) {
+
+var oop = require("ace/lib/oop");
+var BaseFoldMode = require("ace/mode/folding/fold_mode").FoldMode;
+
+var FoldMode = exports.FoldMode = function(markers) {
+    this.foldingStartMarker = new RegExp("(?:([\\[{])|(" + markers + "))(?:\\s*)(?:#.*)?$");
+};
+oop.inherits(FoldMode, BaseFoldMode);
+
+(function() {
+
+    this.getFoldWidgetRange = function(session, foldStyle, row) {
+        var line = session.getLine(row);
+        var match = line.match(this.foldingStartMarker);
+        if (match) {
+            if (match[1])
+                return this.openingBracketBlock(session, match[1], row, match.index);
+            if (match[2])
+                return this.indentationBlock(session, row, match.index + match[2].length);
+            return this.indentationBlock(session, row);
+        }
+    }
+
+}).call(FoldMode.prototype);
+
 });
 

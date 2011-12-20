@@ -17,7 +17,6 @@ oop.inherits(Mode, TextMode);
 
 (function() {
     
-    
     this.getNextLineIndent = function(state, line, tab) {
         return this.$getIndent(line);
     };

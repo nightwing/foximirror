@@ -204,7 +204,7 @@ var HtmlHighlightRules = function() {
     // regexps are ordered -> the first match is used
     this.$rules = {
         start : [{
-            token : "meta.tag",
+            token : "text",
             merge : true,
             regex : "<\\!\\[CDATA\\[",
             next : "cdata"
@@ -218,11 +218,11 @@ var HtmlHighlightRules = function() {
             next : "comment"
         }, {
             token : "meta.tag",
-            regex : "<(?=\s*script)",
+            regex : "<(?=\s*script\\b)",
             next : "script"
         }, {
             token : "meta.tag",
-            regex : "<(?=\s*style)",
+            regex : "<(?=\s*style\\b)",
             next : "css"
         }, {
             token : "meta.tag", // opening tag
@@ -927,26 +927,12 @@ oop.inherits(FoldMode, BaseFoldMode);
         if (match) {
             var i = match.index;
 
-            if (match[2]) {
-                var range = session.getCommentFoldRange(row, i + match[0].length);
-                range.end.column -= 2;
-                return range;
-            }
+            if (match[1])
+                return this.openingBracketBlock(session, match[1], row, i);
 
-            var start = {row: row, column: i+1};
-            var end = session.$findClosingBracket(match[1], start);
-            if (!end)
-                return;
-
-            var fw = session.foldWidgets[end.row];
-            if (fw == null)
-                fw = this.getFoldWidget(session, end.row);
-
-            if (fw == "start") {
-                end.row --;
-                end.column = session.getLine(end.row).length;
-            }
-            return Range.fromPoints(start, end);
+            var range = session.getCommentFoldRange(row, i + match[0].length);
+            range.end.column -= 2;
+            return range;
         }
 
         if (foldStyle !== "markbeginend")
@@ -1209,6 +1195,15 @@ exports.CssHighlightRules = CssHighlightRules;
 });
 
 define("ace/mode/xml_util",[], function(require, exports, module) {
+var lang = require("ace/lib/lang");
+
+var formTags = lang.arrayToMap(
+    ("button|form|input|label|select|textarea").split("|")
+);
+
+var tableTags = lang.arrayToMap(
+    ("table|tbody|td|tfoot|th|tr").split("|")
+);
 
 function string(state) {
     return [{
@@ -1248,9 +1243,33 @@ exports.tag = function(states, name, nextState) {
         token : "text",
         regex : "\\s+"
     }, {
-        token : "meta.tag",
+        //token : "meta.tag",
+        
+    token : function(value) {
+            if ( value==='a' ) {
+                return "meta.tag.anchor";
+            }
+            else if ( value==='img' ) {
+                return "meta.tag.image";
+            }
+            else if ( value==='script' ) {
+                return "meta.tag.script";
+            }
+            else if ( value==='style' ) {
+                return "meta.tag.style";
+            }
+            else if (formTags.hasOwnProperty(value.toLowerCase())) {
+                return "meta.tag.form";
+            }
+            else if (tableTags.hasOwnProperty(value.toLowerCase())) {
+                return "meta.tag.table";
+            }
+            else {
+                return "meta.tag";
+            }
+        },        
         merge : true,
-        regex : "[-_a-zA-Z0-9:]+",
+        regex : "[-_a-zA-Z0-9:!]+",
         next : name + "embed-attribute-list" 
     }, {
         token: "empty",
@@ -1337,6 +1356,7 @@ oop.inherits(FoldMode, BaseFoldMode);
 define("ace/mode/folding/xml",[], function(require, exports, module) {
 
 var oop = require("ace/lib/oop");
+var lang = require("ace/lib/lang");
 var Range = require("ace/range").Range;
 var BaseFoldMode = require("ace/mode/folding/fold_mode").FoldMode;
 var TokenIterator = require("ace/token_iterator").TokenIterator;
@@ -1350,121 +1370,210 @@ oop.inherits(FoldMode, BaseFoldMode);
 (function() {
 
     this.getFoldWidget = function(session, foldStyle, row) {
-        var tags = session.getTokens(row, row)[0].tokens
-            .filter(function(token) {
-                return token.type === "meta.tag";
-            })
-            .map(function(token) {
-                return token.value;
-            }).
-            join("")
-            .trim()
-            .replace(/^<|>$|\s+/g, "")
-            .split("><");
-        var fold = tags[0];
-        
-        if (!fold || this.voidElements[fold])
-            return "";
-            
-        if (fold.charAt(0) == "/")
+        var tag = this._getFirstTagInLine(session, row);
+
+        if (tag.closing)
             return foldStyle == "markbeginend" ? "end" : "";
-            
-        if (fold.charAt(fold.length-1) == "/")
+
+        if (!tag.tagName || this.voidElements[tag.tagName.toLowerCase()])
             return "";
-            
-        if (tags.indexOf("/" + fold) !== -1)
+
+        if (tag.selfClosing)
             return "";
-            
+
+        if (tag.value.indexOf("/" + tag.tagName) !== -1)
+            return "";
+
         return "start";
     };
-        
-    this.getFoldWidgetRange = function(session, foldStyle, row) {
-        var start, end;
-        var stack = [];
-        var voidElements = this.voidElements;
-        
-        var iterator = new TokenIterator(session, row, 0);
-        var step = "stepForward";
-        var isBack = false;
-            
-        function pop(stack, tagName) {
-            while (stack.length) {
-                var top = stack[stack.length-1];
-                if (!tagName || top === "" || top == tagName) {
-                    stack.pop();
-                    return true;
-                }
-                if (voidElements[top]) {
-                    stack.pop();
-                    continue;
-                }
-                else
-                    return false;
-            }
-            return false;
+    
+    this._getFirstTagInLine = function(session, row) {
+        var tokens = session.getTokens(row, row)[0].tokens;
+        var value = "";
+        for (var i = 0; i < tokens.length; i++) {
+            var token = tokens[i];
+            if (token.type.indexOf("meta.tag") === 0)
+                value += token.value;
+            else
+                value += lang.stringRepeat(" ", token.value.length);
         }
-            
-        // limited XML parsing to find matching tag
-        do {
-            var token = iterator.getCurrentToken();
+        
+        return this._parseTag(value);
+    };
 
-            var value = token.value.trim();
-            if (token && token.type == "meta.tag" && token.value !== ">") {
-                var tagName = value.replace(/^[<\s]*|[\s*>]$/g, "");
-                if (!start) {
-                    if (tagName.charAt(0) == "/") {
-                        tagName = tagName.slice(1);
-                        step = "stepBackward";
-                        isBack = true;
-                    }
-                    
-                    start = {
-                        row: row,
-                        column: iterator.getCurrentTokenColumn() + (isBack ? 0 : value.length + 1)
-                    };
+    this.tagRe = /^(\s*)(<?(\/?)([-_a-zA-Z0-9:!]*)\s*(\/?)>?)/;
+    this._parseTag = function(tag) {
+        
+        var match = this.tagRe.exec(tag);
+        var column = this.tagRe.lastIndex || 0;
+        this.tagRe.lastIndex = 0;
 
-                    stack.push(tagName);
-                }
-                else {
-                    var close;
-                    if (tagName.charAt(0) == "/") {
-                        tagName = tagName.slice(1);
-                        close = !isBack;
-                    }
-                    else if (tagName.charAt(tagName.length-1) == "/") {
-                        tagName = "";
-                        close = !isBack;
-                    }
-                    else
-                        close = isBack;
-                        
-                    if (close) {
-                        if (pop(stack, tagName)) {
-                            if (stack.length === 0) {
-                                end = {
-                                    row: iterator.getCurrentTokenRow(),
-                                    column: iterator.getCurrentTokenColumn() + (isBack ? value.length + 1 : 0)
-                                };
-                                if (isBack)
-                                    return Range.fromPoints(end, start);
-                                else
-                                    return Range.fromPoints(start, end);
-                            }
-                        }
-                        else {
-                            if (!(isBack && voidElements[tagName]))
-                                typeof console !== undefined && console.error("unmatched tags!", tagName, stack);
-                        }
-                    }
-                    else {
-                        stack.push(tagName);
-                    }
-                }
-            }
-            
-        } while(token = iterator[step]());
+        return {
+            value: tag,
+            match: match ? match[2] : "",
+            closing: match ? !!match[3] : false,
+            selfClosing: match ? !!match[5] || match[2] == "/>" : false,
+            tagName: match ? match[4] : "",
+            column: match[1] ? column + match[1].length : column
+        };
     };
     
+    /**
+     * reads a full tag and places the iterator after the tag
+     */
+    this._readTagForward = function(iterator) {
+        var token = iterator.getCurrentToken();
+        if (!token)
+            return null;
+            
+        var value = "";
+        var start;
+        
+        do {
+            if (token.type.indexOf("meta.tag") === 0) {
+                if (!start) {
+                    var start = {
+                        row: iterator.getCurrentTokenRow(),
+                        column: iterator.getCurrentTokenColumn()
+                    };
+                }
+                value += token.value;
+                if (value.indexOf(">") !== -1) {
+                    var tag = this._parseTag(value);
+                    tag.start = start;
+                    tag.end = {
+                        row: iterator.getCurrentTokenRow(),
+                        column: iterator.getCurrentTokenColumn() + token.value.length
+                    };
+                    iterator.stepForward();
+                    return tag;
+                }
+            }
+        } while(token = iterator.stepForward());
+        
+        return null;
+    };
+    
+    this._readTagBackward = function(iterator) {
+        var token = iterator.getCurrentToken();
+        if (!token)
+            return null;
+            
+        var value = "";
+        var end;
+
+        do {
+            if (token.type.indexOf("meta.tag") === 0) {
+                if (!end) {
+                    end = {
+                        row: iterator.getCurrentTokenRow(),
+                        column: iterator.getCurrentTokenColumn() + token.value.length
+                    };
+                }
+                value = token.value + value;
+                if (value.indexOf("<") !== -1) {
+                    var tag = this._parseTag(value);
+                    tag.end = end;
+                    tag.start = {
+                        row: iterator.getCurrentTokenRow(),
+                        column: iterator.getCurrentTokenColumn()
+                    };
+                    iterator.stepBackward();
+                    return tag;
+                }
+            }
+        } while(token = iterator.stepBackward());
+        
+        return null;
+    };
+    
+    this._pop = function(stack, tag) {
+        while (stack.length) {
+            
+            var top = stack[stack.length-1];
+            if (!tag || top.tagName == tag.tagName) {
+                return stack.pop();
+            }
+            else if (this.voidElements[tag.tagName]) {
+                return;
+            }
+            else if (this.voidElements[top.tagName]) {
+                stack.pop();
+                continue;
+            } else {
+                return null;
+            }
+        }
+    };
+    
+    this.getFoldWidgetRange = function(session, foldStyle, row) {
+        var firstTag = this._getFirstTagInLine(session, row);
+        
+        if (!firstTag.match)
+            return null;
+        
+        var isBackward = firstTag.closing || firstTag.selfClosing;
+        var stack = [];
+        var tag;
+        
+        if (!isBackward) {
+            var iterator = new TokenIterator(session, row, firstTag.column);
+            var start = {
+                row: row,
+                column: firstTag.column + firstTag.tagName.length + 2
+            };
+            while (tag = this._readTagForward(iterator)) {
+                if (tag.selfClosing) {
+                    if (!stack.length) {
+                        tag.start.column += tag.tagName.length + 2;
+                        tag.end.column -= 2;
+                        return Range.fromPoints(tag.start, tag.end);
+                    } else
+                        continue;
+                }
+                
+                if (tag.closing) {
+                    this._pop(stack, tag);
+                    if (stack.length == 0)
+                        return Range.fromPoints(start, tag.start);
+                }
+                else {
+                    stack.push(tag)
+                }
+            }
+        }
+        else {
+            var iterator = new TokenIterator(session, row, firstTag.column + firstTag.match.length);
+            var end = {
+                row: row,
+                column: firstTag.column
+            };
+            
+            while (tag = this._readTagBackward(iterator)) {
+                if (tag.selfClosing) {
+                    if (!stack.length) {
+                        tag.start.column += tag.tagName.length + 2;
+                        tag.end.column -= 2;
+                        return Range.fromPoints(tag.start, tag.end);
+                    } else
+                        continue;
+                }
+                
+                if (!tag.closing) {
+                    this._pop(stack, tag);
+                    if (stack.length == 0) {
+                        tag.start.column += tag.tagName.length + 2;
+                        return Range.fromPoints(tag.start, end);
+                    }
+                }
+                else {
+                    stack.push(tag)
+                }
+            }
+        }
+        
+    };
+
 }).call(FoldMode.prototype);
 
 });
@@ -1536,42 +1645,36 @@ var FoldMode = exports.FoldMode = function() {};
 
 (function() {
 
-    this.FOO = 12;
-
     this.foldingStartMarker = null;
     this.foldingStopMarker = null;
 
     // must return "" if there's no fold, to enable caching
     this.getFoldWidget = function(session, foldStyle, row) {
-        if (this.foldingStartMarker) {
-            if (this.foldingStopMarker) {
-                // rewrite getFoldWidget so the check is only performed once
-                FoldMode.prototype.getFoldWidget = this.$testBoth;
-                return this.$testBoth(session, foldStyle, row);
-            }
-            else {
-                // rewrite getFoldWidget so the check is only performed once
-                FoldMode.prototype.getFoldWidget = this.$testStart;
-                return this.$testStart(session, foldStyle, row);
-            }
-        }
-        else
-            return "";
+        var line = session.getLine(row);
+        if (this.foldingStartMarker.test(line))
+            return "start";
+        if (foldStyle == "markbeginend"
+                && this.foldingStopMarker
+                && this.foldingStopMarker.test(line))
+            return "end";
+        return "";
     };
     
     this.getFoldWidgetRange = function(session, foldStyle, row) {
         return null;
     };
 
-    this.indentationBlock = function(session, foldStyle, row) {
+    this.indentationBlock = function(session, row, column) {
         var re = /^\s*/;
         var startRow = row;
         var endRow = row;
         var line = session.getLine(row);
-        var startColumn = line.length - 1;
+        var startColumn = column || line.length;
         var startLevel = line.match(re)[0].length;
-
-        while (line = session.getLine(++row)) {
+        var maxRow = session.getLength()
+        
+        while (++row < maxRow) {
+            line = session.getLine(row);
             var level = line.match(re)[0].length;
 
             if (level == line.length)
@@ -1589,19 +1692,21 @@ var FoldMode = exports.FoldMode = function() {};
         }
     };
 
-    this.$testStart = function(session, foldStyle, row) {
-        if (this.foldingStartMarker.test(session.getLine(row)))
-            return "start";
-        return "";
-    };
-    
-    this.$testBoth = function(session, foldStyle, row) {
-        var line = session.getLine(row);
-        if (this.foldingStartMarker.test(line))
-            return "start";
-        if (foldStyle == "markbeginend" && this.foldingStopMarker.test(line))
-            return "end";
-        return "";
+    this.openingBracketBlock = function(session, bracket, row, column) {
+        var start = {row: row, column: column + 1};
+        var end = session.$findClosingBracket(bracket, start);
+        if (!end)
+            return;
+
+        var fw = session.foldWidgets[end.row];
+        if (fw == null)
+            fw = this.getFoldWidget(session, end.row);
+
+        if (fw == "start") {
+            end.row --;
+            end.column = session.getLine(end.row).length;
+        }
+        return Range.fromPoints(start, end);
     };
 
 }).call(FoldMode.prototype);

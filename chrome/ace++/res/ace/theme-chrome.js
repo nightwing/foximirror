@@ -1,6 +1,5 @@
 define("ace/theme/chrome",[], function(require, exports, module) {
 
-
 exports.cssClass = "ace-chrome";
 exports.cssText = ".ace-chrome .ace_editor {\
   border: 2px solid rgb(159, 159, 159);\
