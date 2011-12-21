@@ -7167,7 +7167,7 @@ define("ace/css/editor.css",[], "\
 \
 .ace_gutter .ace_layer {\
     position: relative;\
-    min-width: 54px;\
+    min-width: 40px;\
     text-align: right;\
 }\
 \
@@ -7180,7 +7180,7 @@ define("ace/css/editor.css",[], "\
 }\
 \
 .ace_gutter-cell {\
-    padding-left: 19px;\
+    padding-left: 1px;\
     padding-right: 6px;\
 }\
 \
