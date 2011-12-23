@@ -1,5 +1,5 @@
 define("ace/mode/c_cpp",[], function(require, exports, module) {
-
+    
 var oop = require("ace/lib/oop");
 var TextMode = require("ace/mode/text").Mode;
 var Tokenizer = require("ace/tokenizer").Tokenizer;
@@ -93,7 +93,7 @@ exports.Mode = Mode;
 });
 
 define("ace/mode/c_cpp_highlight_rules",[], function(require, exports, module) {
-
+    
 var oop = require("ace/lib/oop");
 var lang = require("ace/lib/lang");
 var DocCommentHighlightRules = require("ace/mode/doc_comment_highlight_rules").DocCommentHighlightRules;

@@ -1,5 +1,5 @@
 define("ace/keyboard/emacs",[], function(require, exports, module) {
-
+    
 var StateHandler = require("ace/keyboard/state_handler").StateHandler;
 var matchCharacterOnly =  require("ace/keyboard/state_handler").matchCharacterOnly;
 
@@ -112,7 +112,7 @@ exports.handler = new StateHandler(emacsState);
 });
 
 define("ace/keyboard/state_handler",[], function(require, exports, module) {
-
+    
 // If you're developing a new keymapping and want to get an idea what's going
 // on, then enable debugging.
 var DEBUG = false;

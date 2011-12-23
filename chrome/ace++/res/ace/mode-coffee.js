@@ -1,5 +1,5 @@
 define("ace/mode/coffee",[], function(require, exports, module) {
-
+    
 var Tokenizer = require("ace/tokenizer").Tokenizer;
 var Rules = require("ace/mode/coffee_highlight_rules").CoffeeHighlightRules;
 var Outdent = require("ace/mode/matching_brace_outdent").MatchingBraceOutdent;
@@ -69,7 +69,7 @@ exports.Mode = Mode;
 });
 
 define("ace/mode/coffee_highlight_rules",[], function(require, exports, module) {
-
+    
     var lang = require("ace/lib/lang");
     var oop = require("ace/lib/oop");
     var TextHighlightRules = require("ace/mode/text_highlight_rules").TextHighlightRules;
@@ -259,7 +259,7 @@ define("ace/mode/coffee_highlight_rules",[], function(require, exports, module) 
 });
 
 define("ace/mode/folding/pythonic",[], function(require, exports, module) {
-
+    
 var oop = require("ace/lib/oop");
 var BaseFoldMode = require("ace/mode/folding/fold_mode").FoldMode;
 
