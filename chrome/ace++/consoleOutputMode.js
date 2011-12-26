@@ -137,8 +137,6 @@ var JavaScriptHighlightRules = function() {
             }
         ]
     };
-
-	
 };
 
 oop.inherits(JavaScriptHighlightRules, TextHighlightRules);
@@ -158,6 +156,8 @@ var Mode = function() {
     this.$tokenizer = new Tokenizer(new JavaScriptHighlightRules().getRules());
     this.$outdent = new MatchingBraceOutdent();
     this.$behaviour = new CstyleBehaviour();
+    this.foldingRules = new (require("ace/mode/folding/cstyle").FoldMode);
+
 };
 oop.inherits(Mode, TextMode);
 

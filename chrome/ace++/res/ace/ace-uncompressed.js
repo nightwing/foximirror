@@ -6075,7 +6075,12 @@ var Gutter = function(parentEl) {
 
             i++;
         }
-        html.push("</div><div class='ace_gutter-cell'>", this.session.getLength(), "</div>");
+        
+		html.push(
+			"</div><div class='ace_gutter-cell' style='pointer-events:none;opacity:0'>",
+			this.session.getLength() - 1,
+			"</div>"
+		);
         this.element = dom.setInnerHtml(this.element, html.join(""));
         this.element.style.height = config.minHeight + "px";
         
