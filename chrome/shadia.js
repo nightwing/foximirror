@@ -277,10 +277,10 @@ shadowInspector.prototype={
 	},
 	
 	$ignorekeys: function(e){
-		var name
+		var name, el = Services.fm.focusedElement
 		if (
-			!e.ctrlKey&&!e.altKey&&!e.metaKey
-			&& /textarea|input|tree/i.test(name = Services.fm.focusedElement.nodeName)
+			el && !e.ctrlKey&&!e.altKey&&!e.metaKey
+			&& /textarea|input|tree/i.test(name = el.nodeName)
 		){
 			this.fillPanel("key forwarded to "+name+" press with ctrl|alt|meta")
 			return true
@@ -291,6 +291,8 @@ shadowInspector.prototype={
 		if(event.type==="keydown"){
 			var obj=this.historyA[0]
 			switch(event.keyCode){
+				case $shadia.lightStarter.startKey1    :
+				case $shadia.lightStarter.startKey2    : 
 				case KeyEvent.DOM_VK_SCROLL_LOCK       :
 				case KeyEvent.DOM_VK_F1       :this.finish();obj=null;break;
 				case KeyEvent.DOM_VK_NUMPAD4  :this.historyBack();obj=null;break;
@@ -428,10 +430,10 @@ shadowInspector.prototype={
 		return name;
 	},
 
-	showHelp:function(){
-		var message = ['shadia keys{',
+	getMessage: function(){
+		return ['shadia keys{',
 			'/***basics***/',
-			'F1/Pause/Break: start shadia',
+			$shadia.lightStarter.keys + ': start/stop highlighter',
 			'arrows: move in dom tree',
 			'numpad 4,6: previous/next',
 			'/***start inspecting document in***/',
@@ -445,8 +447,9 @@ shadowInspector.prototype={
 			'numpad 0: push current node into shadia.$ array',
 			'numpad 3: toggle between showing event.originalTarget and target',
 		].join('\n\t')+'\n}'
-
-		this.fillPanel(message)
+	},
+	showHelp:function(){
+		this.fillPanel(this.getMessage())
 		// sometimes infopanel gets these set. why?
 		this.infoPanel.removeAttribute("width")
 		this.infoPanel.removeAttribute("height")

@@ -52,9 +52,6 @@ function flushJarCache(aJarFile) {
 }
 
 function flushStartupCache() {
-	//Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
-	// Init this, so it will get the notification. removed in 650494
-	// Cc["@mozilla.org/xul/xul-prototype-cache;1"].getService(Ci.nsISupports);
 	Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 }
 

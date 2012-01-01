@@ -35,7 +35,7 @@ clipboardHelper = {
     },
 
     getData: function() {
-        try{
+        try {
             var pastetext,
                 clip = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard),
                 trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable),
@@ -65,19 +65,19 @@ this.__defineGetter__("editGlue", function(){
 
 
 var addDevelopmentUtils = function(window){
-	//window.toOpenWindowByType = toOpenWindowByType;
-	//window.toOpenWindowByURI = toOpenWindowByURI;
-	window.dump = dump
-	if(!('Cc' in window))
+	// window.toOpenWindowByType = toOpenWindowByType;
+	// window.toOpenWindowByURI = toOpenWindowByURI;
+	// window.dump = dump
+	if (!('Cc' in window))
 		window.Cc=Components.classes
-	if(!('Ci' in window))
+	if (!('Ci' in window))
 		window.Ci=Components.interfaces
-	if(!('Cu' in window))
+	if (!('Cu' in window))
 		window.Cu=Components.utils
 	var href = window.location.href
-	if(href.substring(0,15)=='chrome://shadia' || href=='chrome://console2/content/console2.xul'){
-		for each(var i in ["getLocalFile","makeReq","viewFileURI","npp"]){
-			window[i]=this[i]
+	if (href.substring(0,15)=='chrome://shadia' || href=='chrome://console2/content/console2.xul') {
+		for each (var i in ["getLocalFile","makeReq","viewFileURI","npp","getPref","setPref"]){
+			window[i] = this[i]
 		}
 	}
 }
@@ -143,8 +143,8 @@ dump.trace = function dumpComponentsStack(from){
 }
 
 dump.clear = function(){
+	Services.console.logStringMessage(null);
 	Services.console.reset()
-	Services.console.logStringMessage("");
 }
 
 dump.dir = function(ob){
@@ -189,7 +189,7 @@ dump.dir = function(ob){
 
 /***loging**/
 // get rid of strang
-getLocalURI=function getLocalFile(mPath){
+getLocalURI = function getLocalFile(mPath) {
 	var uri = Services.io.newURI(mPath, null, null), file;
 	if (uri.schemeIs('resource')) {//about?
 		var ph = Services.io.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)
@@ -202,7 +202,7 @@ getLocalURI=function getLocalFile(mPath){
 	if(uri.schemeIs('file')||uri.schemeIs('jar'))
 		return uri
 }
-getLocalFile=function getLocalFile(mPath){
+getLocalFile = function getLocalFile(mPath) {
 	var uri = Services.io.newURI(mPath, null, null),file;
 	if(uri.schemeIs('resource')){//about?
 		var ph = Services.io.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)
@@ -219,7 +219,7 @@ getLocalFile=function getLocalFile(mPath){
 	return file&&file.QueryInterface(Ci.nsILocalFile)
 }
 
-makeReq=function makeReq(href){
+makeReq = function makeReq(href){
 	var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();//new XMLHttpRequest;
 	req.overrideMimeType('text/plain')
 	req.open("GET", href, false);
@@ -228,8 +228,8 @@ makeReq=function makeReq(href){
 	}catch(e){}
 	return req.responseText;
 }
-makeReqAsync=function makeReqAsync(href,callback){
-    req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();//new XMLHttpRequest();
+makeReqAsync = function makeReqAsync(href,callback){
+    var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();//new XMLHttpRequest();
     req.open('GET', href, true);
 	req.overrideMimeType('text/plain')
 
@@ -266,7 +266,7 @@ function clearPref(prefName){
 function getPref(prefName,type){
 	var prefBranch = Services.prefs
 	try{
-        switch (type||prefBranch.getPrefType(prefName)){
+        switch (type || prefBranch.getPrefType(prefName)){
 			case 'string':  case prefBranch.PREF_STRING:
 				return prefBranch.getCharPref(prefName);
 			case 'int':     case prefBranch.PREF_INT:
@@ -613,11 +613,8 @@ reload= function(){
  * bootstrap.js API
  *****************/
 lightStarter ={
-	startKey1: 19,//DOM_VK_PAUSE,
-	startKey2: 112,//DOM_VK_F1,
-
 	handleEvent: function(e){	
-		if(e.keyCode==this.startKey1||e.keyCode==this.startKey2){
+		if(e.keyCode == this.startKey1 || e.keyCode == this.startKey2){
 			var win = this.getTopWindow(e.view)
 			//dump(win.location, ('shadia' in win))
 			if(!('shadia' in win))
@@ -632,6 +629,9 @@ lightStarter ={
 	},
 	init: function(domWindow){
 		domWindow.addEventListener("keydown", lightStarter, true); 
+		
+		if(this.$dumpToConsole)
+			domWindow.dump = dump
 	},
 	uninit: function(domWindow){
 		domWindow.removeEventListener("keydown", lightStarter, true); 
@@ -646,9 +646,22 @@ lightStarter ={
 				pw=rt
 		}
 		return pw
+	},
+	updatePrefs: function() {
+		var branch = Services.prefs.getBranch("extensions.shadia.")
+		this.$dumpToConsole = branch.prefHasUserValue("dumpToConsole") && branch.getBoolPref("dumpToConsole")
+		this.keys = (
+			(branch.prefHasUserValue("startKeys") && branch.getCharPref("startKeys"))
+			|| 'PAUSE|F1'
+		).toUpperCase()
+		var keys = this.keys.split('|')
+		var KeyEvent = Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci.nsIAppShellService).hiddenDOMWindow.KeyEvent
+		this.startKey1 = KeyEvent['DOM_VK_' + keys[0]]
+		this.startKey2 = KeyEvent['DOM_VK_' + keys[1]]
 	}
 }
 
+lightStarter.updatePrefs()
 
 windowObserver = {
 	observe: function(domWindow, topic){
@@ -684,6 +697,10 @@ function shutdown(aData, aReason) {
 	Services.obs.removeObserver(windowObserver, 'chrome-document-global-created')
 }
 
+
+function flushStartupCache() {
+	Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+}
 
 // jsMirror glue
 $jsMirrorData = {}

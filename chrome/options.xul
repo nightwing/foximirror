@@ -3,51 +3,107 @@
 <?xml-stylesheet href="chrome://shadia/content/css/global.css" type="text/css"?>
 
 
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	xmlns:html="http://www.w3.org/1999/xhtml"
 	title="shadia options"
 	autosize="true"
 	centerscreen="true"
 	resizable="yes"
-	ondialogaccept=""
-	id="foxiFrameOptDlg"	
-	buttons="accept"
+	id="foxiFrameOptDlg"
+	buttons=""
+	onclose="save()"
 	>
 <!-- 	ondialogextra1 = ""
+	buttons="accept"
+	ondialogaccept=""
 	ondialogextra2 = "openDialog('chrome://shadia/content/options.xul','resizable').focus();"
 	buttons="accept,extra2"
 	buttonlabelextra2=":)"
 	persist="screenX,screenY,sizemode" -->
 
 <html:style>
-	p{-moz-user-select:text}
+	prefpane{-moz-user-focus:normal!important}
 	#vbox{outline:2px solid #67B6E7;-moz-outline-radius:2px}
 	#window-menu menuitem:hover{outline:2px solid #67B6E7;-moz-outline-radius:2px}
-	descriptionbox{background:lightyellow;-moz-box-orient:vertical}
+	#descriptionbox{
+		background:lightyellow;
+		-moz-box-orient:vertical;
+		white-space:pre;
+		-moz-user-select:text!important;
+		-moz-user-focus:normal!important
+	}
+	
 </html:style>
 
-<vbox id="vbox1">
-  <toolbar id='actionsp'>
-	<toolbarbutton label='configure editor' oncommand="window.openDialog('chrome://shadia/content/utils/prefSetters/changeeditor.xul')"/>
+<prefpane id="vbox1" oncommand="schedule(save)" oninput="schedule(save)" flex="1">
+  <textbox style="position:fixed; top:-100px"/>
+  <hbox>
+	<button label='configure editor' oncommand="window.openDialog('chrome://shadia/content/utils/prefSetters/changeeditor.xul')"/>
 	<spacer flex='1'/>
-  </toolbar>
-<vbox id='descriptionbox'> 
-	
-</vbox>
-</vbox>
 	<shadiaglue/>	
+  </hbox>
+  <preferences>
+	<preference id="dump-pref" name="extensions.shadia.dumpToConsole" type="bool" />
+	<preference id="startKeys-pref" name="extensions.shadia.startKeys" type="string" />
+  </preferences>
+  <hbox>
+	<label value="key1"/>
+	<textbox preference="startKeys-pref" flex="1" placeholder="F1|Pause"/>
+	<label value="*" tooltiptext="a|b => KeyEvent['DOM_VK_'+A] or KeyEvent['DOM_VK_'+B]"/>	
+  </hbox>
+  <hbox>
+	<checkbox label="dump to error Console (ctrl+shift+j)" preference="dump-pref"/>
+  </hbox>
+<description flex="1"> 
+	<html:pre id='descriptionbox'>
+	1
+	2
+	3
+	4
+	5
+	6
+	7
+	8
+	9
+	10
+	11
+	12
+	13
+	14
+	15
+	16
+	17	
+	</html:pre>
+</description>
+  <separator/>
+
+</prefpane>
 
 <script type="application/x-javascript" ><![CDATA[
 var Cc = Components.classes
 var Ci = Components.interfaces
-var prefB = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getBranch('')
 
+Components.utils.import('resource://shadia/main.js')
 
 function $(x)document.getElementById(x)
 
+function save(){
+	$shadia.lightStarter.updatePrefs()
+}
 
+
+function schedule(fn, delay){
+	if (fn._timeout != null)
+		clearTimeout(fn._timeout)
+		
+	fn._timeout = setTimeout(fn, delay||200)
+}
+
+$shadia.lightStarter.loadScript(window)
+
+$('descriptionbox').textContent = shadia.getMessage()
 
 
 ]]></script>
 
-</dialog>
+</prefwindow>
