@@ -6,43 +6,23 @@
 <?xul-overlay href="edit:@xulMirror`overlay.xul"?>
 
 <window id="XULPlayground" title="XULplayground"  width="550"  height="350"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"  xmlns:html="http://www.w3.org/1999/xhtml"
-		xmlns:h="http://www.w3.org/1999/xhtml" xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:svg='http://www.w3.org/2000/svg'
-		onload="onLoad()"  onunload="" windowtype='shadia:XULplayground'>	
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		xmlns:html="http://www.w3.org/1999/xhtml"
+		xmlns:h="http://www.w3.org/1999/xhtml"
+		xmlns:xlink='http://www.w3.org/1999/xlink'
+		xmlns:svg='http://www.w3.org/2000/svg'
+		onload="onLoad()"
+		onunload=""
+		windowtype='shadia:XULplayground'>	
 	<script type="application/javascript;version=1.8"><![CDATA[
 		function onLoad(){}
 	]]></script>
 	<h:style>
-		*:hover{outline:1px solid rgb( 83,80,255);outline-offset:-3px;-moz-outline-radius:2px;}
-		*{-moz-user-select:text}
-		bound{-moz-binding: url(edit:@xulMirror`binding.xml)}
+		
 	</h:style>
 	<hbox flex='1' id='a' align='center'>
 		<description>"Better place for your XUL!"</description>
 	</hbox>
-	<hbox flex='1' id='d' align='center'>
-		<description>"this is d!"</description>
-	</hbox>
-	<bound flex='1' description='binding goes here' value='textbox'>:)</bound>
-  
-  
-  
-	<toolbarbutton popup='pop' label='open popup'/>
-	<panel id='pop' ignorekeys='true' width='500' >
-		<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" >
-			<defs>
-				<marker id="Triangle"
-						viewBox="0 0 10 10" refX="3" refY="5"
-						markerUnits="strokeWidth"
-						markerWidth="3" markerHeight="3"
-						style="stroke:#FF9933;"
-						orient="auto">
-					<path d="M 0 0 L 10 5 L 0 10 z" />
-				</marker>
-			</defs>
-			<line id="migrationPath" x1="0" x2="80" y1="0" y2="80" style="background-color:transparent;z-index:2;fill:none;stroke:#FF9933;stroke-width:4;" marker-end="url(#Triangle)"/>
-		</svg>
-	</panel>
 </window>
 
 
@@ -115,163 +95,63 @@
 }
 
 !>>!	new_html
-!@!===binding.xml    {
-
-<?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+!@!===main.html    {
 
 
-<window id="XULPlayground" title="XULplayground"  width="550"  height="350"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"  xmlns:html="http://www.w3.org/1999/xhtml"
-		xmlns:h="http://www.w3.org/1999/xhtml" xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:svg='http://www.w3.org/2000/svg'
-		onload="onLoad()"  onunload="" windowtype='shadia:XULplayground'>	
-	<script type="application/javascript;version=1.8"><![CDATA[
-		function onLoad(){
-		}    
-        
-	]]></script>
-<hbox>7</hbox>
-<browser src="overlay.xul" flex='1' type="content"  disablehistory="true"/>
-
-    <toolbarbutton popup='pop' label='open popup'/>
-	<menupopup id='pop' ignorekeys='true' width='500' >
-		<menuitem label='asas'/>
-		<menuitem label='asas'/>
-		<menuitem label='asas'/>
-		<menuitem label='asas'/>
-		<menuitem label='asas'/>
-		<menuitem label='asas'/>
-		<menuitem label='asas'/>
-		<menuitem label='asas'/> 
-		<menuitem label='asas'/>
-		<menuitem label='asas'/>
-		<menuitem label='asas'/> 
-		<menuitem label='asas'/>
-		<menuitem label='asas'/>
-		<menuitem label='asas'/>
-	</menupopup>
-</window>
+<head>
+<meta charset="utf-8">
+<title>Checkbox Hack </title>
+<link rel="stylesheet" href="edit:@xulMirror`style.css"></link>
+<script rel="stylesheet" href="edit:@xulMirror`script.js"></script>
+<style>
+</style>
+<body><label for="toggle-1">I'm a toggle</label>
+	<input id="toggle-1" type="checkbox">
+	<div>I'm controlled by toggle. No JavaScript!</div>
+</body>
 
 
 
 
 }
-!@!===main.xul    {
-
-<?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+!@!===style.css    {
 
 
-<window id="XULPlayground" title="XULplayground"  width="550"  height="350"
-    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"  xmlns:html="http://www.w3.org/1999/xhtml"
-		xmlns:h="http://www.w3.org/1999/xhtml" xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:svg='http://www.w3.org/2000/svg'
-		onload="onLoad()"  onunload="" windowtype='shadia:XULplayground'>	
-	<script type="application/javascript;version=1.8"><![CDATA[
-		function onLoad(){ a=document.querySelectorAll("browser")
-            a[0].contentWindow.document.documentElement.style.border='solid red'
-  
-		}
-		
-	fixBrowserEventHandlers= function(contentDocument, callback){
-		var temp = document.querySelector("temp")
-		var frames = contentDocument.querySelectorAll("browser, iframe");
-		bf = []
-		gf = []
-		var j = 0
-		onLoad = function(){
-			//newBrowser.removeEventListener("DOMContentLoaded", arguments.callee, false)	
-			j++
-			if(j == bf.length)
-				onFinalLoad()
-		}
-		onFinalLoad = function(){
-			for(var i in bf){
-				bf[i].swapDocShells( frames[i])
-				frames[i].parentNode.replaceChild(gf[i], frames[i])
-				
-			}
-			callback()
-			
-			for(var i in gf){	
-                Components.utils.import('resource://shadia/main.js', window).dump(i)
-                frames[i].removeAttribute("src")
-				gf[i].parentNode.replaceChild(frames[i], gf[i])
-			 	bf[i].swapDocShells( frames[i])
-			}
-			
-			
-			//	callback()
-		} 
-		
-		for(var i = frames.length; i--; ){
-			gf[i] = document.createElement('placeholder')
-			
-			bf[i] = frames[i].cloneNode(true)
-			bf[i].setAttribute("src", "")
-		//	bf[i].addEventListener("DOMContentLoaded", onLoad, false)	
-			temp.appendChild(bf[i])
-		}
-			onFinalLoad()
-			
-	}
-	swap = function(){
-		fixBrowserEventHandlers(a[0].contentDocument,
-		function(){a[0].swapDocShells(a[1])}
-		)
-		
-	}
-        
-	]]></script>
-<browser src="binding.xul" flex='1' disablehistory="true"/>
-<hbox>-----------------------------<button onclick='swap()'/>
--<button onclick='a[0].removeAttribute("src");
-a[0].contentDocument.documentElement.style.border= "solid green"
-;/*document.documentElement.appendChild(a[0])*/'/></hbox>
-<temp />
-<browser src="" flex='1' disablehistory="true"/>
-</window>
+/* Checkbox Hack */
+
+input[type=checkbox] {
+   position: absolute;
+   top: -9999px;
+   left: -9999px;
+}
+label { 
+  -webkit-appearance: push-button;
+  -moz-appearance: button; 
+  display: inline-block;
+  margin: 60px 0 10px 0;
+  cursor: pointer;
+}
+
+/* Default State */
+div {
+   background: green;
+   width: 400px;
+   height: 100px;
+   line-height: 100px;
+   color: white;
+   text-align: center;
+}
+
+/* Toggled State */
+input[type=checkbox]:checked ~ div {
+   background: red;
+}
 
 
 }
-!@!===overlay.xul    {
+!@!===script.js    {
 
-<?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-
-
-<window id="op"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   xmlns:html="http://www.w3.org/1999/xhtml"
->
-
-  <hbox id='b' flex='1'>
-    this is b
-  </hbox>
-
-  <hbox id='c' flex='1' insertbefore='a'>
-    this is c
-  </hbox>
-
-  <hbox id='d' flex='1' insertafter='b'>
-    hi from overlay
-  </hbox>
-
-
-<script type="application/javascript;version=1.8"><![CDATA[
-    
-	$=function(x)document.getElementById(x)
-
-		$('b').style.background='Cornsilk'
-		$('c').style.background='gold'
-		$('d').style.background='CadetBlue'
-        
-        $('d').textContent = window.top == window
-		
-	
-  ]]></script>
-</window>
-
-
+top.dump(1)
 
 
 }

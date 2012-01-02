@@ -62,7 +62,7 @@
 			</vbox>
 			<splitter collapse="after" id="split"><grippy/></splitter>
 			<vbox flex='1' id='contentbox' persist='height width'>
-				<iframe id="content" flex='1'/>				
+				<iframe id="content" flex='1' type='content' />
 			</vbox>
 		</box>
 		<toolbar> 

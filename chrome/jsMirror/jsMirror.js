@@ -858,7 +858,9 @@ Firebug.jsMirror = {
 		else
 			cell = this.cell = {body: editor.getCopyText().split('\n'),headerText:''};
 
-		if (runSelection)
+		if (runSelection == "line")
+			var text = editor.session.getLine(editor.getCursorPosition().row);
+		else if (runSelection)
 			var text = editor.getCopyText();
 		if (!text) {
 			//log lines with breakpoints

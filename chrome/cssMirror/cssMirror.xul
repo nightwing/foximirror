@@ -109,10 +109,6 @@
 			</statusbar>
 		</vbox>
 	</hbox> 
-		
-	<hbox style="display:none" flex="1">
-		<iframe id='hiddenframe'/>
-	</hbox> 
 
 	<script type="application/x-javascript" src="../shadia.js"/>
 	<script type="application/javascript" src="chrome://shadia/content/utils/prefUtils.js"/>

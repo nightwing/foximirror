@@ -297,54 +297,7 @@ completionProvider={
 }
 
 
-/*
-
-/*dataStyleRegistrar.unpreview()
-
-
-timerStart=Date.now()
-for(var timerI=0;timerI<1;timerI++){
-
-dataStyleRegistrar.preview()
-}timerStart-Date.now()
-
-
-
-
-
-
-//dataStyleRegistrar.changeSheetType(sheetTypes.user)
-function asd(){
-codebox.value=codebox.value.slice(0,-6)+(lt+=5)+'px\n}'
-//dataStyleRegistrar.preview()
-dataStyleRegistrar.register()
-n--;if(n)setTimeout(asd,500)
-}
-n=10;lt=10
-
-asd()
-
-
-
-
-function asd(){
-if(sss.sheetRegistered(uri, type))
-	sss.unregisterSheet(uri, type);
-code=codebox.value.slice(0,-6)+(lt+=5)+'px\n}'
-uri=ios.newURI("data:text/css," + encodeURIComponent(code), null, null)
-sss.loadAndRegisterSheet(uri, type);
-
-//dataStyleRegistrar.preview()
-//dataStyleRegistrar.register()
-n--;if(n)setTimeout(asd,500)
-}
-n=10;lt=10;type=1;
-uri=ios.newURI("data:text/css," + encodeURIComponent('code'), null, null)
-
-*/
-
-
- /***************************************************************
+/***************************************************************
  *   tree and save
  */
 var gstyle={}
@@ -353,40 +306,74 @@ defaultFileComponent={
 		
 		
 	},
-	createStyle: function(){
-		var name = prompt('name for new style')
-		if(!name)
-			return
-		if (!/\.css$/.test(name))
-			name = name + ".css"
-		gstyle={
+	createStyle: function(name){
+		name = name || this.getUniqueName()
+		gstyle = { 
 			name: name,
 			spec: getCssMirrorJarPath()+name
 		}
-
-		codebox.setSession(Firebug.Ace.win2.createSession("", name))
 		styleList.push(gstyle)
 		this.resetView()
+		return gstyle
 	},
 	initialize: function(){
-		this.tree= treeOnSelectHandler.addTree('style-list-tree', function(tree){cssMirror.openStyle()})
+		this.tree= treeOnSelectHandler.addTree('style-list-tree', function(tree){
+			var tree = defaultFileComponent.tree;
+			var i = tree.currentIndex
+			var style = styleList[i]
+			cssMirror.openStyle(style)
+		})
 		styleList = getDirEntries(getCssMirrorJarPath())
 		this.resetView()
 		//
 		
-		this.tree.view.selection.select(0)
 	},
 	resetView: function(){
 		this.tree.view=new plainFilterView(styleList)
+		this.tree.view.selection.select(styleList.indexOf(gstyle))
+	},
+	getUniqueName: function(){
+		var name = 'untitled-'
+		var i = 0, used = [], m
+		for each(var s in styleList){
+			var m = s.name.match(/untitled-(\d+)(\.|$)/)
+			if (m) {
+				used.push(parseInt(m[1]))				
+			}
+		}
+		if (used.length) {
+			used.sort()
+			i = used[used.length-1] + 1
+		}
+        return name + i	+ '.css'		
 	},
 	saveStyle: function(style){
-		style.code=codebox.session.getValue()
+		if(!style.name){
+			var out = {value:this.getUniqueName()}
+			var proceed = Services.prompt.prompt(window,"css:mirror","pick a name",out,'',{})
+			if(!proceed)	
+				return
+			name = out.value
+		}
+		if (!name)
+			return
+		if (!/\.css$/.test(name))
+			name = name + ".css"
+		style.code = codebox.session.getValue()
+		
+		style.spec = getCssMirrorJarPath()+name
+		
+		alert(name)
 		writeData(style.code, style.name)
-		style.dirty=false
+		style.dirty = false
+		
+		this.resetView()
 	},
 	removeStyle: function(style){
-		var  jarFile=getCssMirrorDir()
-		syncWriteToJar(jarFile, style.name, writeStringToJar, data)
+		if(!style||style.name)
+			return
+		var  jarFile = getCssMirrorDir()
+		syncWriteToJar(jarFile, style.name, removeEntryFromJar, data)
 	},
 }
 	initializeables.push(defaultFileComponent)
@@ -603,7 +590,7 @@ cssMirror={
 			execute: FBL.bind(this.preview, this),
 		});
 		aceWindow.canon.addCommand({
-			name: "unprevie",
+			name: "unpreview",
 			bindKey: {
 				win: "Esc",
 				mac: "Esc",
@@ -613,6 +600,8 @@ cssMirror={
 		});
 		
 		addCSSBehaviour(aceWindow.require, aceWindow.modeCache.get("css"))
+		
+		this.openStyle()
 	},
 	
 	toggle: function(i){
@@ -624,26 +613,26 @@ cssMirror={
 	unpreview: function(){
 		dataStyleRegistrar.unpreview()
 	},
-	openStyle: function(event){
-		var tree = defaultFileComponent.tree;
-		var i=tree.currentIndex
-		var style=styleList[i]
-		
-		if(!style)
+	openStyle: function(style) {
+		if(!codebox.session)
 			return
-		
+			
+		if(!style)
+			style = {name:'',code:'/*** sorCereSS ***/\n{}',spec:''}
+
 		var newCode = codebox.session.getValue()
-		if(gstyle.code != newCode){
+		if (gstyle.code != newCode){
 			gstyle.dirty = true
 			gstyle.code = newCode
 		}
 			
 		if(cssMirror.activeURL)
 			cssMirror.unpreview()
-		if(!style.code){
-			style.code = makeReq(style.spec)
+		if(!style.code)
+			style.code = style.spec?makeReq(style.spec):''
+		if(!style.session)			
 			style.session = Firebug.Ace.win2.createSession(style.code, style.spec, 'text/css')
-		}
+		
 		codebox.setSession(style.session)
 		gstyle = style
 		cssMirror.updateSaveButton()
@@ -656,7 +645,10 @@ cssMirror={
 		defaultFileComponent.createStyle()
 	},
 	deleteStyle: function(){
-		defaultFileComponent.deleteStyle()
+		var proceed = Services.prompt.confirm(window,"css:mirror","are you sure?")
+		if(!proceed)	
+			return
+		defaultFileComponent.removeStyle(gstyle)
 	},
 	saveStyle: function(){
 		defaultFileComponent.saveStyle(gstyle)

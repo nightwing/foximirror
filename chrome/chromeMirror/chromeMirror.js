@@ -99,7 +99,7 @@ addonViewer={
 			dirViewer.setDir(chromePaths[i].spec)
 			dirViewer.select(-1)
 		}else{
-			dirViewer.setDir(mAddonData.file)
+			dirViewer.setDir(mAddonData.file||Services.dirsvc.get("Desk", Ci.nsIFile)) // lightweigt themes have no file :(
 			dirViewer.select('chrome.manifest')||dirViewer.select('install.rdf')||dirViewer.select(-1)
 		}
 	},

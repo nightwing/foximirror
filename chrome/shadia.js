@@ -1,11 +1,10 @@
 Components.utils.import('resource://shadia/main.js', window).addDevelopmentUtils(window)
 /**/
-var shadowInspector=function(){}
-shadowInspector.debug=false
+var shadowInspector, shadia
+shadowInspector=function(){}
 
-
-shadowInspector.activate=function(aWindow){
-	var topWin=shadowInspector.getTopWindow(window)
+shadowInspector.activate=function(){
+    var topWin=shadowInspector.getTopWindow(window)
 	if(!topWin.shadia)
 		this.activateTop(topWin)//check is needed for debug
 	if(topWin!=window){
@@ -68,11 +67,11 @@ shadowInspector.browserPopup=function(event,pWin1){
 }
 
 shadowInspector.getTopWindow=function(mWindow){
-	let domUtils = Services.domUtils 
+	var domUtils = Services.domUtils 
 	var rt=mWindow,pw=mWindow
 	while(rt){
-		rt=domUtils.getParentForNode(rt.document,false)
-		rt=rt&&rt.ownerDocument.defaultView
+		rt = domUtils.getParentForNode(rt.document,false)
+		rt = rt && rt.ownerDocument.defaultView
 		if(rt)
 			pw=rt
 	}
@@ -418,8 +417,7 @@ shadowInspector.prototype={
 			name+="#"+object.id
 		if(object.className)
 			name+="."+object.className.toString().replace(" ",".",'g')
-		const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);  
-		gClipboardHelper.copyString(name);
+		$shadia.clipboardHelper.copyString(name);
 	},
 	selectorForObject:function(object){
 		var name=object.tagName
@@ -467,17 +465,17 @@ shadowInspector.prototype={
 	fillPanel:function(el){
 		if(this.infoPanel.state!=="open")
 			this.showPanel()
+		var name,str
 		var container=this.infoPanel
 		var item = container.firstChild;
-		if(!item){
+		if (!item) {
 			item=document.createElementNS("http://www.w3.org/1999/xhtml","div");
 			container.appendChild(item);
 			item.style.MozUserSelect='text'
 		}
-		//container.removeChild(container.firstChild)
-		if(el.nodeType==1){//node
-			var name=el.tagName,str
-			str=el.id
+		if (el.nodeType==1) {//node
+			name = el.tagName
+			str = el.id
 			if(str)
 				name+="#"+str
 			str=el.className
