@@ -25,6 +25,8 @@ var PERMS_FILE      = 0644;
 function unlockJarFile(jarfile){
 	var JARCache = jarProtocolHandler.JARCache
 	var reader = JARCache.getZip(jarfile)
+	if(!reader)
+		return
 	var entries = reader.findEntries('*.jar')
 	while(entries.hasMore()){
 		var subPath = entries.getNext()
@@ -186,6 +188,8 @@ function renameLocaleUri(href, newName){
 /**doesn't work for archives with opened archives inside*/
 function syncWriteToJar(jarFile, entryPath, writer, data, compression){
 	flushJarCache(jarFile)
+	if(!entryPath)
+		return
 	try{
 		dump(jarFile.spec)
 		var zipW = new zipWriter();

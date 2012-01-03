@@ -306,12 +306,8 @@ defaultFileComponent={
 		
 		
 	},
-	createStyle: function(name){
-		name = name || this.getUniqueName()
-		gstyle = { 
-			name: name,
-			spec: getCssMirrorJarPath()+name
-		}
+	createStyle: function(){
+		cssMirror.openStyle()
 		styleList.push(gstyle)
 		this.resetView()
 		return gstyle
@@ -348,7 +344,8 @@ defaultFileComponent={
         return name + i	+ '.css'		
 	},
 	saveStyle: function(style){
-		if(!style.name){
+		var name = style.name
+		if(!name){
 			var out = {value:this.getUniqueName()}
 			var proceed = Services.prompt.prompt(window,"css:mirror","pick a name",out,'',{})
 			if(!proceed)	
@@ -360,11 +357,10 @@ defaultFileComponent={
 		if (!/\.css$/.test(name))
 			name = name + ".css"
 		style.code = codebox.session.getValue()
-		
+		style.name = name
 		style.spec = getCssMirrorJarPath()+name
 		
-		alert(name)
-		writeData(style.code, style.name)
+		writeData(style.code, name)
 		style.dirty = false
 		
 		this.resetView()
@@ -372,7 +368,7 @@ defaultFileComponent={
 	removeStyle: function(style){
 		if(!style||style.name)
 			return
-		var  jarFile = getCssMirrorDir()
+		var jarFile = getCssMirrorDir()
 		syncWriteToJar(jarFile, style.name, removeEntryFromJar, data)
 	},
 }
@@ -534,7 +530,7 @@ jarRegistrar={
 			var isRegistered=self.isStyleRegistered(x.name)
 			if(isEnabled&&!isRegistered){
 			}else if(!isEnabled&&isRegistered){
-				enabledStyles.push(x.name)
+				self.enabledStyles.push(x.name)
 				isEnabled=true
 			} 
 			x.isEnabled=isEnabled
@@ -617,19 +613,20 @@ cssMirror={
 		if(!codebox.session)
 			return
 			
-		if(!style)
-			style = {name:'',code:'/*** sorCereSS ***/\n{}',spec:''}
-
 		var newCode = codebox.session.getValue()
 		if (gstyle.code != newCode){
 			gstyle.dirty = true
 			gstyle.code = newCode
 		}
-			
 		if(cssMirror.activeURL)
 			cssMirror.unpreview()
+
+		if(!style) {
+			let name = defaultFileComponent.getUniqueName()
+			style = {name:name,code:'/*** '+ name +' created by sorCereSS ***/\n{}',spec:'',dirty:true}
+		}
 		if(!style.code)
-			style.code = style.spec?makeReq(style.spec):''
+			style.code = style.spec ? makeReq(style.spec) : ''
 		if(!style.session)			
 			style.session = Firebug.Ace.win2.createSession(style.code, style.spec, 'text/css')
 		
