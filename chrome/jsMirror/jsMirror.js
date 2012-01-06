@@ -603,8 +603,8 @@ function previousCommandFromHistory(){
 
 /**======================-==-======================*/
 jsExplore={}
-jsExplore.qi=function(){
-	autocompleter.start(jn.qi(autocompleter.object),autocompleter.filterText)
+jsExplore.qi=function(){	
+	autocompleter.onEvalSuccess(jn.qi(autocompleter.object))
 }
 
 jsExplore._p=function(){

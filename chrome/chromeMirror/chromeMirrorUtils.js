@@ -180,6 +180,9 @@ function getAddonsNew(callback, addonListTemp){
 
 /*******************************
  * manifest parser
+ *
+ * todo use Cu.import("resource://gre/modules/ChromeManifestParser.jsm");
+ * ChromeManifestParser.parseSync(Services.io.newURI("",null,null))
  */
 function parseManifest(href, addon, cs, manifest){
     var line, params, flags;
