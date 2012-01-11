@@ -779,10 +779,10 @@ Firebug.jsMirror = {
 
 		//add shortcuts
 		editor.addCommands({
-			execute: function(env)Firebug.jsMirror.enter(true, false, env.editor),
-			dirExecute: function(env)Firebug.jsMirror.enter(true, true, env.editor)
+			execute: function(editor)Firebug.jsMirror.enter(true, false, editor),
+			dirExecute: function(editor)Firebug.jsMirror.enter(true, true, editor)
 		});
-		window.canon.addCommand({
+		/*window.canon.addCommand({
 			name: "toggleEditorFocus",
 			bindKey: {
 				win: "Ctrl-Up|Ctrl-Down",
@@ -790,7 +790,7 @@ Firebug.jsMirror = {
 				sender: "editor"
 			},
 			exec: toggleEditorFocus
-		});
+		});*/
 		
 		if(!this.otherEditorReady)
 			return this.otherEditorReady = true

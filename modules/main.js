@@ -121,6 +121,7 @@ dump = function(){
 	var consoleMessage = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
 	consoleMessage.init(aMessage, stack.filename, null, stack.lineNumber, 0, 9, "component javascript");
 	Services.console.logMessage(consoleMessage);
+	return arguments[0]
 }
 dump.reportLine = function(aMessage, filename, lineNumber){
 	var consoleMessage = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
@@ -140,6 +141,7 @@ dump.trace = function dumpComponentsStack(from){
     for (var frame = Components.stack; frame; frame = frame.caller)
         msg.push(frame.filename + "#@" + frame.lineNumber +": "+frame.sourceLine  );
     dump(from+"\n has stack size:" +msg.length+'\n', msg.join('\n'));
+	return from
 }
 
 dump.clear = function(){
@@ -158,6 +160,7 @@ dump.dir = function(ob){
 	var consoleMessage = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
 	consoleMessage.init(aMessage, stack.filename, null, stack.lineNumber, 0, 9, "component javascript");
 	Services.console.logMessage(consoleMessage);
+	return ob
 }
 /*
 
