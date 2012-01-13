@@ -162,6 +162,17 @@ dump.dir = function(ob){
 	Services.console.logMessage(consoleMessage);
 	return ob
 }
+
+$pauseState = 0
+dump.pause = function(evaluator){
+	dump.eval = evaluator || eval
+    var t=Services.tm.currentThread
+    while($pauseState){
+        t.processNextEvent(true)
+        //t.pushEventQueue
+    }
+}
+
 /*
 
     XPConnect JavaScript

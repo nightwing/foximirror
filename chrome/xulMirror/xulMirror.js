@@ -35,7 +35,7 @@ toggleOrient = function(){
 
 /**======================-==-======================*/
 
-var codeCache = {}, sessions = {}, Templates = {}, gTemplate, gTemplateName
+var codeCache = {}, sessions = {}, Templates = {}, gTemplateName
 var contentTypes = {
 	getContextMenuItems: function(_, target){
 		var id = target.id
@@ -179,10 +179,10 @@ Template.prototype = {
 		this.sessions = {}
 		var a = txt.split(/!@!===/)
 		
-		var m = a[0].match(/\!\s+(.*?)\s*/)
-		if (m && this.name != m[1]){
-			dump(m[1],a[0])
-			this.name = m[1]
+		var m = a[0].replace(/^.*!/,"").trim()
+		if (m && this.name != m){
+			dump(m,a[0])
+			this.name = m||"untitled"
 			updateTitle.schedule()
 		}
 		this.defaultTabName = ""
@@ -355,6 +355,8 @@ templateList = {
 		this.updateTabs()
 		this.tabList.selectedItem = this.tabList.querySelector("#" + tabName.replace(".","\\."))
 		this.selectTab(tabName)
+		
+		updatePreview()
 	},
 	getUserTemplate: function(name){
 		return this._userList[this.getIndex(name)]
@@ -466,7 +468,6 @@ Firebug.Ace.savePopupShowing = function(popup) {
 Firebug.Ace.loadPopupShowing = function(popup) {
 	popup = popup || $("load-button").firstChild
 	FBL.eraseNode(popup)
-	popup.ownerPanel = templateLoader
 	var load = function(){
 		templateList.setUserTemplate(this.label)
 		updatePreview()
@@ -514,22 +515,26 @@ Firebug.Ace.loadPopupShowing = function(popup) {
 
 templateLoader = {
 	getContextMenuItems: function(_, target){
-		if (!target.getAttribute('option'))
+		var option = target.getAttribute('option')
+	
+		if (!option)
 			return
 		
+		var name = option == "global" ? gTemplateName : target.label;
+		
 		return [{
-			label: 'rename ' + target.label,
-			option: target.label,
+			label: 'rename ' + name.quote(),
+			option: name,
 			command: function() {
-				var origName = this.getAttribute('option')
-				var name = prompt('are yo sure you want to delete', origName)
+				var origName = name
+				name = prompt('enter new name', origName)
 				
-				name = name&&name.trim()
+				name = name && name.trim()
 				
-				if(!name || name == this.label)
+				if (!name || name == origName)
 					return
-				if(templateList.getIndex(name)!=-1){
-					var name2 = prompt('are yo sure you want to delete', name).trim()
+				if (templateList.getIndex(name)!=-1){
+					var name2 = prompt('are yo sure you want to overwrite', name).trim()
 					name2 = name2&&name2.trim()
 					if(!name2 || name2 == this.label)
 						return
@@ -543,10 +548,9 @@ templateLoader = {
 			},
 			closemenu: 'none'
 		},{
-			label: 'delete ' + target.label,
+			label: 'delete ' + name.quote(),
 			option: target.label,
-			command: function(){
-				var name = this.getAttribute('option')
+			command: function() {
 				deleteTemplete(name)
 				Firebug.Ace.loadPopupShowing()
 			},
@@ -556,4 +560,7 @@ templateLoader = {
 	
 }
 
+$("load-button").ownerPanel = templateLoader
+$("load-button").setAttribute("option", "global")
+$("save-button").ownerPanel = templateLoader
 

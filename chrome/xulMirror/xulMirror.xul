@@ -46,7 +46,8 @@
 				<!-- <separator class="groove" orient="vertical"/><toolbarbutton label="vert" oncommand="toggleOrient()"/> -->
 			</tabs>
 			<spacer flex='1'/>
-			<toolbarbutton type="menu-button" label="load" context='main-context' id="load-button">
+			<toolbarbutton type="menu-button" label="load" context='main-context' id="load-button" 
+					oncommand="if(event.target==this)Firebug.Ace.loadFile(Firebug.Ace.win2.editor)">
 				<menupopup onpopupshowing="Firebug.Ace.loadPopupShowing(this)"/>
 			</toolbarbutton>
 			<toolbarbutton type="menu-button" label="save" id="save-button"
