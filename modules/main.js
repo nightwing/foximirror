@@ -166,7 +166,8 @@ dump.dir = function(ob){
 $pauseState = 0
 dump.pause = function(evaluator){
 	dump.eval = evaluator || eval
-    var t=Services.tm.currentThread
+	$pauseState = !!evaluator
+    var t = Services.tm.currentThread
     while($pauseState){
         t.processNextEvent(true)
         //t.pushEventQueue

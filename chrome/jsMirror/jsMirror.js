@@ -74,12 +74,13 @@ jn.__defineGetter__('safeLoop', function(){
 
 jn.inspect=function(x,long){
 	if(x == null) return String(x);
-	var c, nameList=[], t = typeof x, 
-		Class=Object.prototype.toString.call(x),
-		string=x.toString()
-	if(Class==string)
+	var c, nameList=[], t = typeof x
+	var Class = Object.prototype.toString.call(x)
+	var string =x.toString?x.toString():''
+	
+	if(Class == string)
 		string=''//most objects have same class and toString
-	Class=Class.slice(8,-1)
+	Class = Class.slice(8,-1)
 	
 	if(Class=='Function'){
 		var isNative = /\[native code\]\s*}$/.test(string); //is native function
@@ -418,9 +419,9 @@ function setget(object,prop){
 	object=object.wrappedJSObject||object
 	var ans='',s
 	try{
-		s=object.__lookupSetter__(prop)
+		s = Object.__lookupSetter__.call(object, prop)
 		if(s)ans+=s.toString().replace(/^.*()/,'set '+prop+'()')
-		s=object.__lookupGetter__(prop)
+		s =Object.__lookupGetter__.call(object, prop)
 		if(s)ans+=s.toString().replace(/^.*()/,'\nget '+prop+'()')
 	}catch(e){Components.utils.reportError(e)}
 	return ans
@@ -564,8 +565,7 @@ function appendToConsole2(string){
 	editor.clearSelection()	
 	var a = editor.selection.getCursor()
 	var f = editor.session.insert(a, string+'\n')
-	// todo: fix ace
-	editor.renderer.$desiredScrollLeft=0
+	editor.renderer.scrollCursorIntoView()
 }
 function clearResult(){
 	resultbox.value="";
@@ -577,12 +577,23 @@ function insertText(iText,editor){
 	editor.session.insert(editor.selection.getCursor(), iText)
 }
 function insertTextAtEnd(iText, editor){
+	var s = editor.session
+	var l = s.getLength() - 1
+	
+	var s = editor.session
+	var row = s.getLength()
+	var r = editor.getSelectionRange()
+	r.start = {row:row, column:s.getLine(row).length-1},
+	r.end = s.insert(r.start,iText)
+	editor.selection.setSelectionRange(r)
+	
+	return
 	editor.clearSelection()
 	editor.selection.moveCursorFileEnd()
 	var a = editor.selection.getCursor()
 	var f = editor.session.insert(a, iText)
 	editor.selection.selectTo(a.row, a.column)
-	editor.renderer.$desiredScrollLeft=0
+	editor.renderer.scrollCursorIntoView()
 }
 
 function nextCommandFromHistory(){

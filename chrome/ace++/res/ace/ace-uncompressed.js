@@ -21,6 +21,7 @@ var Editor = function(renderer, session) {
     this.container = container;
     this.renderer = renderer;
     
+    this.commands = new CommandManager(useragent.isMac ? "mac" : "win", defaultCommands);
     this.textInput  = new TextInput(renderer.getTextAreaContainer(), this);
     this.keyBinding = new KeyBinding(this);
 
@@ -37,7 +38,6 @@ var Editor = function(renderer, session) {
         wrap: true
     });
 
-    this.commands = new CommandManager(useragent.isMac ? "mac" : "win", defaultCommands);
     this.setSession(session || new EditSession(""));
 };
 
@@ -1574,6 +1574,10 @@ var VirtualRenderer = function(container, theme) {
             changes & this.CHANGE_SCROLL
         )
             this.$computeLayerConfig();
+        
+        //this.content.style.left = -this.scrollLeft + "px";
+        if (changes & this.CHANGE_H_SCROLL)
+            this.scroller.scrollLeft = this.scrollLeft
 
         // full
         if (changes & this.CHANGE_FULL) {
@@ -1632,11 +1636,6 @@ var VirtualRenderer = function(container, theme) {
 
         if (changes & this.CHANGE_SIZE)
             this.$updateScrollBar();
-
-        if (changes & this.CHANGE_H_SCROLL) {
-            //this.content.style.left = -this.scrollLeft + "px";
-            this.scroller.scrollLeft = this.scrollLeft
-        }
     };
 
     this.$computeLayerConfig = function() {
@@ -2783,7 +2782,7 @@ require("ace/commands/default_commands");
 var KeyBinding = function(editor) {
     this.$editor = editor;
     this.$data = { };
-    this.$handlers = [this];
+    this.$handlers = [this.$editor.commands];
 };
 
 (function() {
@@ -5178,6 +5177,7 @@ var CommandManager = function(platform, commands) {
 oop.inherits(CommandManager, HashHandler);
 
 (function() {
+//	oop.implement(this, HashHandler.prototype)
 
 
     this.exec = function(command, editor, args) {
@@ -7644,7 +7644,7 @@ define("ace/css/editor.css",[], "\
     background-position: center center, top left;\
 }\
 \
-.ace_dragging {\
+.ace_dragging .ace_content {\
     cursor: move;\
 }\
 \
@@ -9981,8 +9981,8 @@ function Folding() {
 		var foldWidgets = this.foldWidgets;
 		var getFoldWidget = function(row) {
 			if (foldWidgets[row] == null)
-                foldWidgets[row] = this.getFoldWidget(row);
-			return foldWidgets[row]
+                foldWidgets[row] = self.getFoldWidget(row);
+			return foldWidgets[row];
 		}
 		
 		var row = startRow || 0

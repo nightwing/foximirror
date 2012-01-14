@@ -1241,7 +1241,7 @@ jn.inspect2 = function(x, isLong) {
     var nameList = [];
     var t = typeof x;
     var Class = Object.prototype.toString.call(x);
-    var string = x.toString();
+    var string = x.toString?x.toString():'';
     if (Class == string)
         string = ""; //most objects have same class and toString
 
@@ -1298,8 +1298,7 @@ jn.inspect2 = function(x, isLong) {
     //\u25b7'\u25ba'
     if (Class === "Object") {
         c = x.constructor;
-        c = c.name;
-        if (c && c !== "Object")
+        if (c && (c = c.name) && c !== "Object")
             nameList.push(":", c, ":");
     }
     try {
@@ -1361,10 +1360,10 @@ jn.lookupSetter = function (object,prop) {
     var s;
     var ans = [];
     try {
-        s = object.__lookupSetter__(prop);
+        s = Object.__lookupSetter__.call(object, prop);
         if (s)
             ans.push(jn.inspect(s, "long").replace(/^.*\)/,"set " + prop + "()"));
-        s = object.__lookupGetter__(prop);
+        s = Object.__lookupGetter__.call(object, prop);
         if (s)
             ans.push(jn.inspect(s, "long").replace(/^.*\)/,"get " + prop + "()"));
     } catch(e) {

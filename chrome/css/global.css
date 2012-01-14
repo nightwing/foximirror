@@ -177,3 +177,4 @@ treechildren::-moz-tree-column(dnd-insert-before) {
 
 treechildren::-moz-tree-column(dnd-insert-after) {
   border-right: 2px solid #000000;
+}

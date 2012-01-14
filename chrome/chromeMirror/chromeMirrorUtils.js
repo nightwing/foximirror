@@ -351,7 +351,7 @@ function getManifestsInDir(dir){
 
 
 uriFromFile=function(file){
-	return 'file:///'+(typeof file=='string'?file:file.path).replace(/\\/g, '\/').replace(/^\s*\/?/, '')//.replace(/\ /g, '%20');
+	return 'file:///'+(typeof file=='string'?file:file.path).replace(/\\/g, '\/').replace(/^\s*\/?/, '');
 }
 
 
@@ -362,107 +362,99 @@ a.debug()
 a.getAliasList('file:///e:/program files/mozilla firefox/chrome/') */
 //********************************
 
+
 function fileMap(a) {
-	this.aliasList = []
+	this.map = Object.create(null)
+	this.map2 = []
 	this.addAlias(a)
 }
 
 fileMap.prototype = {
-	normalizeUri: function(a){
-		return decodeURIComponent(a.toLowerCase()).replace(/^(:?file:|jar:)+/, '')
+	normalizeUri: function(path){
+		var a = decodeURIComponent(path).replace(/^(:?file:|jar:|\/+)+/, '').split('/')
+		if (a[a.length-1]=="")
+			a.pop()
+		return a
 	},
+	
+	addPathChunc: function(){
+		
+	},
+
 	$addSingleItem: function(a){
 		if(!a._rPath){
 			var p = a.localPath || a.realPath || (a.file && fileHandler.getURLSpecFromFile(a.file))
 			if(!p)
-				return false		
+				return false	
 			a._rPath = this.normalizeUri(p)
 		}
-		if(this.aliasList.indexOf(a) == -1)
-			this.aliasList.push(a)
+		this.map2.push(a._rPath)
+		var start = this.map
+		for each(var i in a._rPath){
+			i = i.toLowerCase()
+			start = start[i] || (start[i] = Object.create(null))
+		}
+		start["/mapto"] = a
+		
 		return true
 	},
 	addAlias: function(a){
-		if('forEach' in a){
-			for each(var i in a)
-				this.$addSingleItem(i)
-		}else{
-			a = this.$addSingleItem(a)
-			if(!a)
-				return false
-		}
-		this.aliasList.sort(this.compare)
-		return true
+		if('forEach' in a)
+			a.forEach(this.$addSingleItem, this)
+		else
+			this.$addSingleItem(a)
 	},
 	
-	compare: function(a, b){
-		var tempA = a._rPath
-		var tempB = b._rPath
-		if(tempA < tempB)
-			return -1;
-		if(tempA > tempB)
-			return 1;
-		return 0;
-	},
 	
 	debug: function(){
-		return this.aliasList.map(function(x, i){
+		dump(JSON.stringify(this.map, function(a, b) {
+			if (a[0] != "/")
+				return b;
+			else
+				return b.id||b.aliasPath
+		}, 1))
+
+		dump(JSON.stringify(this.map2).replace("],[", "]\n,[", "g"))
+		return /*this.aliasList.map(function(x, i){
 			return i + ': ' + x._rPath + '   -->  ' + (x.aliasPath || '```'+x.name+'```')
-		}).join('\n')
+		}).join('\n')*/
+	},
+	getAlias: function(href){
+		var a = this.getAliasList(href)[0]
+		return a ? a.url : ""
 	},
 	
-	getAliasListSlow: function(href){		
-		var _r = this.normalizeUri(href)
-		
-		var ans = []
-		for each(var x in this.aliasList){
-			if (href.indexOf(x._rPath)==0)
-				ans.push(x)
-		}
-		
-		return ans
-	},
 	getAliasList: function(href){
-		var _r = this.normalizeUri(href)
-		
-		var ans = [], list = this.aliasList
-		var left = 0, right = list.length - 1;
-		
-		var n = 0
-		while(right-left > 1 && n < 10000){
-			n++
-			var mid = (left + right) >> 1;
-			var pivot = list[mid]._rPath
-			if (_r < pivot) {
-				right = mid;
-			} else if (_r > pivot) {
-				left = mid;
-			} else {
-				left = mid
+		var _rPath = this.normalizeUri(href)		
+		var ans = [], node = this.map
+		var i, alias
+		while (i = _rPath.shift()){
+			i = i.toLowerCase()
+			node = node[i]
+			if (!node)
 				break
+
+			if (alias = node["/mapto"]){
+				var unmatched = _rPath.join('/')
+				var newURL = this.resolveAlias(null, alias, unmatched)
+				ans.unshift({
+					url: newURL,
+					alias: alias
+				})
 			}
+
 		}
-		
-		if(_r.indexOf(pivot) != 0){
-			pivot = list[left]._rPath
-			if(_r.indexOf(pivot) != 0){
-				mid = right
-				pivot = list[right]._rPath
-				if(_r.indexOf(pivot) != 0){
-					return [href, -1]
-				}
-			}
-		}
-		
-		return [this.resolveAlias(_r, list[left], true), mid]
+		return ans
 	},
 	
 	// todo: doesn't belong here
-	resolveAlias: function(href, alias, isNormalized){
-		if(!isNormalized)
-			href = this.normalizeUri(href)
+	resolveAlias: function(href, alias, matchedHref){
+		if (matchedHref == null){
+			// todo get from href
+		}
 		let p = alias.aliasPath || ('```'+alias.name+'```')
-		return p + href.substr(alias._rPath.length)
+		
+		return p + matchedHref
 	},
 	
 	getAliasPathList: function(href){

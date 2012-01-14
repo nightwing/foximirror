@@ -484,9 +484,13 @@ slateViewer={
 		} else		
 			this.setDir(ans)
 		
+		if(!data)
+			return
 		
-		var chromeUri = gChromeMap.getAliasList(data.spec)[0]
-		var addonUri = gChromeMap.getAliasList(data.spec)[0]
+		var url = data.spec
+		
+		var chromeUri = gChromeMap.getAlias(url)||url
+		var addonUri = gAddonMap.getAlias(url)
 		
 		
 		
@@ -522,11 +526,12 @@ urlbarPopup = {
 	showDetails: function(popup){
 		var uri = getCurrentURI()
 		var file = getLocalFile(uri)
+
 		var data = [
 			uri,
 			file.path,
-			gAddonMap.getAliasList(uri)[0],
-			gChromeMap.getAliasList(uri)[0],
+			gChromeMap.getAlias(uri),
+			gAddonMap.getAlias(uri),
 			"",
 			file.fileSize+"kb",
 			new Date(getLocalFile(uri).lastModifiedTime)
