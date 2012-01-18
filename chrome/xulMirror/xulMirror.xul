@@ -70,9 +70,10 @@
 
 			<shadiaglue/>
 			<toolbarbutton type="checkbox" label="debugself" oncommand="shadia.defWindow = this.checked?null:gBrowser"/>
-			<spacer flex="1"/>
-			
+			<spacer flex="1"/>			
 			<toolbarbutton  label="detach" oncommand="toggleDetach(this)"/>
+			<checkbox id="iframe-type" persist="checked" label="iframe type=content" oncommand="initPreviewBrowser()"/>
+			<spacer flex="1"/>
 			<toolbarbutton label="&#10227;" oncommand='updatePreview()'   />
 			<toolbarbutton type="checkbox" checked="true" label="autoupdate" oncommand='gAutoUpdate = this.checked;updatePreview()' />
 		</toolbar>	

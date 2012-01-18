@@ -9,7 +9,10 @@
   <binding id="parseerror">
     <content hidevscroll="true" hidehscroll="true">
       <children/>
-      1222
+      <hbox style="font-weight:normal;font-size:15px">
+		  <xul:button label="edit" edit='true'/>
+		  <xul:shadiaglue/>
+      </hbox>
     </content>
 	<implementation>
       <constructor>        
@@ -21,13 +24,15 @@
     <handlers>
       <handler event="click" button="0" clickcount="1">
       <![CDATA[
-       document.location.reload()
+		if (event.originalTarget.hasAttribute("edit")){
+			var match = this.textContent.match(/Line number (\d+),/i)
+			var lineNumber = match&&parseInt(match[1]);
+			window.openDialog("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", document.location, null, null, lineNumber, null);
+		}
       ]]>
       </handler> 
 	 <handler event="click" button="2" clickcount="1">
-      <![CDATA[
-		var lineNumber = null;
-      	openDialog("chrome://global/content/viewSource.xul", "_blank", "all,dialog=no", document.location, null, null, lineNumber, null);
+      <![CDATA[		
       ]]>
       </handler> 
     </handlers>

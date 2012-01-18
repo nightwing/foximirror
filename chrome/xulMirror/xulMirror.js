@@ -7,8 +7,7 @@ var codebox = null;
 
 function doOnload(){
 	wrap = $("wrap")
-	gBrowser = $("content")
-	content = gBrowser.contentWindow
+	initPreviewBrowser()
 	
 	// sadia must inspect content
 	shadia.defWindow = gBrowser
@@ -32,7 +31,22 @@ toggleOrient = function(){
 	wrap.children[1].firstChild.removeAttribute("width")
 }
 
+function initPreviewBrowser() {
+	var isContent = $("iframe-type").checked
+	var el = window.gBrowser = $("content")
+	
+	var loc = el.contentWindow.location.href
+	
+	if (isContent)
+		el.setAttribute("type", "content")
+	else
+		el.removeAttribute("type", "content")
+	el.parentNode.insertBefore(el, el.nextSibling)
 
+	window.content = gBrowser.contentWindow
+	
+	el.contentWindow.location = loc
+}
 /**======================-==-======================*/
 
 var codeCache = {}, sessions = {}, Templates = {}, gTemplateName
@@ -87,7 +101,8 @@ xulMirror = {
 };
 //-----------------------------------------------------------------------------
 updatePreview_inBrowser = function(){
-	content.location = 'edit:@xulMirror`'+templateList.currentTemplate.defaultTabName
+	if (templateList.currentTemplate)
+		content.location = 'edit:@xulMirror`'+templateList.currentTemplate.defaultTabName
 }
 var dWin
 updatePreview_detached = function(){

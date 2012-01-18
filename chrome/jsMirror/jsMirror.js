@@ -57,11 +57,18 @@ var getProps = function(targetObj) {
 
 jn={};
 jn.resultBuffer = []
-jn.say=function(a){
-	if(!jn.$useResultBuffer)
-		appendToConsole(jn.inspect(a))
-	else
-		jn.resultBuffer.push(a)
+jn.say=function(){
+	if(!jn.$useResultBuffer) {
+		if (arguments.length == 1)
+			appendToConsole(jn.inspect(arguments[0]))
+	} else {
+		if (arguments.length == 1)
+			jn.resultBuffer.push(arguments[0])
+		else {
+			for (var i = 0; i < arguments.length; i++)
+				jn.resultBuffer.push(arguments[i])
+		}
+	}
 }
 jn.__defineGetter__('safeLoop', function(){
 	if(!jn.safeLoopCounter){
@@ -108,13 +115,21 @@ jn.inspect=function(x,long){
 		Class = string
 		string = ''
 	}if(Class=='Array'){
-		var l=x.length
+		var l = x.length
 		nameList.push('`'+Class+'` ~'+l)
-		l=Math.min(long?100:10,l)
-		for(var i=0;i<l;i++){
-			nameList.push(x[i])
+		l = Math.min(long?100:10,l)
+		if (l<=3) {
+			for(var i=0;i<l;i++){
+				nameList.push(x[i])
+			}
+			long = false
+		} else {
+			for(var i=0;i<l;i++){
+				nameList.push(x[i])
+			}
+			long = true
 		}
-		return nameList.join(',\n   ');
+		return nameList.join(long ?',\n   ':', ');
 	}
 	
 	

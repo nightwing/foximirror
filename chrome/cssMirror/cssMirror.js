@@ -83,7 +83,6 @@ errorListener={
 	checkForErrors:function(context,funcToCheck,args){
 		//t=Date.now()
 		this.clearErrors()
-		consoleService.unregisterListener(this)
 		consoleService.registerListener(this);
 		try{
 			funcToCheck.apply(context,args||[])
