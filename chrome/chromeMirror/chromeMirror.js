@@ -10,6 +10,10 @@ function initialize(){
    //********************************************************************                  -------------------windowViewer
   //* viewer objects
  //****************************/
+var XPIProviderBP = Components.utils.import("resource://gre/modules/XPIProvider.jsm")
+var XPIProvider = XPIProviderBP.XPIProvider
+
+
 addonViewer={
 	getContextMenuItems: function(_, target){
         var items = []
@@ -51,6 +55,39 @@ addonViewer={
 				mAddonData.file.QueryInterface(Ci.nsILocalFile).reveal()
 			},
 		})
+		
+		if (XPIProvider.bootstrapScopes[mAddonData.id]) {
+			items.push({
+				label: "reload",
+				command: function() {
+					var id = mAddonData.id
+					XPIProviderBP = Components.utils.import("resource://gre/modules/XPIProvider.jsm")
+					XPIProvider = XPIProviderBP.XPIProvider
+				 
+					let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+					file.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
+					XPIProvider.callBootstrapMethod(id, XPIProvider.bootstrappedAddons[id].version,
+											   XPIProvider.bootstrappedAddons[id].type, file, "shutdown",
+											   XPIProviderBP.BOOTSTRAP_REASONS.ADDON_UPGRADE);
+					
+					delete XPIProvider.bootstrapScopes[id]
+					XPIProviderBP.flushStartupCache()
+					
+					XPIProvider.callBootstrapMethod(id, XPIProvider.bootstrappedAddons[id].version,
+											   XPIProvider.bootstrappedAddons[id].type, file,
+											   "startup", XPIProviderBP.BOOTSTRAP_REASONS.APP_STARTUP);
+				},
+			})
+		}
+		if (mAddonData.addon.optionsURL) {
+			items.push({
+				label: "options",
+				command: function() {
+					$shadia.openWindow(mAddonData.addon.optionsURL)
+				},
+			})
+		}
+		
         return items;
 	},
 	

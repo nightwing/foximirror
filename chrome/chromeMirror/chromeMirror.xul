@@ -81,7 +81,7 @@
 				</tree>
 			</hbox>
 			<hbox id="addonViewer-search">
-				<textbox type="search" flex='1'/>
+				<textbox type="search" flex='1' clickselectsall='true'/>
 				<toolbarbutton label='n' tooltiptext='name' type='checkbox'/>
 				<toolbarbutton label='d' tooltiptext='date' type='radio'/>
 			</hbox>

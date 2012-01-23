@@ -24,8 +24,8 @@ if (Cc["@mozilla.org/extensions/manager;1"]){//3.6-
 	}
 }
 else{ // dealing with 4+ is more work apearantly
-	this.__defineGetter__('installLocations', function(){$getAddonData(); return installLocations})
-	this.__defineGetter__('inactiveAddonIDs', function(){$getAddonData(); return inactiveAddonIDs})
+	this.__defineGetter__('installLocations', function(){$getAddonData(); return this.installLocations})
+	this.__defineGetter__('inactiveAddonIDs', function(){$getAddonData(); return this.inactiveAddonIDs})
 
 	$getAddonData = function (){
 		var bap = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});

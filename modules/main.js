@@ -564,9 +564,11 @@ function getCssMirrorDir(){
 		zipW.open(cssMirrorDir, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 		try{
 			let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);	
-			var data='shadiaglue{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")!important}\n'+
-				'*|parseerror{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#parseerror")!important}\n'+
-				'*{-moz-tab-size:4!important}\n'
+			var data='@namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);\n'
+				+ 'shadiaglue{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")!important}\n'
+				+ 'parsererror|parsererror{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#parseerror")!important}\n'
+				+ '/*parsererror|sourcetext{color:green!important;}\n*/'
+				+ 'html{-moz-tab-size:4!important}\n'
 			var entryPath='debug.css'
 			istream.setData(data, data.length);
 			if (zipW.hasEntry(entryPath))

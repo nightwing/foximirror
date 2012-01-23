@@ -542,6 +542,9 @@ function doOnUnload(){
 		data.newTarget = {}
 	data.newTarget.code = codebox.session.getValue()
 	data.newTarget.winRef = Cu.getWeakReference(getTargetWindow())
+	/**/
+	ConfigManager.set(data.newTarget.code)
+	/**/
 	
 	var maxHistSize = 100
 	var startIndex = Math.max(0, commandHistory.length-maxHistSize)
@@ -827,7 +830,7 @@ Firebug.jsMirror = {
 		var data = $shadia.$jsMirrorData
 		if(data && data.newTarget){
 			initTargetWindow(data.newTarget.winRef.get())
-			codebox.session.doc.setValue(data.newTarget.code||'')
+			codebox.session.doc.setValue(data.newTarget.code||ConfigManager.get())
 			//data.newTarget = null
 			codebox.selectAll();
 		}
@@ -870,9 +873,11 @@ Firebug.jsMirror = {
 
 	// * * * * * * * * * * * * * * * * * * * * * *
 	enter: function(runSelection, dir, text) {
+		//schedule(jsMirror.saveEditorState, 200, jsMirror)
+		
 		var editor, cell
 		this.$useConsoleDir = dir;
-		if(typeof text == "object"){
+		if (typeof text == "object"){
 			editor = text
 			text = ""
 		} else {
@@ -995,9 +1000,6 @@ var inputNumber = 0;
 /**======================-==-======================*/
 
 var ConfigManager = {
-	CONFIG_FILE_NAME: "executhistory.xml",
-	thisFile: 'chrome://shadia/content/jsMirror/jsMirror.xul',
-
 	readHistory: function(){
 		return []
 	},
@@ -1008,7 +1010,19 @@ var ConfigManager = {
 
 	getConfigFile: function(){
 		
-		}
+	},
+	
+	get: function(){
+		var file = aceManager.getUserFile("foxiMirror")
+		file.append("js.autosave.js")
+		if(file.exists())return readEntireFile(file)||''
+	},
+	set: function(t){
+		if (!t)return
+		var file = aceManager.getUserFile("foxiMirror")
+		file.append("js.autosave.js")
+		writeToFile(file, t)
+	},
 }
 
 /*********************************************************************
