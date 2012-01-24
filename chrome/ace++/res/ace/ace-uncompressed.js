@@ -132,7 +132,10 @@ var Editor = function(renderer, session) {
 
         this.onChangeMode();
 
+        this.$blockScrolling += 1;
         this.onCursorChange();
+        this.$blockScrolling -= 1;
+
         this.onScrollTopChange();
         this.onScrollLeftChange();
         this.onSelectionChange();
@@ -1581,18 +1584,19 @@ var VirtualRenderer = function(container, theme) {
 
         // full
         if (changes & this.CHANGE_FULL) {
+            this.$updateScrollBar();
             this.$textLayer.update(this.layerConfig);
             if (this.showGutter)
                 this.$gutterLayer.update(this.layerConfig);
             this.$markerBack.update(this.layerConfig);
             this.$markerFront.update(this.layerConfig);
             this.$cursorLayer.update(this.layerConfig);
-            this.$updateScrollBar();
             return;
         }
 
         // scrolling
         if (changes & this.CHANGE_SCROLL) {
+            this.$updateScrollBar();
             if (changes & this.CHANGE_TEXT || changes & this.CHANGE_LINES)
                 this.$textLayer.update(this.layerConfig);
             else
@@ -1603,7 +1607,6 @@ var VirtualRenderer = function(container, theme) {
             this.$markerBack.update(this.layerConfig);
             this.$markerFront.update(this.layerConfig);
             this.$cursorLayer.update(this.layerConfig);
-            this.$updateScrollBar();
             return;
         }
 
@@ -2104,7 +2107,7 @@ exports.cssText = ".ace-tm .ace_editor {\
 }\
 \
 .ace-tm .ace_fold {\
-    background-color: #4b50c3;\
+    background-color: #6B72E6;\
 }\
 \
 .ace-tm .ace_text-layer {\

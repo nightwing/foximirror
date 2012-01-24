@@ -1260,25 +1260,31 @@ insertAddrs=function(mNode){
 	viewDoc.body.replaceChild(body,viewDoc.body.firstChild)
 }
 /**-----------//////**************************/
-function sayDocument(doc){
-	var ans=['<span class="selector">'+mNode.nodeName+'</span>'],uri
+var $ht = function(){
+    let y = function(m) escapeMap[m]
+    let escapeMap = { '&': '&amp;', '"': '&quot;', '"': '&#39;', '<': '&lt;', '>': '&gt;' }    
+    return function escapeHTML(str) str.replace(/[&"<>]/g, y);
+}()
 
-	ans.push('<span class="name">title</span>= <span class="val">'+doc.title+'</span>')
+function sayDocument(doc){
+	var ans=['<span class="selector">'+$ht(mNode.nodeName)+'</span>'],uri
+
+	ans.push('<span class="name">title</span>= <span class="val">'+$ht(doc.title)+'</span>')
 	var uri=sayHref(doc.documentURI)
 
-	ans.push('<span class="name">uri</span>= <span class="val">'+uri+'</span>')
+	ans.push('<span class="name">uri</span>= <span class="val">'+$ht(uri)+'</span>')
 
 	return '<div>'+ans.join('</div><div class="prop">')+'</div>'
 	
 }
 function sayAttrs(mNode){
-	var ans=['<sp1><sp>edit</sp></sp1> <span class="selector">'+mNode.nodeName+'</span>']
+	var ans=['<sp1><sp>edit</sp></sp1> <span class="selector">'+$ht(mNode.nodeName)+'</span>']
 	if(mNode.attributes){
 		for(var i=0;i<mNode.attributes.length;i++){
 			var attr=mNode.attributes[i]
 			var attName=attr.name
 			if(attName=='shadia-lighted')continue
-			ans.push('<span class="name">'+attName+"</span>='<span class='val'>"+attr.value+"</span>'")
+			ans.push('<span class="name">'+$ht(attName)+"</span>='<span class='val'>"+$ht(attr.value)+"</span>'")
 		}
 		if(mNode.textContent){
 			var t=mNode.textContent.length
@@ -1286,9 +1292,9 @@ function sayAttrs(mNode){
 			ans.push('<span class="name">textContent.length</span>= <span class="sval">'+t+'</span>')
 		}
 	}else
-		ans.push('<span class="name">text</span>= <span class="val">'+mNode.nodeValue+'</span>')
+		ans.push('<span class="name">text</span>= <span class="val">'+$ht(mNode.nodeValue)+'</span>')
 
-	ans.push('<span class="moreinfo">xmlns= '+mNode.namespaceURI)
+	ans.push('<span class="moreinfo">xmlns= '+$ht(mNode.namespaceURI))
 	return '<div id="attributes-slate" slateID><div>'+ans.join('</div><div class="prop">')+'</div></div>'
 }
 function saveAttrs(mNode,text){
@@ -1441,7 +1447,7 @@ function sayParents(mNode){
 	var parent=mNode
 	var ans=[]
 	while(parent){
-		ans.unshift(cssSelector(parent))
+		ans.unshift($ht(cssSelector(parent)))
 		parent=parent.parentNode
 	}
 	ans.shift()//\u25c4
@@ -1449,18 +1455,19 @@ function sayParents(mNode){
 }
 
 /**-----------//////**************************/
+
 function sayXBL(mNode){
 	var parent=mNode
 	var ans=[]
 	while(parent){//&&parent.nodeType==1
-		ans.push('<div class="name">'+cssSelector(parent)+'</div>')
+		ans.push('<div class="name">'+$ht(cssSelector(parent))+'</div>')
 		try{
 			var xbl=domUtils.getBindingURLs(parent)
 		}catch(e){var xbl=[]}
 		if(xbl.length==0)
 			ans.push('<div class="val">-------</div>')
 		else for(var i=0;i<xbl.length;i++)
-				ans.push('<div class="val link selectAll">'+xbl.queryElementAt(i, Ci.nsIURI).spec+'</div>')
+				ans.push('<div class="val link selectAll">'+$ht(xbl.queryElementAt(i, Ci.nsIURI).spec)+'</div>')
 		parent=parent.parentNode
 	}
 	return ans
@@ -1495,7 +1502,7 @@ function sayEvents(mNode){
 					'<d class=selector >', i.type,
 					'</d>\t<d class=dr >', i.capturing?'capturing':'',
 					'</d><pre class="func" slateID="', saidFuncs.push(s)-1,
-					'">',s.toString(),'</pre>'
+					'">',$ht(s.toString()),'</pre>'
 				)
 			else 
 				subans.push(
@@ -1507,7 +1514,7 @@ function sayEvents(mNode){
 		else ans.push(subans.join(''))
 	}
 	while(parent){//&&parent.nodeType==1
-		ans.push('<div class="name">'+cssSelector(parent)+'</div>')
+		ans.push('<div class="name">'+$ht(cssSelector(parent))+'</div>')
 		sayEventsInner(parent)
 		parent=parent.parentNode
 	}
@@ -1556,7 +1563,7 @@ function sayInlineCSS(mNode){
 	stateButtons='<sp1><sp>hover</sp></sp1>'
 	if(mNode.style&&mNode.style.cssText){
 		var t="<div id='InlineCSS-slate'><div><span class='selector'>"+'element.style</span>{</div>'
-			 +breakRule2(mNode.style.cssText)+'</div><div class="end">}'+stateButtons+'</div></div>'
+			 +sayRuleContents(mNode.style.cssText)+'</div><div class="end">}'+stateButtons+'</div></div>'
 		return t
 	}else{
 		var t="<div id='InlineCSS-slate' class='gray'><span class='selector'>element.style</span><span>{<span class='prop'></span>}</span>"+stateButtons+"</div>"
@@ -1592,17 +1599,18 @@ function sayCSS(rules,maxn,isSecondary){var t=Date.now()
 			if(!href)href=ps.ownerNode.ownerDocument.location.href//change to stylesheet
 			var ruleLine = domUtils.getRuleLine(rule);
 
-			href='<a1>'+ruleLine+sayHrefEnd(href)+'<npp></npp></a1>'
-			ans.push("<div slateID='"+i+"'><div><span class='selector'>"+rule.selectorText+'</span>{',breakRule2(rule.cssText),'<div class="end">} '+href+'</div>')
+			href='<a1>'+ruleLine+$ht(sayHrefEnd(href))+'<npp></npp></a1>'
+			ans.push("<div slateID='"+i+"'><div><span class='selector'>"
+				+$ht(rule.selectorText)+'</span>{', sayRuleContents(rule.cssText),'<div class="end">} '+href+'</div>')
 
 		}else if(rule.cssRules){//-moz-document,media
 			var sel=rule.cssText
 			sel=sel.substring(0,sel.indexOf('{'))
-			ans.push("<div slateID='"+i+"'><div><span class='docrule'>"+sel+'</span>{',"<div class='prop'>"
+			ans.push("<div slateID='"+i+"'><div><span class='docrule'>"+$ht(sel)+'</span>{',"<div class='prop'>"
 				+sayCSS(rule.cssRules,0,true)
 				+'</div>','<div class="end">}</div>')
 		}else{
-			ans.push('<div slateID="'+i+'"><div class="end"><span class="selector">'+rule.cssText+'</span>'+rule.type+'</div>')
+			ans.push('<div slateID="'+i+'"><div class="end"><span class="selector">'+$ht(rule.cssText)+'</span>'+rule.type+'</div>')
 		}
 	}
 	if(n>maxn){
@@ -1610,7 +1618,7 @@ function sayCSS(rules,maxn,isSecondary){var t=Date.now()
 	}
 	return '<div id="CSS-slate">'+ans.join('</div>')+'</div></div>'
 }
-function breakRule2(cssText){
+function sayRuleContents(cssText){
 	var props = [];
 	cssText=cssText.substr(cssText.indexOf('{')+1)
 	var lines = cssText.match(/(?:[^;\(]*(?:\([^\)]*?\))?[^;\(]*)*;?/g);
@@ -1623,7 +1631,7 @@ function breakRule2(cssText){
 			continue;
 		//var name = m[1], value = m[2], important = !!m[3];
 		/*if (m[2])this.addProperty(m[1], m[2], !!m[3], false, inheritMode, props);*/
-		props.push("<span class='name'>"+m[1]+"</span>: <span class='val'>"+rgbToHex(m[2])+"</span>"+(!!m[3]?'<span>!important</span>;':";"))
+		props.push("<span class='name'>"+m[1]+"</span>: <span class='val'>"+$ht(rgbToHex(m[2]))+"</span>"+(!!m[3]?'<span>!important</span>;':";"))
 	};
 
 	return "<div class='prop'>"+props.join("</div><div class='prop'>")//+'</div>';
@@ -1683,7 +1691,7 @@ function sayParentCSS(mNode){
 	var ans=[]
 	var cr=[]
 	while(parent){//&&parent.nodeType==1
-		ans.push("<div class='parents' closer='true'><a11> \u25e2 </a11><a>"+cssSelector(parent)+"</a></div>")
+		ans.push("<div class='parents' closer='true'><a11> \u25e2 </a11><a>"+$ht(cssSelector(parent))+"</a></div>")
 		try{
 			var rules=rulesForNode(parent);
 			cr=cr.concat(rules);
@@ -1745,7 +1753,7 @@ computedStyleViwer={
 				l=rgbToHex(l)
 				m=rgbToHex(m)
 				ans.push('<td'+[' class="propName">'+k+':'
-							   ,' class="propVal">'+l
+							   ,' class="propVal">'+$ht(l)
 							   ,' class="propDef">'+m].join('</td><td')+'</td>')
 			}
 		}
