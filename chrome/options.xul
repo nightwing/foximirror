@@ -10,15 +10,15 @@
 	centerscreen="true"
 	resizable="yes"
 	id="foxiFrameOptDlg"
-	buttons=""
+	buttons="extra2,accept"
+	buttonlabelextra2="recomended"
+	ondialogextra2="setRecomendedValues()"
+	ondialogaccept=""
 	onclose="save()"
+	onload="onLoad()"
 	>
 <!-- 	ondialogextra1 = ""
 	buttons="accept"
-	ondialogaccept=""
-	ondialogextra2 = "openDialog('chrome://shadia/content/options.xul','resizable').focus();"
-	buttons="accept,extra2"
-	buttonlabelextra2=":)"
 	persist="screenX,screenY,sizemode" -->
 
 <html:style>
@@ -48,7 +48,7 @@
   </preferences>
   <hbox>
 	<label value="key1"/>
-	<textbox preference="startKeys-pref" flex="1" placeholder="F1|Pause"/>
+	<textbox preference="startKeys-pref" flex="1" placeholder=""/>
 	<label value="*" tooltiptext="a|b => KeyEvent['DOM_VK_'+A] or KeyEvent['DOM_VK_'+B]"/>	
   </hbox>
   <hbox>
@@ -90,7 +90,13 @@ function $(x)document.getElementById(x)
 function save(){
 	$shadia.lightStarter.updatePrefs()
 }
-
+onLoad = function(){
+	document.querySelector('textbox[preference="startKeys-pref"]')
+		.setAttribute('placeholder', $shadia.lightStarter.defaultKey)
+	
+	
+	document.documentElement._configureButtons("accept,extra2")
+}
 
 function schedule(fn, delay){
 	if (fn._timeout != null)
@@ -103,6 +109,9 @@ $shadia.lightStarter.loadScript(window)
 
 $('descriptionbox').textContent = shadia.getMessage()
 
+setRecomendedValues = function(){
+	
+}
 
 ]]></script>
 

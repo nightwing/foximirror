@@ -299,42 +299,10 @@ viewFileURI=function viewFileURI(selectedURI,lineNumber){
 	openWindow("chrome://global/content/viewSource.xul", "all,dialog=no", selectedURI, null, null, lineNumber, null);
 }
 var externalEditors = {
-	guessEditorPath: function (){
-		//todo: look into registry
-		if(this.$guessedPath)
-			return this.$guessedPath;
-		try{
-			var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-			var path="C:\\Program Files\\Notepad++\\notepad++.exe"
-			file.initWithPath(path);
-			if(file.exists())
-				return this.$guessedPath=path
-			var path="C:\\Program Files (x86)\\Notepad++\\notepad++.exe"
-			file.initWithPath(path);
-			if(file.exists())
-				return this.$guessedPath=path
-		}catch(e){}
-	},
-	guessEditor: function(){try{
-		var path = this.guessEditorPath()
-		if(!path)
-			return;
-		return {
-			label:'notepad++',
-			executable: path,
-			cmdline: '-n%line %file'
-		}
-		}catch(e){}
-	},
 	getItem: function(){
 		var a=$shadia.getPref('extensions.shadia.editor')
 		if(a && (a=a.split(','))[1])
 			return {label:a[0], executable: a[1], cmdline: a[2]}
-
-		if(a = this.guessEditor())
-			return a
-
-
 	},
 	edit: function(path, line, column, id){
 		var editor = this.getItem()
@@ -668,14 +636,14 @@ lightStarter ={
 		var branch = Services.prefs.getBranch("extensions.shadia.")
 		this.$dumpToConsole = branch.prefHasUserValue("dumpToConsole") && branch.getBoolPref("dumpToConsole")
 		this.keys = (
-			(branch.prefHasUserValue("startKeys") && branch.getCharPref("startKeys"))
-			|| 'PAUSE|F1'
+			(branch.prefHasUserValue("startKeys") && branch.getCharPref("startKeys")) || this.defaultKey
 		).toUpperCase()
 		var keys = this.keys.split('|')
 		var KeyEvent = Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci.nsIAppShellService).hiddenDOMWindow.KeyEvent
 		this.startKey1 = KeyEvent['DOM_VK_' + keys[0]]
 		this.startKey2 = KeyEvent['DOM_VK_' + keys[1]]
-	}
+	},
+	defaultKey: 'PAUSE|F1'
 }
 
 lightStarter.updatePrefs()

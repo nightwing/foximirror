@@ -1198,7 +1198,7 @@ function domSearchView(table){
   //* browser viewer objects
  //******/
 insertAddrs=function(mNode){
-	var body=viewDoc.createElement(body)
+	var body=viewDoc.createElement('body')
 	if(!mNode){
 		body.textContent='error mNode is undefined'
 	}
@@ -1227,7 +1227,7 @@ insertAddrs=function(mNode){
 		case 3://TEXT_NODE
 		case 4://CDATA_SECTION_NODE: 4
 		case 8://COMMENT_NODE: 8
-			body.innerHTML='<div>'+mNode.nodeName+'</div>'+'<pre>'+mNode.nodeValue+'</pre>'
+			body.innerHTML='<div>'+$ht(mNode.nodeName)+'</div>'+'<pre>'+$ht(mNode.nodeValue)+'</pre>'
 			break
 		case 7://PROCESSING_INSTRUCTION_NODE
 			if(mNode.sheet){
