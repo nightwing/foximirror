@@ -4,14 +4,12 @@ content  shadia  chrome/
 override  chrome://e/dit/ed             edit:@e/dit/ed
 
 overlay  chrome://browser/content/browser.xul             chrome://shadia/content/browserOverlay.xul
+overlay  chrome://navigator/content/navigator.xul         chrome://shadia/content/browserOverlay.xul
 overlay  chrome://global/content/viewSource.xul           chrome://shadia/content/viewSourceOverlay.xul
 
-overlay  about:addons 									  chrome://shadia/content/addonsOverlay.xul             appversion>=4.0b1
+overlay  about:addons 									  chrome://shadia/content/addonsOverlay.xul
 
 
-
-
-#FF4
 component {01234567-1234-1234-1234-123456789ABC} components/editProtocolHandler.js
 contract @mozilla.org/network/protocol;1?name=edit {01234567-1234-1234-1234-123456789ABC}
 

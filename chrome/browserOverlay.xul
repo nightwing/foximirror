@@ -34,6 +34,9 @@
 <menupopup id="menu_ToolsPopup">
 	<shadiaglue buttons='log,jsMirror,cssMirror,inspector,chromeMirror' style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue");padding-left:10px' position='1000'/>
 </menupopup>
+<menupopup id="taskPopup">
+	<shadiaglue buttons='log,jsMirror,cssMirror,inspector,chromeMirror' style='-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue");padding-left:10px' position='1000'/>
+</menupopup>
 <menupopup id="appmenu-popup">
 	<shadiaglue insertbefore='appmenu_webDeveloper'
 		buttons='log,jsMirror,cssMirror,chromeMirror'
