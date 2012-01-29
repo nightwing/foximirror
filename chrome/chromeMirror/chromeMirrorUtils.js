@@ -407,17 +407,14 @@ fileMap.prototype = {
 	
 	
 	debug: function(){
-		dump(JSON.stringify(this.map, function(a, b) {
+		$shadia.dump(JSON.stringify(this.map, function(a, b) {
 			if (a[0] != "/")
 				return b;
 			else
 				return b.id||b.aliasPath
 		}, 1))
 
-		dump(JSON.stringify(this.map2).replace("],[", "]\n,[", "g"))
-		return /*this.aliasList.map(function(x, i){
-			return i + ': ' + x._rPath + '   -->  ' + (x.aliasPath || '```'+x.name+'```')
-		}).join('\n')*/
+		$shadia.dump(JSON.stringify(this.map2).replace("],[", "]\n,[", "g"))
 	},
 	getAlias: function(href){
 		var a = this.getAliasList(href)[0]
