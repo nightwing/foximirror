@@ -304,7 +304,7 @@ jn.bait= modernFox?(function(a){
 		keys: function() { return []; }
 
 	};
-	return Proxy.create(pr)
+	return Proxy.createFunction(pr, function()jn.bait)
 })():dump;
 
 jn.getScripts = function(window){
@@ -473,12 +473,6 @@ jn.setget=setget
 jn.qi=qi
 jn.compare=compare
 jn.wr=wr
-jn.getSourceLink = function(fn){	
-	var s=Services.jsd.wrapValue(shadia.showHelp).script
-	if(s){
-		return {href: s.fileName, line:s.baseLineNumber}
-	}
-}
 
  
 initJANE = function(){
@@ -603,15 +597,7 @@ function insertTextAtEnd(iText, editor){
 	var r = editor.getSelectionRange()
 	r.start = {row:row, column:s.getLine(row).length-1},
 	r.end = s.insert(r.start,iText)
-	editor.selection.setSelectionRange(r)
-	
-	return
-	editor.clearSelection()
-	editor.selection.moveCursorFileEnd()
-	var a = editor.selection.getCursor()
-	var f = editor.session.insert(a, iText)
-	editor.selection.selectTo(a.row, a.column)
-	editor.renderer.scrollCursorIntoView()
+	editor.selection.setSelectionRange(r, true)
 }
 
 function nextCommandFromHistory(){
@@ -657,36 +643,31 @@ jsExplore.si=function(){
 }
 
 jsExplore.reveal=function(){
-	if(!Services.jsd.isOn){
-		Services.jsd.asyncOn(jsExplore.reveal)
-		return
-	}
-	let script = Services.jsd.wrapValue(autocompleter.selectedObject.object).script
-	if(script)
-		return $shadia.externalEditors.edit(script.fileName, script.baseLineNumber)
-	let script = Services.jsd.wrapValue(autocompleter.selectedObject.object.constructor).script
-	if(script)
-		$shadia.externalEditors.edit(script.fileName, script.baseLineNumber)
-	
-	alert('unable to find script:(')
+	$shadia.getSourceLocation(autocompleter.selectedObject.object, function(loc) {
+		if (loc)
+			$shadia.externalEditors.edit(loc.href, loc.line)
+		else
+			alert('unable to find script:(')
+	})
 }
-jsExplore.eval=function(){
+
+jsExplore.eval = function(){
 	var f = autocompleter.selectedObject.object
 	var o = autocompleter.object
-	try{
-		if(typeof f == 'function')
+	try {
+		if (typeof f == 'function')
 			var result = jn.inspect(f.call(o))
 		else
 			var result = 'not a function'
-	}catch(e){
+	} catch(e) {
 		result = e
 	}
 
 	autocompleter.sayInBubble(result, true)
 }
 
-jsExplore.getParent=function(){
-	var p=jn.getParent(autocompleter.selectedObject.object)
+jsExplore.getParent = function(){
+	var p = jn.getParent(autocompleter.selectedObject.object)
 	autocompleter.sayInBubble(jn.inspect2(p, 'long'), true)
 }
 /*****************

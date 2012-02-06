@@ -372,17 +372,17 @@ var externalEditors = {
 		)
 		if(!proceed)
 			return 'stop'
-		
+
 		var result = sel.value
 		if(isFileModified)
 			result--
-			
+
 		if(result==0)
-			return 'extract'		
+			return 'extract'
 		if(result==-1)
 			return 'proceed'
-		
-		
+
+
 		if(result==1){
 			getLocalFile(uri.spec).reveal()
 		}else if(result==2){
@@ -459,7 +459,7 @@ extractRelative = function(uri, doExtract){
 				target.parent.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 			//if (target.exists())
 			//	continue;
-			zipReader.extract(entryName, target); 
+			zipReader.extract(entryName, target);
 			target.permissions |= PERMS_FILE;
 			target.lastModifiedTime = jar.lastModifiedTime
 		} finally {
@@ -494,7 +494,7 @@ npp=function(path,line){
 }
 
 //*******************************************
-//* 
+//*
 //******
 
 /**zr constants*/
@@ -514,10 +514,10 @@ function getCssMirrorJarPath(){
 	/*var cssMirrorDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
 	cssMirrorDir.append('foxiMirror')
 	cssMirrorDir.append('cssMirrorStyles.zip')*/
-	
+
 	var fileHandler = Services.io.getProtocolHandler("file").QueryInterface(Ci.nsIFileProtocolHandler);
 	var uri = fileHandler.getURLSpecFromFile(getCssMirrorDir());
-		
+
 	return 'jar:'+uri+'!/'
 }
 
@@ -531,7 +531,7 @@ function getCssMirrorDir(){
 		var zipW = new zipWriter();
 		zipW.open(cssMirrorDir, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 		try{
-			let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);	
+			let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
 			var data='@namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);\n'
 				+ 'shadiaglue{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#shadiaGlue")!important}\n'
 				+ 'parsererror|parsererror{-moz-binding:url("chrome://shadia/content/bindings/debug.xml#parseerror")!important}\n'
@@ -544,7 +544,7 @@ function getCssMirrorDir(){
 			zipW.addEntryStream(entryPath,null,Ci.nsIZipWriter.COMPRESSION_NONE,istream,false)
 		}finally{
 			zipW.close();
-		}		
+		}
 	}
 
 	return cssMirrorDir
@@ -598,7 +598,7 @@ reload= function(){
  * bootstrap.js API
  *****************/
 lightStarter ={
-	handleEvent: function(e){	
+	handleEvent: function(e){
 		if(e.keyCode == this.startKey1 || e.keyCode == this.startKey2){
 			var win = this.getTopWindow(e.view)
 			//dump(win.location, ('shadia' in win))
@@ -613,16 +613,16 @@ lightStarter ={
 		Services.scriptloader.loadSubScript('chrome://shadia/content/shadia.js', mWindow);
 	},
 	init: function(domWindow){
-		domWindow.addEventListener("keydown", lightStarter, true); 
-		
+		domWindow.addEventListener("keydown", lightStarter, true);
+
 		if(this.$dumpToConsole)
 			domWindow.dump = dump
 	},
 	uninit: function(domWindow){
-		domWindow.removeEventListener("keydown", lightStarter, true); 
+		domWindow.removeEventListener("keydown", lightStarter, true);
 	},
 	getTopWindow: function(mWindow){
-		let domUtils = Services.domUtils 
+		let domUtils = Services.domUtils
 		var rt=mWindow, pw=mWindow
 		while(rt){
 			rt=domUtils.getParentForNode(rt.document,false)
@@ -672,8 +672,8 @@ function startup(aData, aReason) {
 
 function shutdown(aData, aReason) {
 	//if (aReason == APP_SHUTDOWN)return;
-		
-	let wm = Services.wm;	
+
+	let wm = Services.wm;
 	// Unload from any existing windows
 	let enumerator = Services.wm.getEnumerator("navigator:browser");
 	while(enumerator.hasMoreElements()) {
@@ -707,4 +707,41 @@ function openJSMirrorFor(window, forceNewInstance, code){
 }
 
 
+// debugger
+function newGlobal(aName) {
+    var sandbox = Cu.Sandbox(window, {
+		sandboxPrototype: null,
+		wantXrays: false,
+        sandboxName: name
+    });
+	Cu.evalInSandbox("this.__name = '" + aName + "'", sandbox);
+    return sandbox
+}
 
+var src = "(" +
+    function src(){
+        Cc = Components.classes
+        Ci = Components.interfaces
+        init = Components.classes["@mozilla.org/jsdebugger;1"].createInstance(Components.interfaces.IJSDebugger);
+        init.addClass();
+        dbg = new Debugger()
+        timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer)
+        getSourceLocation = function(f, callback) {
+            t={observe: function() {
+                var loc, o = dbg.addDebuggee(f)
+                try {
+                    (loc = o.script) && (loc = {href:loc.url, line:loc.startLine})
+                } finally {
+                    dbg.removeDebuggee(f)
+                }
+                callback(loc)
+            }}
+            timer.init(t, 0, 0)
+        }
+    }
++ ")()"
+
+dsb = newGlobal("shadia-debugger")
+dsb.eval(src)
+getSourceLocation = dsb.getSourceLocation
+//sb.getSource(Firebug.GlobalUI.$el, jn.say)
