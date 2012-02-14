@@ -1584,6 +1584,7 @@ var VirtualRenderer = function(container, theme) {
 
         // full
         if (changes & this.CHANGE_FULL) {
+            // update scrollbar first to not loose scroll position when gutter calls resize
             this.$updateScrollBar();
             this.$textLayer.update(this.layerConfig);
             if (this.showGutter)
@@ -1617,9 +1618,9 @@ var VirtualRenderer = function(container, theme) {
         }
         else if (changes & this.CHANGE_LINES) {
             if (this.$updateLines()) {
-            this.$updateScrollBar();
-            if (this.showGutter)
-                this.$gutterLayer.update(this.layerConfig);
+                this.$updateScrollBar();
+                if (this.showGutter)
+                    this.$gutterLayer.update(this.layerConfig);
             }
         } else if (changes & this.CHANGE_GUTTER) {
             if (this.showGutter)
@@ -1655,7 +1656,7 @@ var VirtualRenderer = function(container, theme) {
         if (horizScrollChanged) {
             this.scroller.style.overflowX = horizScroll ? "scroll" : "hidden";
             // when we hide scrollbar scroll event isn't emited
-            // leaving session with old scrollLeft value
+            // leaving session with wrong scrollLeft value
             if (!horizScroll)
                 this.session.setScrollLeft(0);
         }
@@ -1830,7 +1831,7 @@ var VirtualRenderer = function(container, theme) {
     };
 
     this.getScrollLeft = function() {
-        return this.session.getScrollTop();
+        return this.session.getScrollLeft();
     };
 
     this.getScrollTopRow = function() {
@@ -1890,12 +1891,10 @@ var VirtualRenderer = function(container, theme) {
         var canvasPos = this.scroller.getBoundingClientRect();
 
         var col = Math.round(
-            (pageX + this.scrollLeft - canvasPos.left - this.$padding - window.pageYOffset)
-            / this.characterWidth
+            (pageX + this.scrollLeft - canvasPos.left - this.$padding - window.pageYOffset) / this.characterWidth
          );
         var row = Math.floor(
-            (pageY + this.scrollTop - canvasPos.top - window.pageYOffset)
-            / this.lineHeight
+            (pageY + this.scrollTop - canvasPos.top - window.pageYOffset) / this.lineHeight
          );
         if (row < 0) {
             row = 0;
@@ -5201,7 +5200,7 @@ oop.inherits(CommandManager, HashHandler);
         return true;
     };
 
-    this.toggleRecording = function() {
+    this.toggleRecording = function(editor) {
         if (this.$inReplay)
             return;
         if (this.recording) {
@@ -5211,7 +5210,7 @@ oop.inherits(CommandManager, HashHandler);
             if (!this.macro.length)
                 this.macro = this.oldMacro;
 
-			editor.status.set("");
+			//editor && editor.status.set("");
             return this.recording = false;
         }
         this.oldMacro = this.macro;
@@ -5221,7 +5220,7 @@ oop.inherits(CommandManager, HashHandler);
             this.macro.push([command, args]);
             return this.normal_exec(command, editor, args);
         };
-		editor.status.set("recording_macro");
+		//editor && editor.status.set("recording_macro");
         return this.recording = true;
     };
 
@@ -5234,7 +5233,7 @@ oop.inherits(CommandManager, HashHandler);
 
         try {
             this.$inReplay = true;
-			editor.status.set("in_replay");
+			//editor.status.set("in_replay");
             this.macro.forEach(function(x) {
                 if (typeof x == "string")
                     this.exec(x, editor);
@@ -5243,7 +5242,7 @@ oop.inherits(CommandManager, HashHandler);
             }, this)
         } finally {
             this.$inReplay = false;
-			editor.status.set("replay_finished", 2);
+			//editor && editor.status.set("replay_finished", 2);
         }
     };
 
@@ -5500,7 +5499,7 @@ exports.commands = [{
 }, {
     name: "togglerecording",
     bindKey: bindKey("Ctrl-Alt-E", "Command-Option-E"),
-    exec: function(editor) { editor.commands.toggleRecording(); },
+    exec: function(editor) { editor.commands.toggleRecording(editor); },
     readOnly: true
 }, {
     name: "replaymacro",
@@ -6663,7 +6662,7 @@ var Text = function(parentEl) {
 
         // Size and width can be null if the editor is not visible or
         // detached from the document
-        if (size.width == 0 && size.height == 0)
+        if (!size.width || !size.height)
             return null;
 
         return size;

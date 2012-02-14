@@ -1,7 +1,7 @@
 Components.utils.import('resource://shadia/main.js', window).addDevelopmentUtils(window)
 /**/
 var shadowInspector, shadia
-shadowInspector=function(){}
+shadowInspector = function(){}
 
 shadowInspector.activate=function(){
     var topWin=shadowInspector.getTopWindow(window)
@@ -290,8 +290,8 @@ shadowInspector.prototype={
 		if(event.type==="keydown"){
 			var obj=this.historyA[0]
 			switch(event.keyCode){
-				case $shadia.lightStarter.startKey1    :
-				case $shadia.lightStarter.startKey2    : 
+				case $shadia.lightStarter.startKey     :
+				case $shadia.lightStarter.startKey2    :
 				case KeyEvent.DOM_VK_SCROLL_LOCK       :
 				case KeyEvent.DOM_VK_F1       :this.finish();obj=null;break;
 				case KeyEvent.DOM_VK_NUMPAD4  :this.historyBack();obj=null;break;
@@ -431,7 +431,7 @@ shadowInspector.prototype={
 	getMessage: function(){
 		return ['shadia keys{',
 			'/***basics***/',
-			$shadia.lightStarter.keys + ': start/stop highlighter',
+			$shadia.lightStarter.key + ': start/stop highlighter',
 			'arrows: move in dom tree',
 			'numpad 4,6: previous/next',
 			'/***start inspecting document in***/',

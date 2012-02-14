@@ -7,7 +7,7 @@ if (!window.console) {
 var aceRoot = './res/ace/';
 var PATHS = {
 	'ace/theme/'              :  aceRoot + 'theme-',
-	'ace/keyboard/keybinding/':  aceRoot + 'keybinding-',
+	'ace/keyboard/'           :  aceRoot + 'keybinding-',
 	'ace/mode/'               :  aceRoot + 'mode-',
 	'fbace/'                  :  '',
 	'res/'                    :  'res/',

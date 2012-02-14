@@ -1262,8 +1262,8 @@ insertAddrs=function(mNode){
 /**-----------//////**************************/
 var $ht = function(){
     let y = function(m) escapeMap[m]
-    let escapeMap = { '&': '&amp;', '"': '&quot;', '"': '&#39;', '<': '&lt;', '>': '&gt;' }    
-    return function escapeHTML(str) str.replace(/[&"<>]/g, y);
+    let escapeMap = { '&': '&amp;', '"': '&quot;', '"': '&#39;', '<': '&lt;', '>': '&gt;' }
+    return function escapeHTML(str) (str||'').replace(/[&"<>]/g, y);
 }()
 
 function sayDocument(doc){
@@ -1275,7 +1275,7 @@ function sayDocument(doc){
 	ans.push('<span class="name">uri</span>= <span class="val">'+$ht(uri)+'</span>')
 
 	return '<div>'+ans.join('</div><div class="prop">')+'</div>'
-	
+
 }
 function sayAttrs(mNode){
 	var ans=['<sp1><sp>edit</sp></sp1> <span class="selector">'+$ht(mNode.nodeName)+'</span>']
@@ -1477,7 +1477,7 @@ function sayEvents(mNode){
 	var ans=[]
 	if(!Services.jsd.isOn){
 		ans.push(actionButton("enable jsd to see event handlers", 'enableJSD'))
-	}	
+	}
 	var eventListenerService=Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService);
 	var parent=mNode
 	saidFuncs = []
@@ -1496,7 +1496,7 @@ function sayEvents(mNode){
 					s = s.getProperty('handleEvent').value.getWrappedValue()
 				//else i.toSource()//prevent nightly crash
 			}
-			
+
 			if(s)
 				subans.push(
 					'<d class=selector >', i.type,
@@ -1504,7 +1504,7 @@ function sayEvents(mNode){
 					'</d><pre class="func" slateID="', saidFuncs.push(s)-1,
 					'">',$ht(s.toString()),'</pre>'
 				)
-			else 
+			else
 				subans.push(
 					'<d class=selector >', i.type, '</d>\t<d class=dr >', i.capturing?'capturing':'', '</d><br>'
 				)
@@ -1704,7 +1704,7 @@ function sayParentCSS(mNode){
 }
 
 closeNodeInSlate=function(node, id){
-	if(id != 'true'){	
+	if(id != 'true'){
 		var p = node.parentNode
 		var st = slateViewer[id+'-closed']
 		if(st){
@@ -1776,8 +1776,8 @@ setContentState=function(state){
 	domUtils.setContentState(mNode.ownerDocument.documentElement, 4)//
 	utils.redraw(true)
 	domUtils.setContentState(mNode, st)
-	utils.redraw(true) 
-	
+	utils.redraw(true)
+
 	insertAddrs(mNode)
 }
 /**-----------//////**************************/
@@ -1803,7 +1803,7 @@ slateViewer={
 		var b=createElement('tab',{label:'xbl',id:'xbl'})
 		a.appendChild(b)
 		a.selectedIndex=0
-		
+
 		content.InfoTip && content.InfoTip.initialize()
 	},
 	setSlateFromTab: function(mode){
@@ -1819,10 +1819,10 @@ slateViewer={
 		var node=event.target
 		var closerNode = getAncestorByAttribute(node, 'closer')
 		var actionNode = getAncestorByAttribute(node, 'aID')
-		
+
 		!actionNode[1] && closerNode[1] && closeNodeInSlate(closerNode[1], closerNode[0])
 		 actionNode[1] && actionNode[0] && window[actionNode[0]](actionNode[1])
-		
+
 		if(node.nodeName=='SP'){
 			if(node.textContent=='edit')
 				attributeViewer.startEdit(mNode)
@@ -1830,7 +1830,7 @@ slateViewer={
 				setContentState(node.textContent)
 		}
 	},
-	
+
 	sayXBL:function(mNode){
 
 		return '<div id="XBL-slate" closed="'+ this["XBL-slate"+"-closed"]+'">'
@@ -1838,7 +1838,7 @@ slateViewer={
 				+(this["XBL-slate"+"-closed"]?'\u25e5':'\u25e2')
 			+" </a11><a>bindings</a></div>"
 			+'<div class="prop closable">'+sayXBL(mNode).join('')+'</div></div>'
-			
+
 			+'<div id="event-slate" closed="'+ this["event-slate"+"-closed"] +'">'
 			+"<div class='parents' closer='event-slate'><a11> "
 				+(this["event-slate"+"-closed"]?'\u25e5':'\u25e2' )
@@ -1847,21 +1847,21 @@ slateViewer={
 				+sayEvents(mNode).join('')
 			+'</div></div>'
 	},
-	
+
 	isEditable: function(node){
 		var i=getSlatePosition(node)
-		
+
 	},
 	sceduleSave: function(){
-		
+
 	},
 	saveEdit: function(oldval, newVal){
 		var node = viewDoc.getElementsByClassName('editing')[0]
 		var i=getSlatePosition(node)
-		
+
 		if(!i)
 			return
-			
+
 		if(i.id=='attributes-slate'){
 			if(node.classList.contains('name')){
 				var name = newVal
@@ -1886,7 +1886,7 @@ slateViewer={
 		}if(i.id=='InlineCSS-slate.gray'){
 			m
 		}
-		
+
 	}
 }
 	initializeables.push(slateViewer)
@@ -2246,8 +2246,8 @@ function contextMenuPopupShowing(event){
 			try{
 				let script = Services.jsd.wrapValue(saidFuncs[i.slateId]).script
 				mURI = script.fileName
-				mLine = script.baseLineNumber	
-			}catch(e){}			
+				mLine = script.baseLineNumber
+			}catch(e){}
 		}
 	}
 	// selected url
@@ -2259,7 +2259,7 @@ function contextMenuPopupShowing(event){
 			mURI = m[1]
 		mLine = null
 	}
-	
+
 	//copy selection
 	var a=document.getElementById('copy')
 	a.hidden=!sel
@@ -2491,10 +2491,10 @@ browserFind={
 	selectionReallyChanged:function(){
 
 			var text=this.selCon.getSelection(1).toString()
-			
+
 			if(!text.trim())
 				return
-		
+
 			if(text!==this.text){
 				if(this.timeout){
 					clearTimeout(this.timeout)

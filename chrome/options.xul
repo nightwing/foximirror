@@ -48,7 +48,8 @@
   </preferences>
   <hbox>
 	<label value="key1"/>
-	<textbox preference="startKeys-pref" flex="1" placeholder=""/>
+	<textbox preference="startKeys-pref" flex="1" placeholder="" onkeydown="
+		setPref('extensions.shadia.startKeys', this.value=parseEvent(event));event.preventDefault();schedule(save)"/>
 	<label value="*" tooltiptext="a|b => KeyEvent['DOM_VK_'+A] or KeyEvent['DOM_VK_'+B]"/>	
   </hbox>
   <hbox>
@@ -88,6 +89,9 @@ Components.utils.import('resource://shadia/main.js')
 function $(x)document.getElementById(x)
 
 function save(){
+	var panes = document.querySelectorAll('prefpane')
+	for (var i=panes.length; i-- ;)
+		panes[i].writePreferences(false)
 	$shadia.lightStarter.updatePrefs()
 }
 onLoad = function(){
@@ -111,6 +115,23 @@ $('descriptionbox').textContent = shadia.getMessage()
 
 setRecomendedValues = function(){
 	
+}
+
+parseEvent = function(e){
+	var key
+	for (var i in KeyEvent){
+		if(KeyEvent[i]==e.keyCode){
+			key = i.replace('DOM_VK_', '')
+			break
+		}
+	}
+	var seq = []
+	;['ctrl', 'meta', 'shift', 'alt'].forEach(function(x){
+		if(e[x+'Key'])
+			seq.push(x)
+	})
+	seq.push(key)
+	return seq.join('-')
 }
 
 ]]></script>

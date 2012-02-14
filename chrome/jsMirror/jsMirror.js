@@ -597,6 +597,9 @@ function insertTextAtEnd(iText, editor){
 	var r = editor.getSelectionRange()
 	r.start = {row:row, column:s.getLine(row).length-1},
 	r.end = s.insert(r.start,iText)
+	// .selection.moveCursorToPosition(r.end)
+	// editor.renderer.scrollCursorIntoView()
+	editor.selection.setSelectionRange(r)
 	editor.selection.setSelectionRange(r, true)
 }
 

@@ -599,7 +599,9 @@ reload= function(){
  *****************/
 lightStarter ={
 	handleEvent: function(e){
-		if(e.keyCode == this.startKey1 || e.keyCode == this.startKey2){
+		if ((e.keyCode == this.startKey2)
+			|| e.keyCode == this.startKey && this.testModifiers(e, this.modifiers)
+		) {
 			var win = this.getTopWindow(e.view)
 			//dump(win.location, ('shadia' in win))
 			if(!('shadia' in win))
@@ -635,15 +637,23 @@ lightStarter ={
 	updatePrefs: function() {
 		var branch = Services.prefs.getBranch("extensions.shadia.")
 		this.$dumpToConsole = branch.prefHasUserValue("dumpToConsole") && branch.getBoolPref("dumpToConsole")
-		this.keys = (
+		this.key = (
 			(branch.prefHasUserValue("startKeys") && branch.getCharPref("startKeys")) || this.defaultKey
 		).toUpperCase()
-		var keys = this.keys.split('|')
 		var KeyEvent = Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci.nsIAppShellService).hiddenDOMWindow.KeyEvent
-		this.startKey1 = KeyEvent['DOM_VK_' + keys[0]]
-		this.startKey2 = KeyEvent['DOM_VK_' + keys[1]]
+		var keyData = this.key.split('-')		
+		this.startKey = KeyEvent['DOM_VK_' + keyData.pop()]
+		this.modifiers = keyData.join()
 	},
-	defaultKey: 'PAUSE|F1'
+	defaultKey: 'PAUSE',
+	startKey2: 112,
+	testModifiers: function(e, modifiers){		
+		for each (var x in['ctrl', 'meta', 'shift', 'alt']){
+			if(!e[x+'Key'] != !~modifiers.indexOf(x))
+				return false
+		}
+		return true
+	}
 }
 
 lightStarter.updatePrefs()
@@ -709,10 +719,10 @@ function openJSMirrorFor(window, forceNewInstance, code){
 
 // debugger
 function newGlobal(aName) {
-    var sandbox = Cu.Sandbox(window, {
+    var sandbox = Cu.Sandbox($shadia, {
 		sandboxPrototype: null,
 		wantXrays: false,
-        sandboxName: name
+        sandboxName: aName
     });
 	Cu.evalInSandbox("this.__name = '" + aName + "'", sandbox);
     return sandbox
