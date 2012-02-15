@@ -116,7 +116,7 @@ jn.inspect=function(x,long){
 		string = ''
 	}if(Class=='Array'){
 		var l = x.length
-		nameList.push('`'+Class+'` ~'+l)
+		nameList.push('`Array~'+l+'`')
 		l = Math.min(long?100:10,l)
 		if (l<=3) {
 			for(var i=0;i<l;i++){
