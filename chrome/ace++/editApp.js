@@ -45,7 +45,8 @@ req.onload = function(){
 	stopReq('noAbort')
 	var val = req.responseText;
 	var uri = req.channel.name
-	var mime = req.getResponseHeader('Content-Type')
+	var mime = /^http/.test(uri)?req.getResponseHeader('Content-Type'):''
+	console.log(req.getResponseHeader('Content-Type'))
 	if(uri[uri.length-1]=='/' && uri.search(/^(file|jar):/)==0){
 		// directory listing =============================================================================
 		var a = val.split('\n')
@@ -82,6 +83,8 @@ req.onload = function(){
 		s.mimeType = 'file-listing'
 	}else
 		var s=createSession(val, uri, mime)
+	
+	
 	editor.setSession(s)
 	doURICommand(gCommand)
 }
