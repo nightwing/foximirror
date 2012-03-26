@@ -46,14 +46,13 @@
 	<preference id="dump-pref" name="extensions.shadia.dumpToConsole" type="bool" />
 	<preference id="startKeys-pref" name="extensions.shadia.startKeys" type="string" />
   </preferences>
-  <hbox>
+  <hbox tooltiptext="a|b => KeyEvent['DOM_VK_'+A] or KeyEvent['DOM_VK_'+B]">
 	<label value="key1"/>
-	<textbox preference="startKeys-pref" flex="1" placeholder="" onkeydown="
-		setPref('extensions.shadia.startKeys', this.value=parseEvent(event));event.preventDefault();schedule(save)"/>
-	<label value="*" tooltiptext="a|b => KeyEvent['DOM_VK_'+A] or KeyEvent['DOM_VK_'+B]"/>	
+	<textbox preference="startKeys-pref" flex="1" placeholder="" id="pf"/>
+	<toolbarbutton label="+"/>	
   </hbox>
   <hbox>
-	<checkbox label="dump to error Console (ctrl+shift+j)" preference="dump-pref"/>
+	<checkbox label="dump to error Console (ctrl+shift+j)" preference="dump-pref" id="dump"/>
   </hbox>
 <description flex="1"> 
 	<html:pre id='descriptionbox'>
@@ -81,6 +80,64 @@
 </prefpane>
 
 <script type="application/x-javascript" ><![CDATA[
+window.addEventListener("load", function(){
+	shadia.toggle = function() {
+	if(this.on)
+		this.finish()
+	else
+		this.start()
+	setTimeout(this.finish.bind(this), 800)
+	}
+}, false)
+var modifierRe = /(shift|ctrl|meta|alt)(-|$)/ig
+$("pf").addEventListener("keydown", function(event) {	
+	var newKey=parseEvent(event);
+	if (newKey.replace(modifierRe, '')) {
+		if (/left|right/i.test(newKey))
+			return
+		var o = this.value.split(/\|+/);
+		if (o.indexOf(newKey) == -1) {
+			var start = this.selectionStart, cur = 0
+			for(var i = 0; i < o.length; i++) {
+				cur += o[i].length
+				dump(cur,start,i)
+				if (start > cur) {
+					cur ++
+					continue
+				}
+				break
+			}
+			cur -= o[i].length
+			if (/back|delete/i.test(newKey)) {
+				if (o[i] == '')
+					o.splice(i, 1)
+				else
+					o[i] = ''
+			} else {
+				o[i] = newKey
+			}
+				
+			
+			this.value = o.join('|').replace(/\|+/g,'|')
+			this.selectionStart = this.selectionEnd = cur
+			
+			setPref('extensions.shadia.startKeys', this.value);
+			schedule(save)
+		}
+	}
+	event.preventDefault();event.stopPropagation()
+}, true)
+$("pf").addEventListener("blur", function(event) {
+	setPref('extensions.shadia.startKeys', this.value);
+	schedule(save)
+}, true)
+$("pf").nextSibling.addEventListener("click", function() {
+	var t = this.previousSibling;
+	t.value=(t.value+'|').replace(/\|+/g,'|');
+	t.focus();
+	t.selectionStart=t.selectionEnd=t.value.length
+}, true)
+
 var Cc = Components.classes
 var Ci = Components.interfaces
 
@@ -114,7 +171,10 @@ $shadia.lightStarter.loadScript(window)
 $('descriptionbox').textContent = shadia.getMessage()
 
 setRecomendedValues = function(){
-	
+	$("pf").value = "PAUSE|F1"
+	$("dump").checked = true
+	setPref('extensions.shadia.startKeys', "PAUSE|F1");
+	schedule(save)
 }
 
 parseEvent = function(e){

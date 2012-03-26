@@ -197,7 +197,8 @@ exports.launch = function(env, options) {
     Renderer.prototype.moveTextAreaToCursor =
 	require("ace/layer/text").Text.prototype.$pollSizeChanges = function(){}
 	// selection on first/last lines
-
+	Editor.prototype.__defineGetter__("value", function(){return this.session.getValue()})
+	
     var container = document.getElementById("editor");
     editor = env.editor = new Editor(new Renderer(container, options.theme));
     editor.setTheme(options.theme);
@@ -288,7 +289,7 @@ exports.launch = function(env, options) {
     };
 
     editor.autocompletionKeySet = new HashHandler({
-        startAutocompleter: 'Ctrl-Space',
+        startAutocompleter: 'Ctrl-Space|Cmd-Space|Shift-Space',
         complete: 'Return',
         completeAndReplace: 'Shift-Return',
         dotComplete: 'Ctrl-.|Alt-.',

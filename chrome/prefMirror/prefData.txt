@@ -37,6 +37,7 @@ addon management{
 }
 
 development{
+	>>>("nglayout.debug.paint_flashing", true)
 	// see https://developer.mozilla.org/en/setting_up_extension_development_environment
 	>>>("security.fileuri.strict_origin_policy", false) //Bug 230606	
 	>>>("dom.allow_XUL_XBL_for_file", true) 

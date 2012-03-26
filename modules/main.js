@@ -599,9 +599,8 @@ reload= function(){
  *****************/
 lightStarter ={
 	handleEvent: function(e){
-		if ((e.keyCode == this.startKey2)
-			|| e.keyCode == this.startKey && this.testModifiers(e, this.modifiers)
-		) {
+		if (~this.$startKeys.indexOf(e.keyCode)
+			&& this.testModifiers(e, this.$modifiers[this.$startKeys.indexOf(e.keyCode)]) ) {
 			var win = this.getTopWindow(e.view)
 			//dump(win.location, ('shadia' in win))
 			if(!('shadia' in win))
@@ -611,7 +610,7 @@ lightStarter ={
 			e.preventDefault()
 		}
 	},
-	loadScript: function(mWindow){
+	loadScript: function(mWindow) {
 		Services.scriptloader.loadSubScript('chrome://shadia/content/shadia.js', mWindow);
 	},
 	init: function(domWindow){
@@ -635,18 +634,24 @@ lightStarter ={
 		return pw
 	},
 	updatePrefs: function() {
+		var KeyEvent = Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci.nsIAppShellService).hiddenDOMWindow.KeyEvent
 		var branch = Services.prefs.getBranch("extensions.shadia.")
 		this.$dumpToConsole = branch.prefHasUserValue("dumpToConsole") && branch.getBoolPref("dumpToConsole")
-		this.key = (
+		var key = this.key = (
 			(branch.prefHasUserValue("startKeys") && branch.getCharPref("startKeys")) || this.defaultKey
-		).toUpperCase()
-		var KeyEvent = Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci.nsIAppShellService).hiddenDOMWindow.KeyEvent
-		var keyData = this.key.split('-')		
-		this.startKey = KeyEvent['DOM_VK_' + keyData.pop()]
-		this.modifiers = keyData.join()
+		).toUpperCase().split('|')
+		
+		for (var i = key.length; i--;) {
+			var keyData = key[i].split('-')
+			if (!keyData.length)
+				continue
+			this.$startKeys[i] = KeyEvent['DOM_VK_' + keyData.pop()]
+			this.$modifiers[i] = keyData.join()
+		}
 	},
-	defaultKey: 'PAUSE',
-	startKey2: 112,
+	defaultKey: 'PAUSE|F1',
+	$startKeys: [],
+	$modifiers: [],
 	testModifiers: function(e, modifiers){		
 		for each (var x in['ctrl', 'meta', 'shift', 'alt']){
 			if(!e[x+'Key'] != !~modifiers.indexOf(x))
