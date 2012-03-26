@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window id="XULPlayground" title="XULplayground"  width="550"  height="350"
+    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		xmlns:html="http://www.w3.org/1999/xhtml"
+		xmlns:h="http://www.w3.org/1999/xhtml"
+		xmlns:xlink='http://www.w3.org/1999/xlink'
+		xmlns:svg='http://www.w3.org/2000/svg'
+		>	
+	<h:style>
+	#editor {
+		top: 0;
+		left: 0;
+		background: white;
+		-moz-box-flex: 1;
+	}
+	</h:style>
+
+	<box flex="1">
+		<h:div id="editor"></h:div>
+
+		<h:script type="text/javascript" src='boot.js'></h:script>
+		<h:script type="text/javascript" > startAce(null, null);</h:script> 
+	</box>
+	<toolbar>
+		<toolbarbutton label=":)"/>
+		<textbox flex="1"/>
+	</toolbar>
+</window>

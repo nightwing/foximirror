@@ -6374,7 +6374,7 @@ var Gutter = function(parentEl) {
             i++;
         }
         html.push(
-            "</div><div class='ace_gutter-cell' style='pointer-events:none;opacity:0'>",
+            "<div class='ace_gutter-cell' style='pointer-events:none;opacity:0'>",
             this.session.getLength() - 1,
             "</div>"
         );
