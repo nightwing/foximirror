@@ -18,7 +18,7 @@
 	</h:style>
 
 	<box flex="1">
-		<h:div id="editor"></h:div>
+		<vbox id="editor"></vbox>
 
 		<h:script type="text/javascript" src='boot.js'></h:script>
 		<h:script type="text/javascript" > startAce(null, null);</h:script> 

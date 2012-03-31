@@ -312,6 +312,11 @@ var externalEditors = {
 			return
 		}
 
+		if (path.indexOf("->") > 0) {
+			Cu.reportError(path)
+			path = path.substr(path.lastIndexOf("->") + 2).trim()
+		}
+
 		// resolve internal uris
 		var uri = Services.io.newURI(path, null, null);
 		if(uri.schemeIs('resource')){//about?
@@ -760,3 +765,5 @@ dsb = newGlobal("shadia-debugger")
 dsb.eval(src)
 getSourceLocation = dsb.getSourceLocation
 //sb.getSource(Firebug.GlobalUI.$el, jn.say)
+//$shadia.dsb.dbg.addDebuggee(window.content)
+//$shadia.dsb.dbg.findScripts()
