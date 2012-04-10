@@ -62,12 +62,14 @@
   //**********************************************************
  //* actions
 //****/
+Components.utils.import("resource://gre/modules/Services.jsm", window);
+function flushCache(){Services.obs.notifyObservers(null, "startupcache-invalidate", null);}
 this.actions={//external
 	 log:function(){toOpenWindowByType("global:console", "chrome://global/content/console.xul")}
-	,reload:function(){document.location=document.location}
+	,reload:function(){flushCache();document.location=document.location}
 	,reopen:function(){
-		((window.Services&&Services.ww)||Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher))
-		.openWindow(null, window.location.href, "_blank", 
+		flushCache();
+		Services.ww.openWindow(null, window.location.href, "_blank", 
 			"chrome,extrachrome,resizable,modal=no," + /*"centerscreen"+*/'top=' + (screenY +10)+ ',left=' + (screenX+10),
 			null).focus();		
 		return;
@@ -81,6 +83,7 @@ this.actions={//external
 	,idleMirror:function()  {toOpenWindowByType('shadia:idleMirror', "chrome://shadia/content/idleMirror/idleMirror.xul")}
 	,magnifier:function()   {$shadia.getLocalFile('chrome://shadia/content/magnifier.ahk').launch()}
 	,restartApp:function()  {
+		flushCache();
 		if(typeof Application=='object') Application.restart()
 		else
 		var appStartup = Ci.nsIAppStartup;
@@ -101,10 +104,7 @@ this.actions={//external
 		
 		if (item) {
 			item.setAttribute("checked", p);
-			if(p){
-				Services.obs.notifyObservers(null, "startupcache-invalidate", null);
-				Services.obs.notifyObservers(null, "chrome-flush-caches", null);
-			}
+			flushCache();
 		}
 	}
 }

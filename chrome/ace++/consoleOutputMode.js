@@ -241,10 +241,3 @@ exports.Mode = Mode;
 
 
 });
-
-
-initConsoleMode = function(editor){
-	var mode = require('fbace/consoleOutputMode').Mode
-	console.log(editor)
-	editor.session.setMode(new mode);
-}

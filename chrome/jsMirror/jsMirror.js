@@ -788,22 +788,15 @@ Firebug.jsMirror = {
 		editor.session.autocompletionType = 'console';
 
 		// set mode which allows cells and, js+coffeescript combination
-		window.initConsoleMode(editor)
+		var modeName = window == Firebug.Ace.win2 ?'ace/mode/consoleMode':'fbace/consoleOutputMode'
+		editor.session.setMode(modeName)
 
 		//add shortcuts
 		editor.addCommands({
 			execute: function(editor)Firebug.jsMirror.enter(true, false, editor),
 			dirExecute: function(editor)Firebug.jsMirror.enter(true, true, editor)
 		});
-		/*window.canon.addCommand({
-			name: "toggleEditorFocus",
-			bindKey: {
-				win: "Ctrl-Up|Ctrl-Down",
-				mac: "Command-Up|Command-Down",
-				sender: "editor"
-			},
-			exec: toggleEditorFocus
-		});*/
+
 		
 		if(!this.otherEditorReady)
 			return this.otherEditorReady = true
