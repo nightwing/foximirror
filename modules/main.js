@@ -76,7 +76,7 @@ var addDevelopmentUtils = function(window){
 		window.Cu=Components.utils
 	var href = window.location.href
 	if (href.substring(0,15)=='chrome://shadia' || href=='chrome://console2/content/console2.xul') {
-		for each (var i in ["getLocalFile","makeReq","viewFileURI","npp","getPref","setPref"]){
+		for each (var i in ["getLocalFile","makeReq","viewFileURI","npp","getPref","setPref","readdir"]){
 			window[i] = this[i]
 		}
 	}
@@ -242,6 +242,13 @@ makeReq = function makeReq(href){
 		req.send(null);
 	}catch(e){}
 	return req.responseText;
+}
+readdir = function(href){
+	var a = makeReq(href.replace(/[\/\\]?$/, "/")).split('\n201: ')
+	a.shift()
+	return a.map(function(x){
+		return x.slice(0, x.indexOf(" ")) + (x.trim().slice(-1) == "E"?"":"/")
+	})
 }
 makeReqAsync = function makeReqAsync(href,callback){
     var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();//new XMLHttpRequest();
@@ -743,7 +750,7 @@ var src = "(" +
         Cc = Components.classes
         Ci = Components.interfaces
         init = Components.classes["@mozilla.org/jsdebugger;1"].createInstance(Components.interfaces.IJSDebugger);
-        init.addClass();
+        init.addClass(this);
         dbg = new Debugger()
         timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer)
         getSourceLocation = function(f, callback) {
@@ -761,9 +768,17 @@ var src = "(" +
     }
 + ")()"
 
-dsb = newGlobal("shadia-debugger")
-dsb.eval(src)
-getSourceLocation = dsb.getSourceLocation
+
+XPCOMUtils.defineLazyGetter(this, "dsb", function () {
+	var dsb = newGlobal("shadia-debugger") 
+	dsb.eval(src)
+	return dsb
+});
+
+XPCOMUtils.defineLazyGetter(this, "getSourceLocation", function () {
+	return dsb.getSourceLocation
+});
+
 //sb.getSource(Firebug.GlobalUI.$el, jn.say)
 //$shadia.dsb.dbg.addDebuggee(window.content)
 //$shadia.dsb.dbg.findScripts()
