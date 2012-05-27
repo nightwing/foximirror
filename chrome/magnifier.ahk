@@ -80,8 +80,8 @@ DrawCross(rX,rY,z, dc){
 
 DrawMask( M_C , R_C, zoom_c, dc ){
 	; xz := In(x-Rz-6,0,A_ScreenWidth-2*Rz) ; keep the frame on screen
-	DllCall("gdi32.dll\BitBlt", UInt,dc, Int,0, Int, 0, Int,20, Int,20
-					,UInt,dc, UInt,0, UInt,0, UInt,0x00000042) ; SOLID_BLACK (42)
+	;DllCall("gdi32.dll\BitBlt", UInt,dc, Int,0, Int, 0, Int,20, Int,20
+	;				,UInt,dc, UInt,0, UInt,0, UInt,0x00000042) ; SOLID_BLACK (42)
 }
 
 ;#############                      ###########################################
@@ -122,7 +122,7 @@ Repaint:
     yz := y-as_y
 	DllCall("gdi32.dll\StretchBlt", UInt,hdc_frame, Int,0, Int,0, Int,ws_x, Int,ws_y
 				, UInt,hdd_frame, UInt,xz, UInt,yz, Int,2*as_x+1, Int,2*as_y+1, UInt,0xCC0020) ; SRCCOPY	
-Traytip,, %zoom%
+;Traytip,, %zoom%
     DrawCross(hws_x, hws_y, pix, hdc_frame) 
 DrawMask(0,0,0, hdc_frame)	
     
