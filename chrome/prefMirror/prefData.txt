@@ -6,6 +6,7 @@ hdd health{
 	>>>("browser.safebrowsing.enabled", false)
 	//sessionstore
 	>>>("browser.sessionstore.interval", 1000000)
+	>>>("browser.pagethumbnails.capturing_disabled", true)
 }
 
 ui{
@@ -13,6 +14,7 @@ ui{
 	>>>("general.autoScroll", false)
 	>>>("ui.SpellCheckerUnderline", "lime")
 	>>>("layout.selectanchor", true)
+    >>>("ui.tooltipDelay", 100)
 }
 
 addon management{

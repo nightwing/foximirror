@@ -67,10 +67,13 @@ exports.launch = function(env, options) {
 			var delta = e.data;
 			var range = delta.range;
 			var len, firstRow, f1;
+            
+            if (range.end.row == range.start.row)
+                return;
 			
 			if (delta.action == "insertText") {
 				len = range.end.row - range.start.row
-				firstRow = range.start.column == 0? range.start.row: range.start.row + 1;
+				firstRow = range.start.column == 0 ? range.start.row: range.start.row + 1;
 			} else if (delta.action == "insertLines") {
 				len = range.end.row - range.start.row;
 				firstRow = range.start.row;
@@ -203,6 +206,7 @@ exports.launch = function(env, options) {
     editor = env.editor = new Editor(new Renderer(container, options.theme));
     editor.setTheme(options.theme);
     editor.setSession(jsDoc);
+    editor.setFontSize(options.fontsize);
 
     editor.setShowInvisibles(options.showinvisiblecharacters);
     editor.setHighlightActiveLine(options.highlightactiveline);
@@ -222,6 +226,7 @@ exports.launch = function(env, options) {
     window.onresize = onResize;
     onResize();
 	
+	require("ace/multi_select").MultiSelect(editor);
 	/**************************** drag&drop *****************************************************/
     event.addListener(container, "dragover", function(e) {
         return event.preventDefault(e);
@@ -485,5 +490,64 @@ exports.launch = function(env, options) {
 	}
 	editor.on('gutterclick', onGutterClick)
 
-};
-});
+	// linux clipboard
+	if (require("ace/lib/useragent").isLinux) {
+		var cpState
+		var onSelChange = function() {
+			editor.selection.removeEventListener("changeSelection", onSelChange)
+			cpState = "sel"
+		}
+		var listenForSelChange = function() {
+			editor.selection.on("changeSelection", onSelChange)
+		}
+		editor.on("changeSession", onSelChange)
+		editor.on("focus", listenForSelChange)
+		editor.on("blur", function() {
+			cpState = ""
+			gClipboardHelper.copyString(editor.getCopyText(),"primary")  
+		})
+		editor.on("mousedown", function(e) {
+			if (e.getButton() == 1) {
+				editor.focus()
+				var str = cpState ? editor.getCopyText() : gClipboardHelper.getData(true)
+				if (e.inSelection()) {
+					editor.selection.clearSelection()
+					if (cpState) {
+						cpState = ""
+						listenForSelChange()
+						gClipboardHelper.copyString(str, "primary")  
+					}
+				}
+				editor.session.insert(e.getDocumentPosition(), str)
+				e.stop()
+			}
+		})
+		
+	}
+	
+	void function addGutterHighlight() {
+		var div = div||editor.renderer.content.insertBefore(document.createElement("div"), editor.renderer.$textLayer.element)
+		var divH
+		editor.renderer.$gutter.addEventListener("mouseover", function(e){
+			var config = editor.renderer.layerConfig
+			if(e.target.classList.contains("ace_gutter-cell")||e.target.parentNode.classList.contains("ace_gutter-cell")){
+				div.style.top=(e.target.getBoundingClientRect().top	+ config.offset)+"px"
+			}
+			if (divH != config.lineHeight){
+				divH = config.lineHeight
+				div.style.height=divH+"px"
+			}
+		})
+		editor.renderer.$gutter.addEventListener("mouseout", function(e){
+			div.style.top="-100px"
+		})
+
+		
+		div.style.width="100%"
+		div.style.position="absolute"
+		div.style.border="solid 2px rgba(100,200,120,0.2)"
+		div.style.MozBoxSizing="border-box"
+		div.style.top="-100px"
+		div.style.zIndex="1"
+	};
+}});

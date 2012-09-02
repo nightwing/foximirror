@@ -31,7 +31,7 @@ Firebug.Ace.BaseAutocompleter = {
 
         this.bubble = document.getElementById("autocomplate-info-bubble");
         this.bubble.width = 1.7*panelW;
-		//set handlers
+        //set handlers
         this.panel.setAttribute('onpopupshown', 'if(event.target==this)Firebug.Ace.autocompleter.setView(0)');
         this.panel.setAttribute('onpopuphidden', 'if(event.target==this)Firebug.Ace.autocompleter.finish()');
         this.tree.setAttribute('ondblclick', 'Firebug.Ace.autocompleter.insertSuggestedText();Firebug.Ace.autocompleter.finish()');
@@ -95,16 +95,16 @@ dump(posX, posY)
         };
         //this.bubble.height = this.bubblePos.h;
         //this.bubble.width = this.bubblePos.w;
-		
-		// make global
-		autocompleter = this
+        
+        // make global
+        autocompleter = this
     },
 
     $selectionListener: function(e) {
-		if (!this.editor){
-			dump.trace("asdasdasd")
-			this.finish()
-		}
+        if (!this.editor){
+            dump.trace("asdasdasd")
+            this.finish()
+        }
 
         var point = this.editor.selection.getCursor();
         var range = this.$q.filterRange
@@ -171,22 +171,22 @@ dump(posX, posY)
         /**     doOnselect  **/
         this.onSelectTimeOut = null;
 
-		try {
-			var index = this.tree.currentIndex;
+        try {
+            var index = this.tree.currentIndex;
 
-			if(this.sortedArray){
-				this.selectedObject = this.sortedArray[index]
-				this.number.value = index + ':' +this.sortedArray.length + "/" + this.unfilteredArray.length;
-			}else{
-				index = -1
-				this.selectedObject = {object:this.object}
-				this.number.value = ''
-			}
-			
-			var hint = this.getHint(index);
-			this.sayInBubble(hint);
-			
-		} catch(e) {Cu.reportError(e)}
+            if(this.sortedArray){
+                this.selectedObject = this.sortedArray[index]
+                this.number.value = index + ':' +this.sortedArray.length + "/" + this.unfilteredArray.length;
+            }else{
+                index = -1
+                this.selectedObject = {object:this.object}
+                this.number.value = ''
+            }
+            
+            var hint = this.getHint(index);
+            this.sayInBubble(hint);
+            
+        } catch(e) {Cu.reportError(e)}
 
     },
 
@@ -311,7 +311,7 @@ dump(posX, posY)
     },
 
     finish: function(i) {
-	dump("--------------------------------------------------")
+    dump("--------------------------------------------------")
         if (this.hidden)
             return;
         for each(var i in this.$markers)
@@ -344,15 +344,15 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
         var cursor = this.editor.selection.getCursor();
         fr.end.column = fr.start.column = cursor.column;
         fr.end.row = fr.start.row = cursor.row;
-		
-		cursor.column--
-		this.$q.dotPosition = cursor
-		
+        
+        cursor.column--
+        this.$q.dotPosition = cursor
+        
         this.text = '';
         this.onEvalSuccess(o);
     },
-	
-	onEvalSuccess: function(result, context) {
+    
+    onEvalSuccess: function(result, context) {
         this.object = result;
 
         if (this.$q.functionName) {
@@ -365,25 +365,25 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
 
         this.filter(this.unfilteredArray, this.text);
         this.showPanel();
-		this.bubble.className = ''
+        this.bubble.className = ''
     },
 
     onEvalFail: function(result, context) {
-		var error = true
-		this.object = result;
+        var error = true
+        this.object = result;
 
         if (this.$q.functionName) {
             this.unfilteredArray = getProps(context.global);
             this.appendSpecialEntries();
             this.object = context.global;
-			error = false
+            error = false
         } else {
             this.unfilteredArray = getProps(result);
         }
 
         this.filter(this.unfilteredArray, this.text);
         this.showPanel();
-		this.bubble.className = error?'error':''
+        this.bubble.className = error?'error':''
     },
 
     eval: function(string, context) {
@@ -395,7 +395,7 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
                 FBL.bind(this.onEvalSuccess, this),
                 FBL.bind(this.onEvalSuccess, this)
             );
-		else
+        else
             Firebug.evaluate(string,
                 FBL.bind(this.onEvalSuccess, this),
                 FBL.bind(this.onEvalFail, this)
@@ -403,8 +403,8 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
     },
 
     start: function(editor) {
-		if (!this.editor && !editor)
-			return
+        if (!this.editor && !editor)
+            return
         this.editor = editor || this.editor;
 
         var cell = Firebug.Ace.win2.editor.session.getMode().getCurrentCell();
@@ -453,8 +453,8 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
                 longDescriptor = o.name + '\n' + o.description;
             } else {
                 longDescriptor = jn.inspect2(o.object, "long");
-				if(index != -1)
-					longDescriptor += '\n' + jn.lookupSetter(this.object, o.name);
+                if(index != -1)
+                    longDescriptor += '\n' + jn.lookupSetter(this.object, o.name);
             }
         } else
             longDescriptor = jn.inspect2(this.object);
@@ -532,11 +532,11 @@ Firebug.Ace.JSAutocompleter = FBL.extend(Firebug.Ace.BaseAutocompleter, {
                 descr = "interface"
                 pre = '\u2555Ci.'
                 post = ')'
-				;(
-				fu == "QueryInterface"
-					? supportedInterfaces(this.object)
-					: supportedInterfaces(getserviceOrCreateInstance(this.object))
-				).forEach(createItem);
+                ;(
+                fu == "QueryInterface"
+                    ? supportedInterfaces(this.object)
+                    : supportedInterfaces(getserviceOrCreateInstance(this.object))
+                ).forEach(createItem);
             } else if (fu == "getInterface") {
                 descr = "interface"
                 pre = '\u2555Ci.'
@@ -824,10 +824,10 @@ var backParse = (function() {
                 var state='.'
                 outer: while (ch) {
                     switch (ch) {
-						case "'": case '"':
-							eatString(ch);
-							next()
-						break outer;
+                        case "'": case '"':
+                            eatString(ch);
+                            next()
+                        break outer;
                         case '.':
                             eatWhile(/\s/)
                             state='.'
@@ -1148,53 +1148,53 @@ var getNodeNamesInDoc = function(doc) {
 var modernFox = !!Object.getOwnPropertyNames;
 /**============-=========-================**/
 var getProps = function(targetObj) {
-	if (!targetObj)
-		return [];
+    if (!targetObj)
+        return [];
 
-	var d, o, x = targetObj
-	var data = [], protoList = [], depth = 0, allProps = [];
+    var d, o, x = targetObj
+    var data = [], protoList = [], depth = 0, allProps = [];
 
-	if (typeof x !== "object" && typeof x !== "function")
-		x = x.constructor.prototype;
+    if (typeof x !== "object" && typeof x !== "function")
+        x = x.constructor.prototype;
 
-	if (typeof x === "xml")
-		return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
+    if (typeof x === "xml")
+        return [{name: toXMLString, comName: 'toxmlString', description: d, depth:depth, object: o}];
 
-	if (typeof targetObj === "object") {
-		x = XPCNativeWrapper.unwrap(targetObj)
+    if (typeof targetObj === "object") {
+        x = XPCNativeWrapper.unwrap(targetObj)
 
-		if (targetObj != x) {
-			data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
-			targetObj = x
-		}
-	}
+        if (targetObj != x) {
+            data.push({name:'wrappedJSObject', comName: 'wrappedjsobject',description:'', depth:-1})
+            targetObj = x
+        }
+    }
 
-	var maxProtoDepth = 20
-	while(x) {
-		var props = Object.getOwnPropertyNames(x);
-		innerloop: for each(var i in props) {
-			if (allProps.indexOf(i) > -1)
-				continue innerloop;
+    var maxProtoDepth = 20
+    while(x) {
+        var props = Object.getOwnPropertyNames(x);
+        innerloop: for each(var i in props) {
+            if (allProps.indexOf(i) > -1)
+                continue innerloop;
 
-			try {
-				o = targetObj[i];
-				d = '---slacking---'//jn.inspect(o);
-			} catch(e) {
-				o = "error";
-				d = e.message;
-			}
-			data.push({name: i, comName: i.toLowerCase(), description: d, depth:depth, object: o});
-		}
-		protoList.push(x);
-		// some objects (XML, Proxy) may have infinite list of __proto__
-		if(!maxProtoDepth--)
-			break;
-		x = Object.getPrototypeOf(x);
-		depth++;
-		allProps = allProps.concat(props);
-	}
+            try {
+                o = targetObj[i];
+                d = '---slacking---'//jn.inspect(o);
+            } catch(e) {
+                o = "error";
+                d = e.message;
+            }
+            data.push({name: i, comName: i.toLowerCase(), description: d, depth:depth, object: o});
+        }
+        protoList.push(x);
+        // some objects (XML, Proxy) may have infinite list of __proto__
+        if(!maxProtoDepth--)
+            break;
+        x = Object.getPrototypeOf(x);
+        depth++;
+        allProps = allProps.concat(props);
+    }
 
-	return data;
+    return data;
 };
 
 
@@ -1460,7 +1460,7 @@ doc.querySelector('[name="scrollMaxX"]')
 
 
 if(!modernFox){
-	var s = document.querySelector('#autocomplatePanel stack')
-	s.removeChild(s.lastChild)
-	s.removeChild(s.lastChild)
+    var s = document.querySelector('#autocomplatePanel stack')
+    s.removeChild(s.lastChild)
+    s.removeChild(s.lastChild)
 }
