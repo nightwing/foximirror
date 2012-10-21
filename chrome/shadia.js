@@ -463,51 +463,53 @@ shadowInspector.prototype={
 		}
 	},
 	fillPanel:function(el){
-		if(this.infoPanel.state!=="open")
-			this.showPanel()
-		var name,str
-		var container=this.infoPanel
-		var item = container.firstChild;
-		if (!item) {
-			item=document.createElementNS("http://www.w3.org/1999/xhtml","div");
-			container.appendChild(item);
-			item.style.MozUserSelect='text'
-		}
-		if (el.nodeType==1) {//node
-			name = el.tagName
-			str = el.id
-			if(str)
-				name+="#"+str
-			str=el.className
-			if(str&&typeof(str)=='string')
-				name+="."+str.replace(" ",".",'g')
+        try{
+            if(this.infoPanel.state!=="open")
+                this.showPanel()
+            var name,str
+            var container=this.infoPanel
+            var item = container.firstChild;
+            if (!item) {
+                item=document.createElementNS("http://www.w3.org/1999/xhtml","div");
+                container.appendChild(item);
+                item.style.MozUserSelect='text'
+            }
+            if (el.nodeType==1) {//node
+                name = el.tagName
+                str = el.id
+                if(str)
+                    name+="#"+str
+                str=el.className
+                if(str&&typeof(str)=='string')
+                    name+="."+str.replace(" ",".",'g')
 
-			if(this.fullInfoInPanel){
-				var att=el.attributes,ans=[]
-				for(var i=0;i<att.length;i++){
-					var x=att[i],str=x.name
-					if(str=='id'||str=='class'||str=='shadia-lighted')continue
-					ans.push(str+'="'+x.value+'"')
-				}
-				name+='\n'+(ans.length?ans.join('\n'):'no attributes')
-			}
-		}else if(el.nodeType==7){//text
-			name=el.nodeName+el.target+' ->'+el.data
-		}else if(el.nodeType==9){//document
-			name=el.nodeName+': '+el.title +'->'
-			try{name+=decodeURIComponent(el.documentURI)}catch(e){name+=el.documentURI}
-		}else if(el.nodeType==3){//text node
-			name='textnode\n'
-			str=el.textContent
-			if(str.length>100)
-				name+=str.slice(0,50)+' ...\n     ... '+str.slice(-50)
-			else
-				name+=str
-		}else if(typeof el=='string'){
-			name=el
-		}
-		//
-		item.textContent=name
+                if(this.fullInfoInPanel){
+                    var att=el.attributes,ans=[]
+                    for(var i=0;i<att.length;i++){
+                        var x=att[i],str=x.name
+                        if(str=='id'||str=='class'||str=='shadia-lighted')continue
+                        ans.push(str+'="'+x.value+'"')
+                    }
+                    name+='\n'+(ans.length?ans.join('\n'):'no attributes')
+                }
+            }else if(el.nodeType==7){//text
+                name=el.nodeName+el.target+' ->'+el.data
+            }else if(el.nodeType==9){//document
+                name=el.nodeName+': '+el.title +'->'
+                try{name+=decodeURIComponent(el.documentURI)}catch(e){name+=el.documentURI}
+            }else if(el.nodeType==3){//text node
+                name='textnode\n'
+                str=el.textContent
+                if(str.length>100)
+                    name+=str.slice(0,50)+' ...\n     ... '+str.slice(-50)
+                else
+                    name+=str
+            }else if(typeof el=='string'){
+                name=el
+            }
+            //
+            item.textContent=name
+        }catch(e){dump(e)}
 	},
 	hidePanel:function() {
 		this.panelShowing=false
@@ -676,10 +678,14 @@ shadowInspector.prototype={
 
 
 	setLight: function(obj,color) {
-		obj&&obj.setAttribute&&obj.setAttribute("shadia-lighted",color||this.light)
+        try{
+            obj&&obj.setAttribute&&obj.setAttribute("shadia-lighted",color||this.light)
+        }catch(e){dump(e)}
 	},
 	unLightElement: function(obj) {
-		obj&&obj.hasAttribute&&obj.hasAttribute("shadia-lighted")&&obj.removeAttribute("shadia-lighted");
+        try{
+            obj&&obj.hasAttribute&&obj.hasAttribute("shadia-lighted")&&obj.removeAttribute("shadia-lighted");
+        }catch(e){dump(e)}
 	},
 
 

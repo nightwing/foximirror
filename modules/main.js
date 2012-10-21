@@ -325,7 +325,9 @@ var externalEditors = {
 		}
 
 		// resolve internal uris
-		var uri = Services.io.newURI(path, null, null);
+		try {
+			var uri = Services.io.newURI(path, null, null);
+		} catch(e) {Cu.reportError(path)}
 		if(uri.schemeIs('resource')){//about?
 			var ph = Services.io.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)
 			abspath = ph.getSubstitution(uri.host)
@@ -737,7 +739,7 @@ function openJSMirrorFor(window, forceNewInstance, code){
 // debugger
 function newGlobal(aName) {
     var sandbox = Cu.Sandbox($shadia, {
-		sandboxPrototype: null,
+		//sandboxPrototype: null,
 		wantXrays: false,
         sandboxName: aName
     });
