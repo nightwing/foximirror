@@ -18,7 +18,7 @@ var PR_EXCL        = 0x80;
 
 var maxFileCount = 1000, fileCount = 0, userCanceled = false
 
-var excludePattern = /\.xpi$|\.zip$|\.rar$|thumbs.db$|^\.|^__/i
+var excludePattern = /\s|\.xpi$|\.zip$|\.rar$|thumbs.db$|^\.|^__/i
 var specialPattern = /\.(xml|xul|jsm?|css)$/i
 var ignorePatterns = []
 var shouldIgnore

@@ -537,7 +537,7 @@ function doOnUnload(){
 	data.newTarget.code = codebox.session.getValue()
 	data.newTarget.winRef = Cu.getWeakReference(getTargetWindow())
 	/**/
-	ConfigManager.set(data.newTarget.code)
+	ConfigManager.store(codebox.session)
 	/**/
 	
 	var maxHistSize = 100
@@ -807,9 +807,12 @@ Firebug.jsMirror = {
 		var data = $shadia.$jsMirrorData
 		if(data && data.newTarget){
 			initTargetWindow(data.newTarget.winRef.get())
-			codebox.session.doc.setValue(data.newTarget.code||ConfigManager.get())
+            /*if (data.newTarget.code)
+                codebox.session.doc.setValue(data.newTarget.code)
+                codebox.selectAll();
+            else*/
+                ConfigManager.restore(codebox.session)
 			//data.newTarget = null
-			codebox.selectAll();
 		}
 		initJANE()
 		codebox.focus()
@@ -992,7 +995,7 @@ var ConfigManager = {
 	get: function(){
 		var file = aceManager.getUserFile("foxiMirror")
 		file.append("js.autosave.js")
-		if(file.exists())return readEntireFile(file)||''
+		return file.exists() && readEntireFile(file) || ''
 	},
 	set: function(t){
 		if (!t)return
@@ -1000,6 +1003,21 @@ var ConfigManager = {
 		file.append("js.autosave.js")
 		writeToFile(file, t)
 	},
+    store: function(s){
+        var state = [[s.$scrollTop,s.$scrollLeft],s.selection.toOrientedRange()]        
+        this.set(JSON.stringify(state)+"\n\n" + s.getValue())
+    },
+    restore: function(s){
+        var val = this.get().split(/^(.*)\n\n/)
+        var state = JSON.parse(val[1])
+
+        s.setValue(val[2])
+        s.selection.fromOrientedRange(state[1])
+        setTimeout(function(){
+            s.setScrollTop(state[0][0])
+            s.setScrollLeft(state[0][1])
+        })
+    }
 }
 
 /*********************************************************************
