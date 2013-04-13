@@ -1119,10 +1119,10 @@ function copyView(tree2,copyTree){
 	this.isSorted =    function(){return false; };
 	this.getImageSrc = function(row,col){}// return "chrome://global/skin/checkbox/cbox-check.gif"; };
 	this.getRowProperties = function(row,props){
-		origView.getCellProperties(row,tree2.columns.getColumnAt(0),props);
+		return origView.getCellProperties(row,tree2.columns.getColumnAt(0),props);
 	};
 	this.getCellProperties = function(row,col,props){
-		origView.getCellProperties(row,tree2.columns.getColumnAt(0),props);
+		return origView.getCellProperties(row,tree2.columns.getColumnAt(0),props);
 	};
 	this.getColumnProperties = function(colid,col,props){};
 	this.cycleHeader = function(col, elem){};
@@ -1152,11 +1152,7 @@ function plainOneColumnView(table){
 	this.isSorted = function(){ return false; };
 	this.getImageSrc = function(row,col){}// return "chrome://global/skin/checkbox/cbox-check.gif"; };
 	this.getRowProperties = function(row,props){
-		/* if((row %4) == 0){
-			var aserv=Components.classes["@mozilla.org/atom-service;1"].
-					  getService(Components.interfaces.nsIAtomService);
-			props.AppendElement(aserv.getAtom("makeItBlue"));
-		} */
+		
 	};
 	this.getCellProperties = function(row,col,props){};
 	this.getColumnProperties = function(colid,col,props){};
@@ -1181,11 +1177,7 @@ function domSearchView(table){
 	this.isSorted = function(){ return false; };
 	this.getImageSrc = function(row,col){}// return "chrome://global/skin/checkbox/cbox-check.gif"; };
 	this.getRowProperties = function(row,props){
-		/* if((row %4) == 0){
-			var aserv=Components.classes["@mozilla.org/atom-service;1"].
-					  getService(Components.interfaces.nsIAtomService);
-			props.AppendElement(aserv.getAtom("makeItBlue"));
-		} */
+		
 	};
 	this.getCellProperties = function(row,col,props){};
 	this.getColumnProperties = function(colid,col,props){};

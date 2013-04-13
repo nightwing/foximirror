@@ -400,18 +400,10 @@ function plainFilterView(table) {
 	this.isSorted = function(){ return false; };
 	this.getImageSrc = function(row,col){}// return "chrome://global/skin/checkbox/cbox-check.gif"; };
 	this.getRowProperties = function(row,props){
-		/* if ((row %4) == 0){
-			var aserv=Components.classes["@mozilla.org/atom-service;1"].
-					  getService(Components.interfaces.nsIAtomService);
-			props.AppendElement(aserv.getAtom("makeItBlue"));
-		} */
+		
 	};
 	this.getCellProperties = function(row,col,props){
-		/* if ((row %4) == 0){
-			var aserv=Components.classes["@mozilla.org/atom-service;1"].
-					  getService(Components.interfaces.nsIAtomService);
-			props.AppendElement(aserv.getAtom("makeItBlue"));
-		}	 */
+		
 	};
 	this.getColumnProperties = function(colid,col,props){};
 	this.cycleHeader = function(col, elem) {};
