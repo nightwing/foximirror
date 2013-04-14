@@ -17,6 +17,25 @@ ui{
     >>>("ui.tooltipDelay", 100)
 }
 
+ui.colors {
+    >>>("ui.-moz-cellhighlight", "#D9E4F1")
+    >>>("ui.-moz-dialog", "#D9E4F1")
+    >>>("ui.IMEConvertedTextBackground", "#0aa")
+    >>>("ui.IMEConvertedTextForeground", "#000")
+    >>>("ui.IMEConvertedTextUnderline", 0)
+    >>>("ui.IMEConvertedTextUnderlineStyle", 0)
+    >>>("ui.IMERawInputBackground", "#def")
+    >>>("ui.IMERawInputForeground", "#000")
+    >>>("ui.IMERawInputUnderline", 0)
+    >>>("ui.IMERawInputUnderlineColor", "#f00")
+    >>>("ui.IMERawInputUnderlineStyle", 0)
+    >>>("ui.SpellCheckerUnderline", "lime")
+}
+
+ui.zoom {
+    >>>("layout.css.devPixelsPerPx", "1")
+}
+
 addon management{
 	//update
 	>>>("app.update.enabled", false)

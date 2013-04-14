@@ -661,7 +661,7 @@ simpleView.prototype = {
 	isSorted:    function()            { return false; },
 	isEditable:  function(row, column) { return false; },
 
-	getParentIndex: function(row){-1},
+	getParentIndex: function(row){return -1},
 	getLevel: function(row){return 0;},
 	hasNextSibling: function(row, after){return true;},
 	toggleOpenState: function(row){},
